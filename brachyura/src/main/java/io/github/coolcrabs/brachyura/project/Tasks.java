@@ -10,6 +10,7 @@ import io.github.coolcrabs.brachyura.exception.TaskFailedException;
 class Tasks implements Consumer<Task> {
     public final Map<String, Task> t = new HashMap<>();
 
+    @Override
     public void accept(Task task) {
         if (t.putIfAbsent(task.name, task) != null) {
             throw new TaskFailedException("Duplicate task for " + task.name);

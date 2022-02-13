@@ -5,11 +5,11 @@ import javax.tools.DiagnosticListener;
 
 import org.tinylog.Logger;
 
-enum BrachyuraDiagnosticListener implements DiagnosticListener {
+enum BrachyuraDiagnosticListener implements DiagnosticListener<Object> {
     INSTANCE;
 
     @Override
-    public void report(Diagnostic diagnostic) {
+    public void report(Diagnostic<? extends Object> diagnostic) {
         switch (diagnostic.getKind()) {
             case ERROR:
                 Logger.error(diagnostic.toString());

@@ -1,15 +1,7 @@
 #!/bin/bash
 set -e
-if [ -z "$JAVA6" ]; then
-  echo "Set env var JAVA6"
-  exit 1
-fi
-if [ -z "$JAVAC6" ]; then
-  echo "Set env var JAVAC6"
-  exit 1
-fi
 cd cfr
-mvn -Dmaven.compiler.fork=true -Dmaven.compiler.executable=$JAVAC6 -DjavadocExecutable=/usr/bin/javadoc clean package verify install
+mvn -Dmaven.compiler.fork=true package install
 cd ..
 cd fabricmerge
 mvn clean package verify install

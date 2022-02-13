@@ -29,6 +29,7 @@ class J8FabricProjectTest {
             return Minecraft.getVersion("1.16.5");
         }
 
+        @Override
         public Consumer<AccessWidenerVisitor> getAw() {
             return (v) -> {
                 try {

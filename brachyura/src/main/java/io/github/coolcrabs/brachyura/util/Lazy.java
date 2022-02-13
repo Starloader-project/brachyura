@@ -15,6 +15,7 @@ public final class Lazy<T> implements Supplier<T> {
         this.supplier = supplier;
     }
 
+    @Override
     public T get() {
         final T result = value; // Just one volatile read 
         return result == null ? maybeCompute() : result;

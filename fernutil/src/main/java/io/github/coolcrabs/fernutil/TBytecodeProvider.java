@@ -1,7 +1,6 @@
 package io.github.coolcrabs.fernutil;
 
 import java.io.Closeable;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;

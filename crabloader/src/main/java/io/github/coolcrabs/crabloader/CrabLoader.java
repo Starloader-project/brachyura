@@ -1,13 +1,11 @@
 package io.github.coolcrabs.crabloader;
 
 import java.io.DataInputStream;
-import java.io.File;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
 

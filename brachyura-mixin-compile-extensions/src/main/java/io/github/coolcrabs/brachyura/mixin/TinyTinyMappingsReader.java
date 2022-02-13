@@ -58,6 +58,7 @@ class TinyTinyMappingsReader {
         String[] namespaces;
         HashMap<String, TinyClass>[] classmaps;
 
+        @SuppressWarnings("unchecked") // I believe in more modern java we can work around this warning
         TinyTree(String[] namespaces) {
             this.namespaces = namespaces;
             classmaps = new HashMap[namespaces.length];

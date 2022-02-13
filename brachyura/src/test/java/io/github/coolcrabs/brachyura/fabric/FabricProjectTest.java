@@ -11,8 +11,6 @@ import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
 
 import io.github.coolcrabs.brachyura.decompiler.BrachyuraDecompiler;
-import io.github.coolcrabs.brachyura.decompiler.cfr.CfrDecompiler;
-import io.github.coolcrabs.brachyura.decompiler.fernflower.FernflowerDecompiler;
 import io.github.coolcrabs.brachyura.mappings.Namespaces;
 import io.github.coolcrabs.brachyura.maven.Maven;
 import io.github.coolcrabs.brachyura.maven.MavenId;
@@ -31,10 +29,12 @@ class FabricProjectTest {
             return Minecraft.getVersion("21w39a");
         }
 
+        @Override
         public int getJavaVersion() {
             return 17;
         };
 
+        @Override
         public Consumer<AccessWidenerVisitor> getAw() {
             return (v) -> {
                 try {
