@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Objects;
 
 import io.github.coolcrabs.brachyura.mixin.TinyTinyMappingsReader.TinyTree.TinyClass;
 import io.github.coolcrabs.brachyura.mixin.TinyTinyMappingsReader.TinyTree.TinyClass.TinyField;
@@ -42,13 +43,13 @@ class TinyTinyMappingsReader {
                 method.desc = parts[1];
                 method.name = new String[r.namespaces.length];
                 System.arraycopy(parts, 2, method.name, 0, r.namespaces.length);
-                currentClass.methods.add(method);
+                Objects.requireNonNull(currentClass).methods.add(method);
             } else if (indent == 1 && parts[0].equals("f")) {
                 TinyField field = new TinyField();
                 field.desc = parts[1];
                 field.name = new String[r.namespaces.length];
                 System.arraycopy(parts, 2, field.name, 0, r.namespaces.length);
-                currentClass.fields.add(field);
+                Objects.requireNonNull(currentClass).fields.add(field);
             }
         }
         return r;

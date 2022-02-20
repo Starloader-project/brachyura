@@ -2,6 +2,7 @@ package io.github.coolcrabs.brachyura.util;
 
 import java.util.ArrayList;
 
+@SuppressWarnings("serial")
 public class CloseableArrayList extends ArrayList<AutoCloseable> implements AutoCloseable {
     public CloseableArrayList() {
         super();

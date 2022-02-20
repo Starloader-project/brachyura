@@ -41,10 +41,12 @@ class InputFiles {
                 return null;
             }
 
+            @Override
             public boolean hasNext() {
                 return next != null;
             }
 
+            @Override
             public JavaFileObject next() {
                 if (!hasNext()) throw new NoSuchElementException();
                 InputFile r = next;

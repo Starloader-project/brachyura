@@ -51,6 +51,7 @@ public enum Netbeans implements Ide {
     }
 
     static class NetbeansProject {
+        @SuppressWarnings("serial")
         final Properties projectProperties = new Properties() {{
             putAll(defaultProperties);
         }};

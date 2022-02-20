@@ -88,8 +88,11 @@ class BrachyuraMappingProvider implements IMappingProvider {
         // Scan super classes
         try {
             try (DataInputStream in = new DataInputStream(new BufferedInputStream(BrachyuraMappingWriter.class.getClassLoader().getResourceAsStream(cls + ".class")))) {
+                @SuppressWarnings("unused")
                 int magic = in.readInt();
+                @SuppressWarnings("unused")
                 int minor_version = in.readUnsignedShort();
+                @SuppressWarnings("unused")
                 int major_version = in.readUnsignedShort();
                 int cp_count = in.readUnsignedShort();
                 Object[] cp = new Object[cp_count];
@@ -137,7 +140,9 @@ class BrachyuraMappingProvider implements IMappingProvider {
                             throw new UnsupportedOperationException("Unknown cp entry: " + tag + " in class " + cls);
                     }
                 }
+                @SuppressWarnings("unused")
                 int access_flags = in.readUnsignedShort();
+                @SuppressWarnings("unused")
                 int this_class = in.readUnsignedShort();
                 int super_class = in.readUnsignedShort();
                 int interfaces_count = in.readUnsignedShort();

@@ -12,6 +12,7 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Objects;
 
 import io.github.coolcrabs.brachyura.decompiler.DecompileLineNumberTable.ClassLineMap;
 import io.github.coolcrabs.brachyura.decompiler.DecompileLineNumberTable.MethodId;
@@ -78,7 +79,7 @@ public class LineNumberTableReplacer {
                                                         }
                                                     }
 
-                                                    lnAttr.lineNumberTable = mln.replace.toArray(new LineNumberTableEntry[mln.replace.size()]); 
+                                                    Objects.requireNonNull(lnAttr).lineNumberTable = mln.replace.toArray(new LineNumberTableEntry[mln.replace.size()]); 
                                                 } else {
                                                     for (int i = 0; i < ac.attributes.length; i++) {
                                                         if (ac.attributes[i] instanceof AttributeLineNumberTable) {
@@ -86,7 +87,7 @@ public class LineNumberTableReplacer {
                                                                 if (REMAP_DEBUG) Logger.info("Missing method map in {} {}", file, cpEntry(c.constantPool, method.nameIndex));
                                                                 continue;
                                                             }
-                                                            Map<Integer, Integer> remap = mmap.isStupid ? mmap.stupid : mln.remap;
+                                                            Map<Integer, Integer> remap = mmap.isStupid ? mmap.stupid : Objects.requireNonNull(mln).remap;
                                                             LineNumberTableEntry[] lnt = ((AttributeLineNumberTable)ac.attributes[i]).lineNumberTable;
                                                             for (int j = 0; j < lnt.length; j++) {
                                                                 Integer rmp = remap.get((int)lnt[j].lineNumber);

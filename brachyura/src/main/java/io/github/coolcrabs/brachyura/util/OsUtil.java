@@ -40,7 +40,7 @@ public class OsUtil {
         } else if (osString.indexOf("nux") >= 0) {
             OS = Os.LINUX;
         } else {
-            throw new UnknownOsException(); // Minecraft requires natives so knowing the os is required
+            throw new UnknownOsException(osString); // Minecraft requires natives so knowing the os is required
         }
     }
 }

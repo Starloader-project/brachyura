@@ -26,24 +26,28 @@ import org.kohsuke.github.GitHub;
 import org.kohsuke.github.GitHubBuilder;
 
 public class Main {
+
+    static String ASM_VERSION = "9.2";
+    static String TINYLOG_VERSION = "2.3.2";
+
     static String[] localLibs = new String[] {"fabricmerge", "cfr", "brachyura", "bootstrap", "brachyura-mixin-compile-extensions", "trieharder", "fernutil"};
     static String[] mavenLibs = new String[] {
-        "https://repo.maven.apache.org/maven2/org/ow2/asm/asm/9.2/asm-9.2.jar",
-        "https://repo.maven.apache.org/maven2/org/ow2/asm/asm/9.2/asm-9.2-sources.jar",
-        "https://repo.maven.apache.org/maven2/org/ow2/asm/asm-analysis/9.2/asm-analysis-9.2.jar",
-        "https://repo.maven.apache.org/maven2/org/ow2/asm/asm-analysis/9.2/asm-analysis-9.2-sources.jar",
-        "https://repo.maven.apache.org/maven2/org/ow2/asm/asm-commons/9.2/asm-commons-9.2.jar",
-        "https://repo.maven.apache.org/maven2/org/ow2/asm/asm-commons/9.2/asm-commons-9.2-sources.jar",
-        "https://repo.maven.apache.org/maven2/org/ow2/asm/asm-tree/9.2/asm-tree-9.2.jar",
-        "https://repo.maven.apache.org/maven2/org/ow2/asm/asm-tree/9.2/asm-tree-9.2-sources.jar",
-        "https://repo.maven.apache.org/maven2/org/ow2/asm/asm-util/9.2/asm-util-9.2.jar",
-        "https://repo.maven.apache.org/maven2/org/ow2/asm/asm-util/9.2/asm-util-9.2-sources.jar",
+        "https://repo.maven.apache.org/maven2/org/ow2/asm/asm/" + ASM_VERSION + "/asm-" + ASM_VERSION + ".jar",
+        "https://repo.maven.apache.org/maven2/org/ow2/asm/asm/" + ASM_VERSION + "/asm-" + ASM_VERSION + "-sources.jar",
+        "https://repo.maven.apache.org/maven2/org/ow2/asm/asm-analysis/" + ASM_VERSION + "/asm-analysis-" + ASM_VERSION + ".jar",
+        "https://repo.maven.apache.org/maven2/org/ow2/asm/asm-analysis/" + ASM_VERSION + "/asm-analysis-" + ASM_VERSION + "-sources.jar",
+        "https://repo.maven.apache.org/maven2/org/ow2/asm/asm-commons/" + ASM_VERSION + "/asm-commons-" + ASM_VERSION + ".jar",
+        "https://repo.maven.apache.org/maven2/org/ow2/asm/asm-commons/" + ASM_VERSION + "/asm-commons-" + ASM_VERSION + "-sources.jar",
+        "https://repo.maven.apache.org/maven2/org/ow2/asm/asm-tree/" + ASM_VERSION + "/asm-tree-" + ASM_VERSION + ".jar",
+        "https://repo.maven.apache.org/maven2/org/ow2/asm/asm-tree/" + ASM_VERSION + "/asm-tree-" + ASM_VERSION + "-sources.jar",
+        "https://repo.maven.apache.org/maven2/org/ow2/asm/asm-util/" + ASM_VERSION + "/asm-util-" + ASM_VERSION + ".jar",
+        "https://repo.maven.apache.org/maven2/org/ow2/asm/asm-util/" + ASM_VERSION + "/asm-util-" + ASM_VERSION + "-sources.jar",
         "https://repo.maven.apache.org/maven2/com/google/code/gson/gson/2.8.7/gson-2.8.7.jar",
         "https://repo.maven.apache.org/maven2/com/google/code/gson/gson/2.8.7/gson-2.8.7-sources.jar",
-        "https://repo.maven.apache.org/maven2/org/tinylog/tinylog-api/2.3.2/tinylog-api-2.3.2.jar",
-        "https://repo.maven.apache.org/maven2/org/tinylog/tinylog-api/2.3.2/tinylog-api-2.3.2-sources.jar",
-        "https://repo.maven.apache.org/maven2/org/tinylog/tinylog-impl/2.3.2/tinylog-impl-2.3.2.jar",
-        "https://repo.maven.apache.org/maven2/org/tinylog/tinylog-impl/2.3.2/tinylog-impl-2.3.2-sources.jar",
+        "https://repo.maven.apache.org/maven2/org/tinylog/tinylog-api/" + TINYLOG_VERSION + "/tinylog-api-" + TINYLOG_VERSION + ".jar",
+        "https://repo.maven.apache.org/maven2/org/tinylog/tinylog-api/" + TINYLOG_VERSION + "/tinylog-api-" + TINYLOG_VERSION + "-sources.jar",
+        "https://repo.maven.apache.org/maven2/org/tinylog/tinylog-impl/" + TINYLOG_VERSION + "/tinylog-impl-" + TINYLOG_VERSION + ".jar",
+        "https://repo.maven.apache.org/maven2/org/tinylog/tinylog-impl/" + TINYLOG_VERSION + "/tinylog-impl-" + TINYLOG_VERSION + "-sources.jar",
         "https://maven.fabricmc.net/net/fabricmc/mapping-io/0.1.7/mapping-io-0.1.7.jar",
         "https://maven.fabricmc.net/net/fabricmc/mapping-io/0.1.7/mapping-io-0.1.7-sources.jar",
         "https://maven.fabricmc.net/net/fabricmc/tiny-remapper/0.7.0/tiny-remapper-0.7.0.jar",
