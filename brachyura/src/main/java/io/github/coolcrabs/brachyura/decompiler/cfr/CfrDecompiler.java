@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.benf.cfr.reader.api.CfrDriver;
 import org.benf.cfr.reader.util.CfrVersionInfo;
+import org.jetbrains.annotations.Nullable;
 import org.tinylog.Logger;
 
 import io.github.coolcrabs.brachyura.decompiler.BrachyuraDecompiler;
@@ -60,7 +61,7 @@ public class CfrDecompiler extends BrachyuraDecompiler {
     }
 
     @Override
-    protected void decompileAndLinemap(Path jar, List<Path> classpath, Path resultDir, MappingTree tree, int namespace) {
+    protected void decompileAndLinemap(Path jar, List<Path> classpath, Path resultDir, @Nullable MappingTree tree, int namespace) {
         DecompileResult r = getDecompileResult(jar, resultDir);
         try {
             ArrayList<String> classes = new ArrayList<>();

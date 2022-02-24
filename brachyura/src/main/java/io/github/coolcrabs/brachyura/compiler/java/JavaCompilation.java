@@ -16,9 +16,10 @@ import javax.tools.StandardLocation;
 import javax.tools.ToolProvider;
 import javax.tools.JavaCompiler.CompilationTask;
 
-import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.NotNull;
 import org.tinylog.Logger;
 
+import io.github.coolcrabs.brachyura.exception.CompilationFailure;
 import io.github.coolcrabs.brachyura.processing.ProcessingSource;
 import io.github.coolcrabs.brachyura.util.Util;
 
@@ -114,7 +115,8 @@ public class JavaCompilation {
         return r;
     }
 
-    public @Nullable JavaCompilationResult compile() {
+    @NotNull
+    public JavaCompilationResult compile() throws CompilationFailure {
         try {
             try (BrachyuraJavaFileManager fileManager = new BrachyuraJavaFileManager()) {
                 boolean success;
@@ -130,7 +132,7 @@ public class JavaCompilation {
                 if (success) {
                     return new JavaCompilationResult(fileManager);
                 }
-                return null;
+                throw new CompilationFailure();
             }
         } catch (IOException e) {
             throw Util.sneak(e);

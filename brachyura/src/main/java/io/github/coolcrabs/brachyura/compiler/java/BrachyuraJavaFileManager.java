@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.tools.FileObject;
@@ -109,7 +110,7 @@ class BrachyuraJavaFileManager extends ForwardingJavaFileManager<StandardJavaFil
         try {
             ArrayList<URL> urls = new ArrayList<>();
             for (File f : getLocation(location)) {
-                urls.add(f.toURI().toURL());
+                urls.add(Objects.requireNonNull(f).toURI().toURL());
             }
             ClassLoader platformClassloader = ClassLoader.getSystemClassLoader().getParent(); // null (bootstrap) in java 8, an actual classloader in java 9
             return new URLClassLoader(urls.toArray(new URL[0]), platformClassloader);

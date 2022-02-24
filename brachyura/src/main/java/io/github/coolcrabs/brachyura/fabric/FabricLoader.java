@@ -17,6 +17,7 @@ public class FabricLoader {
     public final JavaJarDependency[] commonDeps;
     public final JavaJarDependency[] serverDeps;
 
+    @SuppressWarnings({ "deprecation", "null" })
     public FabricLoader(String mavenRepo, MavenId id) {
         try {
             this.jar = Maven.getMavenJarDep(mavenRepo, id);

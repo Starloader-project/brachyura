@@ -9,6 +9,7 @@ import java.util.function.Consumer;
 import io.github.coolcrabs.brachyura.compiler.java.JavaCompilation;
 import io.github.coolcrabs.brachyura.compiler.java.JavaCompilationResult;
 import io.github.coolcrabs.brachyura.dependency.JavaJarDependency;
+import io.github.coolcrabs.brachyura.exception.CompilationFailure;
 import io.github.coolcrabs.brachyura.ide.IdeModule;
 import io.github.coolcrabs.brachyura.maven.MavenId;
 import io.github.coolcrabs.brachyura.maven.MavenPublishing;
@@ -57,11 +58,16 @@ public abstract class SimpleJavaProject extends BaseJavaProject {
     }
 
     public JavaJarDependency build() {
-        JavaCompilationResult compilation = new JavaCompilation()
-            .addSourceDir(getSrcDir())
-            .addClasspath(getCompileDependencies())
-            .addOption(JvmUtil.compileArgs(JvmUtil.CURRENT_JAVA_VERSION, getJavaVersion()))
-            .compile();
+        JavaCompilationResult compilation;
+        try {
+            compilation = new JavaCompilation()
+                .addSourceDir(getSrcDir())
+                .addClasspath(getCompileDependencies())
+                .addOption(JvmUtil.compileArgs(JvmUtil.CURRENT_JAVA_VERSION, getJavaVersion()))
+                .compile();
+        } catch (CompilationFailure e) {
+            throw new IllegalStateException("Couldn't compile sources", e);
+        }
         ProcessingSponge classes = new ProcessingSponge();
         compilation.getInputs(classes);
         Path outjar = getBuildLibsDir().resolve(getJarBaseName() + ".jar");

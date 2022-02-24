@@ -586,12 +586,11 @@ public abstract class FabricProject extends BaseJavaProject {
             for (ProcessingEntry e : inputs) {
                 if ("fabric.mod.json".equals(e.id.path)) {
                     Gson gson = new GsonBuilder().setPrettyPrinting().setLenient().create();
-                    JsonObject fabricModJson;
                     try (BufferedReader reader = new BufferedReader(new InputStreamReader(e.in.get(), StandardCharsets.UTF_8))) {
-                        fabricModJson = gson.fromJson(reader, JsonObject.class);
+                        JsonObject fabricModJson = gson.fromJson(reader, JsonObject.class);
+                        fabricModJson.remove("jars");
+                        sink.sink(() -> GsonUtil.toIs(fabricModJson, gson), e.id);
                     }
-                    fabricModJson.remove("jars");
-                    sink.sink(() -> GsonUtil.toIs(fabricModJson, gson), e.id);
                 } else {
                     sink.sink(e.in, e.id);
                 }
@@ -793,12 +792,13 @@ public abstract class FabricProject extends BaseJavaProject {
     }
 
     public void hashDep(MessageDigest md, JavaJarDependency dep) {
-        if (dep.mavenId == null) {
+        MavenId mavenId = dep.mavenId;
+        if (mavenId == null) {
             // Hash all the metadata if no id
             MessageDigestUtil.update(md, dep.jar.toAbsolutePath().toString());
-            BasicFileAttributes attr;
             try {
-                attr = Files.readAttributes(dep.jar, BasicFileAttributes.class);
+                @SuppressWarnings("null")
+                BasicFileAttributes attr = Files.readAttributes(dep.jar, BasicFileAttributes.class);
                 Instant time = attr.lastModifiedTime().toInstant();
                 MessageDigestUtil.update(md, time.getEpochSecond());
                 MessageDigestUtil.update(md, time.getNano());
@@ -808,9 +808,9 @@ public abstract class FabricProject extends BaseJavaProject {
             }
         } else {
             // Hash the id if it exists
-            MessageDigestUtil.update(md, dep.mavenId.artifactId);
-            MessageDigestUtil.update(md, dep.mavenId.groupId);
-            MessageDigestUtil.update(md, dep.mavenId.version);
+            MessageDigestUtil.update(md, mavenId.artifactId);
+            MessageDigestUtil.update(md, mavenId.groupId);
+            MessageDigestUtil.update(md, mavenId.version);
             MessageDigestUtil.update(md, (byte)(dep.sourcesJar == null ? 0 : 1));
         }
     }

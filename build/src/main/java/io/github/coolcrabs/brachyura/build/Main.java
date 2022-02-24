@@ -55,7 +55,8 @@ public class Main {
         "https://maven.fabricmc.net/net/fabricmc/access-widener/2.0.0/access-widener-2.0.0.jar",
         "https://maven.fabricmc.net/net/fabricmc/access-widener/2.0.0/access-widener-2.0.0-sources.jar",
         "https://repo.maven.apache.org/maven2/org/jetbrains/annotations/23.0.0/annotations-23.0.0.jar",
-        "https://repo.maven.apache.org/maven2/org/jetbrains/annotations/23.0.0/annotations-23.0.0-sources.jar"
+        "https://repo.maven.apache.org/maven2/org/jetbrains/annotations/23.0.0/annotations-23.0.0-sources.jar",
+        "https://repo1.maven.org/maven2/org/apache/httpcomponents/httpclient/4.5.13/httpclient-4.5.13.jar"
     };
     static boolean github = Boolean.parseBoolean(System.getenv("CI"));
     static String commit = github ? getCommitHash() : null;

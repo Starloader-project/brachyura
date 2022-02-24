@@ -10,6 +10,7 @@ import io.github.coolcrabs.brachyura.decompiler.DecompileLineNumberTable;
 import io.github.coolcrabs.brachyura.decompiler.LineNumberTableReplacer;
 import io.github.coolcrabs.brachyura.decompiler.DecompileLineNumberTable.ClassLineMap;
 import io.github.coolcrabs.brachyura.dependency.JavaJarDependency;
+import io.github.coolcrabs.brachyura.maven.MavenId;
 import io.github.coolcrabs.fernutil.FernUtil;
 import net.fabricmc.mappingio.tree.MappingTree;
 
@@ -22,12 +23,20 @@ public class FernflowerDecompiler extends BrachyuraDecompiler {
 
     @Override
     public String getName() {
-        return ff.mavenId.artifactId + " (" + ff.mavenId.groupId + ")";
+        MavenId mavenid = ff.mavenId;
+        if (mavenid == null) {
+            throw new NullPointerException("ff.mavenId is null!");
+        }
+        return mavenid.artifactId + " (" + mavenid.groupId + ")";
     }
 
     @Override
     public String getVersion() {
-        return ff.mavenId.version;
+        MavenId mavenid = ff.mavenId;
+        if (mavenid == null) {
+            throw new NullPointerException("ff.mavenId is null!");
+        }
+        return mavenid.version;
     }
 
     @Override

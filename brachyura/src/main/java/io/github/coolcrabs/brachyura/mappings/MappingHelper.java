@@ -14,10 +14,16 @@ public class MappingHelper {
         Iterator<? extends MappingTree.ClassMapping> clsIt = mappings.getClasses().iterator();
         while (clsIt.hasNext()) {
             MappingTree.ClassMapping cls = clsIt.next();
+            if (cls == null) {
+                throw new NullPointerException();
+            }
             boolean keepCls = cls.getName(ns) != null;
             Iterator<? extends MappingTree.MethodMapping> methodIt = cls.getMethods().iterator();
             while (methodIt.hasNext()) {
                 MappingTree.MethodMapping method = methodIt.next();
+                if (method == null) {
+                    throw new NullPointerException();
+                }
                 if (method.getName(ns) == null) {
                     methodIt.remove();
                 } else {
@@ -27,6 +33,9 @@ public class MappingHelper {
             Iterator<? extends MappingTree.FieldMapping> fieldIt = cls.getFields().iterator();
             while (fieldIt.hasNext()) {
                 MappingTree.FieldMapping field = fieldIt.next();
+                if (field == null) {
+                    throw new NullPointerException();
+                }
                 if (field.getName(ns) == null) {
                     fieldIt.remove();
                 } else {

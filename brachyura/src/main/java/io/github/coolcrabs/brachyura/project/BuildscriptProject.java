@@ -19,6 +19,7 @@ import org.tinylog.Logger;
 import io.github.coolcrabs.brachyura.compiler.java.JavaCompilation;
 import io.github.coolcrabs.brachyura.compiler.java.JavaCompilationResult;
 import io.github.coolcrabs.brachyura.dependency.JavaJarDependency;
+import io.github.coolcrabs.brachyura.exception.CompilationFailure;
 import io.github.coolcrabs.brachyura.ide.IdeModule;
 import io.github.coolcrabs.brachyura.ide.IdeModule.RunConfigBuilder;
 import io.github.coolcrabs.brachyura.processing.ProcessingId;
@@ -97,18 +98,20 @@ class BuildscriptProject extends BaseJavaProject {
     }
 
     public ClassLoader getBuildscriptClassLoader() {
-        JavaCompilationResult compilation = new JavaCompilation()
-            .addSourceDir(getSrcDir())
-            .addClasspath(getCompileDependencies())
-            .addOption(JvmUtil.compileArgs(JvmUtil.CURRENT_JAVA_VERSION, 8))
-            .compile();
-        if (compilation == null) {
-            Logger.warn("Buildscript compilation failed!");
-            return null;
-        } else {
+        JavaCompilationResult compilation;
+        try {
+            compilation = new JavaCompilation()
+                .addSourceDir(getSrcDir())
+                .addClasspath(getCompileDependencies())
+                .addOption(JvmUtil.compileArgs(JvmUtil.CURRENT_JAVA_VERSION, 8))
+                .compile();
             BuildscriptClassloader r = new BuildscriptClassloader(BuildscriptProject.class.getClassLoader());
             compilation.getInputs(r);
             return r;
+        } catch (CompilationFailure e) {
+            Logger.warn("Buildscript compilation failed!");
+            e.printStackTrace();
+            return null;
         }
     }
 

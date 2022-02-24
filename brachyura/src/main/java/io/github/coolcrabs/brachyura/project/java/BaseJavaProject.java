@@ -44,8 +44,9 @@ public abstract class BaseJavaProject extends Project {
     public void getIdeTasks(Consumer<Task> p) {
         for (Ide ide : Ide.getIdes()) {
             p.accept(Task.of(ide.ideName(), () -> {
-                if (getBuildscriptProject() != null) {
-                    ide.updateProject(getProjectDir(), ArrayUtil.join(IdeModule.class, getIdeModules(), getBuildscriptProject().getIdeModules()));
+                BaseJavaProject buildscriptProject = getBuildscriptProject();
+                if (buildscriptProject != null) {
+                    ide.updateProject(getProjectDir(), ArrayUtil.join(IdeModule.class, getIdeModules(), buildscriptProject.getIdeModules()));
                 } else {
                     ide.updateProject(getProjectDir(), getIdeModules());
                 }

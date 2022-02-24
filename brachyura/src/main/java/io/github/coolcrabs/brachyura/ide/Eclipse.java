@@ -129,8 +129,9 @@ public enum Eclipse implements Ide {
                     w.writeEmptyElement("classpathentry");
                     w.writeAttribute("kind", "lib");
                     w.writeAttribute("path", dep.jar.toString());
-                    if (dep.sourcesJar != null) {
-                        w.writeAttribute("sourcepath", dep.sourcesJar.toString());
+                    Path sourcesJar = dep.sourcesJar;
+                    if (sourcesJar != null) {
+                        w.writeAttribute("sourcepath", sourcesJar.toString());
                     }
                 }
                 w.newline();

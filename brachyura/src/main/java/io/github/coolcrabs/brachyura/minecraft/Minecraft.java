@@ -33,6 +33,7 @@ import io.github.coolcrabs.brachyura.minecraft.LauncherMeta.Version;
 import io.github.coolcrabs.brachyura.minecraft.Minecraft.AssetsIndex.SizeHash;
 import io.github.coolcrabs.brachyura.minecraft.VersionMeta.VMAssets;
 import io.github.coolcrabs.brachyura.minecraft.VersionMeta.VMDependency;
+import io.github.coolcrabs.brachyura.minecraft.VersionMeta.VMDependencyDownload;
 import io.github.coolcrabs.brachyura.minecraft.VersionMeta.VMDownload;
 import io.github.coolcrabs.brachyura.util.AtomicFile;
 import io.github.coolcrabs.brachyura.util.FileSystemUtil;
@@ -176,18 +177,19 @@ public class Minecraft {
                 Path artifactPath = null;
                 Path nativesPath = null;
                 Path sourcesPath = null;
-                if (dependency.artifact != null) {
-                    artifactPath = mcLibCache().resolve(dependency.artifact.path);
+                VMDependencyDownload artifact = dependency.artifact;
+                if (artifact != null) {
+                    artifactPath = mcLibCache().resolve(artifact.path);
                     if (!Files.isRegularFile(artifactPath)) {
-                        downloadDep(artifactPath, new URL(dependency.artifact.url), dependency.artifact.sha1);
+                        downloadDep(artifactPath, new URL(artifact.url), artifact.sha1);
                     }
-                    Path noSourcesPath = mcLibCache().resolve(dependency.artifact.path + ".nosources");
+                    Path noSourcesPath = mcLibCache().resolve(artifact.path + ".nosources");
                     if (!Files.isRegularFile(noSourcesPath)) {
-                        Path sourcesPath2 = mcLibCache().resolve(dependency.artifact.path.replace(".jar", "-sources.jar"));
+                        Path sourcesPath2 = mcLibCache().resolve(artifact.path.replace(".jar", "-sources.jar"));
                         if (Files.isRegularFile(sourcesPath2)) {
                             sourcesPath = sourcesPath2;
                         } else {
-                            String sourcesUrl = dependency.artifact.url.replace(".jar", "-sources.jar");
+                            String sourcesUrl = artifact.url.replace(".jar", "-sources.jar");
                             URL sourcesHashUrl = new URL(sourcesUrl + ".sha1");
                             String targetHash;
                             try {
@@ -208,17 +210,18 @@ public class Minecraft {
                                     sourcesPath = sourcesPath2;
                                     downloadDep(sourcesPath, new URL(sourcesUrl), targetHash);
                                 } catch (FileNotFoundException e2) {
-                                    Logger.info("No sources found for " + dependency.name + " (" + dependency.artifact.url + ")");
+                                    Logger.info("No sources found for " + dependency.name + " (" + artifact.url + ")");
                                     Files.createFile(noSourcesPath);
                                 }
                             }
                         }
                     }
                 }
-                if (dependency.natives != null) {
-                    nativesPath = mcLibCache().resolve(dependency.natives.path);
+                VMDependencyDownload natives = dependency.natives;
+                if (natives != null) {
+                    nativesPath = mcLibCache().resolve(natives.path);
                     if (!Files.isRegularFile(nativesPath)) {
-                        downloadDep(nativesPath, new URL(dependency.natives.url), dependency.natives.sha1);
+                        downloadDep(nativesPath, new URL(natives.url), natives.sha1);
                     }
                 }
                 if (artifactPath != null) {

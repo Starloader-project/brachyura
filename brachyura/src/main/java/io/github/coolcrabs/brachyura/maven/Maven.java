@@ -33,14 +33,17 @@ public class Maven {
     public static final String MAVEN_CENTRAL = "https://repo.maven.apache.org/maven2/";
     public static final String MAVEN_LOCAL = PathUtil.HOME.resolve(".m2").resolve("repository").toUri().toString(); // This is wrong, too bad https://stackoverflow.com/a/47833316
 
+    @Deprecated
     public static JavaJarDependency getMavenJarDep(String mavenRepo, MavenId dep) {
         return (JavaJarDependency) getMavenDep(mavenRepo, dep, ".jar", true, true, true);
     }
 
+    @Deprecated
     public static JavaJarDependency getMavenJarDep(String mavenRepo, MavenId dep, boolean checkChecksum) {
         return (JavaJarDependency) getMavenDep(mavenRepo, dep, ".jar", true, true, checkChecksum);
     }
 
+    @Deprecated
     public static FileDependency getMavenFileDep(String mavenRepo, MavenId dep, String extension) {
         return getMavenFileDep(mavenRepo, dep, extension, true, true);
     }
@@ -50,6 +53,7 @@ public class Maven {
         return (FileDependency) getMavenDep(mavenRepo, dep, extension, false, allowDownload, true);
     }
 
+    @Deprecated
     public static @Nullable FileDependency getMavenFileDep(String mavenRepo, MavenId dep, String extension, boolean allowDownload, boolean checkChecksum) {
         return (FileDependency) getMavenDep(mavenRepo, dep, extension, false, allowDownload, checkChecksum);
     }
