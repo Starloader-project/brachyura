@@ -48,7 +48,7 @@ public class Main {
                 if (line.isEmpty()) {
                     continue;
                 }
-                String[] a = line.split("\\s++");
+                String[] a = line.split("\\s+");
                 URL url = new URL(a[0].trim());
                 String hash = a[1].trim();
                 String fileName = a[2].trim();

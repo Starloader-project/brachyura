@@ -17,6 +17,12 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.util.Comparator;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
+import java.util.jar.JarOutputStream;
 import java.util.stream.Stream;
 
 import org.kohsuke.github.GHRelease;
@@ -68,18 +74,45 @@ public class Main {
             System.getenv("GITHUB_REPOSITORY") != null ? System.getenv("GITHUB_REPOSITORY") : "CoolCrabs/brachyura";
     static GitHub gitHub2;
 
+    private static void copyBootstrapConfig(Path boostrapJar, Path bootstrapConfig) throws Exception {
+        Map<JarEntry, byte[]> data = new HashMap<>();
+        try (JarFile jarFile = new JarFile(boostrapJar.toFile())) {
+            Enumeration<JarEntry> entries = jarFile.entries();
+            while (entries.hasMoreElements()) {
+                JarEntry entry = entries.nextElement();
+                try (InputStream input = jarFile.getInputStream(entry)) {
+                    data.put(entry, readFully(input).toByteArray());
+                }
+            }
+        }
+        try (JarOutputStream jarOut = new JarOutputStream(Files.newOutputStream(boostrapJar))) {
+            for (Map.Entry<JarEntry, byte[]> entry : data.entrySet()) {
+                jarOut.putNextEntry(entry.getKey());
+                jarOut.write(entry.getValue());
+            }
+            jarOut.putNextEntry(new JarEntry("brachyurabootstrapconf.txt"));
+            jarOut.write(Files.readAllBytes(bootstrapConfig));
+        }
+    }
+
     public static void main(String[] args) throws Exception {
         if (github) {
             gitHub2 = new GitHubBuilder().withOAuthToken(GITHUB_TOKEN).build();
         }
-        Path cwd = Paths.get("").toAbsolutePath();
-        Path outDir = cwd.resolve("out");
-        if (Files.isDirectory(outDir)) deleteDirectory(outDir);
+        Path workDirectory = Paths.get("").toAbsolutePath();
+        Path outDir = workDirectory.resolve("out");
+        if (Files.isDirectory(outDir)) {
+            deleteDirectory(outDir);
+        }
         Files.createDirectories(outDir);
-        try (BufferedWriter w = Files.newBufferedWriter(outDir.resolve("brachyurabootstrapconf.txt"))) {
-            w.write(String.valueOf(0) + "\n");
+
+        Path bootstrapJar = null;
+        Path boostrapConfig = outDir.resolve("brachyurabootstrapconf.txt");
+
+        try (BufferedWriter bootstrapConfigWriter = Files.newBufferedWriter(boostrapConfig)) {
+            bootstrapConfigWriter.write(String.valueOf(0) + "\n");
             for (String lib : localLibs) {
-                Path a = cwd.getParent().resolve(lib).resolve("target");
+                Path a = workDirectory.getParent().resolve(lib).resolve("target");
                 Stream<Path> b = Files.walk(a, 1);
                 Path jar = 
                     b.filter(p -> p.toString().endsWith(".jar") && !p.toString().endsWith("-sources.jar") && !p.toString().endsWith("-javadoc.jar"))
@@ -98,15 +131,16 @@ public class Main {
                 if ("bootstrap".equals(lib)) {
                     doLocalDep(jar, targetjar, true);
                     doLocalDep(sources, targetSources, false);
+                    bootstrapJar = targetjar;
                 } else {
                     if (github) {
-                        w.write(doGithubDep(jar, targetjar, true));
-                        w.write(doGithubDep(sources, targetSources, false));
+                        bootstrapConfigWriter.write(doGithubDep(jar, targetjar, true));
+                        bootstrapConfigWriter.write(doGithubDep(sources, targetSources, false));
                     } else {
-                        w.write(doLocalDep(jar, targetjar, true));
-                        w.write(doLocalDep(sources, targetSources, false));
+                        bootstrapConfigWriter.write(doLocalDep(jar, targetjar, true));
+                        bootstrapConfigWriter.write(doLocalDep(sources, targetSources, false));
                     }
-                }                
+                }
             }
             for (String lib : mavenLibs) {
                 boolean isJar = !lib.endsWith("-sources.jar");
@@ -117,9 +151,12 @@ public class Main {
                 try (InputStream is = connection.getInputStream()) {
                     hash = readFullyAsString(is);
                 }
-                w.write(lib + "\t" + hash + "\t" + filename + "\t" + isJar + "\n");
+                bootstrapConfigWriter.write(lib + "\t" + hash + "\t" + filename + "\t" + isJar + "\n");
             }
         }
+
+        copyBootstrapConfig(bootstrapJar, boostrapConfig);
+
         if (github) {
             uploadGithub(outDir);
         }
