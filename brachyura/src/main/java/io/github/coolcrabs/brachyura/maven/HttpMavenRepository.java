@@ -7,9 +7,11 @@ import java.nio.charset.StandardCharsets;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.NoConnectionReuseStrategy;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.tinylog.Logger;
 
 public final class HttpMavenRepository extends MavenRepository {
 
@@ -34,7 +36,12 @@ public final class HttpMavenRepository extends MavenRepository {
         }
     }
 
-    private static final HttpClient client = HttpClientBuilder.create().build();
+    private static final HttpClient client = HttpClientBuilder
+            .create()
+            .setConnectionReuseStrategy(NoConnectionReuseStrategy.INSTANCE)
+            .setConnectionManagerShared(true)
+            .build();
+
     private final String repoUrl;
     private boolean checksums = true;
 
@@ -55,10 +62,12 @@ public final class HttpMavenRepository extends MavenRepository {
         try {
             HttpResponse response = HttpMavenRepository.client.execute(request);
             if ((response.getStatusLine().getStatusCode() / 100) != 2) {
+                request.abort();
                 return null;
             }
             ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
             response.getEntity().writeTo(byteOut);
+            Logger.info("Downloaded " + location);
             return new ResolvedFile(this, byteOut.toByteArray());
         } catch (IOException e) {
             return null;

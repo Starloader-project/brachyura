@@ -5,9 +5,11 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Map;
 
+import org.jetbrains.annotations.NotNull;
+
 import io.github.coolcrabs.brachyura.mappings.Namespaces;
-import io.github.coolcrabs.brachyura.maven.Maven;
 import io.github.coolcrabs.brachyura.maven.MavenId;
+import io.github.coolcrabs.brachyura.maven.MavenResolver;
 import io.github.coolcrabs.brachyura.util.FileSystemUtil;
 import io.github.coolcrabs.brachyura.util.Util;
 import net.fabricmc.mappingio.MappingReader;
@@ -25,6 +27,7 @@ public class Intermediary {
         this.tree = tree;
     }
 
+    @NotNull
     public static Intermediary ofV1(Path file) {
         try {
             MemoryMappingTree tree = new MemoryMappingTree();
@@ -35,6 +38,7 @@ public class Intermediary {
         }
     }
 
+    @NotNull
     public static Intermediary ofV1Jar(Path file) {
         try {
             try (FileSystem fileSystem = FileSystemUtil.newJarFileSystem(file)) {
@@ -45,7 +49,18 @@ public class Intermediary {
         }
     }
 
+    @Deprecated
+    @NotNull
     public static Intermediary ofMaven(String repo, MavenId id) {
-        return ofV1Jar(Maven.getMavenFileDep(repo, id, ".jar").file);
+        return ofV1Jar(io.github.coolcrabs.brachyura.maven.Maven.getMavenFileDep(repo, id, ".jar").file);
+    }
+
+    @NotNull
+    public static Intermediary ofMaven(@NotNull MavenResolver resolver, @NotNull MavenId id) {
+        try {
+            return ofV1Jar(resolver.resolveArtifact(id, "", "jar").asFileDependency().file);
+        } catch (Exception e) {
+            throw new IllegalStateException("Unable to resolve artifact: " + id, e);
+        }
     }
 }

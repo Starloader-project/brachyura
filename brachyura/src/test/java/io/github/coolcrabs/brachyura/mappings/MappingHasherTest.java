@@ -12,12 +12,13 @@ import org.tinylog.Logger;
 import io.github.coolcrabs.brachyura.fabric.FabricMaven;
 import io.github.coolcrabs.brachyura.fabric.Intermediary;
 import io.github.coolcrabs.brachyura.fabric.Yarn;
+import io.github.coolcrabs.brachyura.maven.MavenResolver;
 import io.github.coolcrabs.brachyura.util.MessageDigestUtil;
 
 class MappingHasherTest {
     @Test
     void hashYarn() throws IOException {
-        Yarn yarn = Yarn.ofMaven(FabricMaven.URL, FabricMaven.yarn("1.17+build.13"));
+        Yarn yarn = Yarn.ofMaven(new MavenResolver(MavenResolver.MAVEN_LOCAL).addRepository(FabricMaven.REPOSITORY), FabricMaven.yarn("1.17+build.13"));
         MessageDigest digest = MessageDigestUtil.messageDigest(MessageDigestUtil.SHA256);
         long start = System.currentTimeMillis();
         MappingHasher mappingHasher = new MappingHasher(digest);
@@ -30,7 +31,7 @@ class MappingHasherTest {
 
     @Test
     void hashYarn2() throws IOException {
-        Yarn yarn = Yarn.ofMaven(FabricMaven.URL, FabricMaven.yarn("1.17+build.13"));
+        Yarn yarn = Yarn.ofMaven(new MavenResolver(MavenResolver.MAVEN_LOCAL).addRepository(FabricMaven.REPOSITORY), FabricMaven.yarn("1.17+build.13"));
         long start = System.currentTimeMillis();
         String hash = MappingHasher.hashSha256(yarn.tree);
         long time = System.currentTimeMillis() - start;
@@ -40,7 +41,7 @@ class MappingHasherTest {
 
     @Test
     void hashIntermediary() throws IOException {
-        Intermediary intermediary = Intermediary.ofMaven(FabricMaven.URL, FabricMaven.intermediary("1.17"));
+        Intermediary intermediary = Intermediary.ofMaven(new MavenResolver(MavenResolver.MAVEN_LOCAL).addRepository(FabricMaven.REPOSITORY), FabricMaven.intermediary("1.17"));
         MessageDigest digest = MessageDigestUtil.messageDigest(MessageDigestUtil.SHA256);
         long start = System.currentTimeMillis();
         MappingHasher mappingHasher = new MappingHasher(digest);

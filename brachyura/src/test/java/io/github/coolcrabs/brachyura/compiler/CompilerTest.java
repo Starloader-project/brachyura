@@ -3,15 +3,18 @@ package io.github.coolcrabs.brachyura.compiler;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.IOException;
 import java.nio.file.Path;
 
 import org.junit.jupiter.api.Test;
 
 import io.github.coolcrabs.brachyura.compiler.java.JavaCompilation;
 import io.github.coolcrabs.brachyura.compiler.java.JavaCompilationResult;
+import io.github.coolcrabs.brachyura.dependency.JavaJarDependency;
 import io.github.coolcrabs.brachyura.exception.CompilationFailure;
-import io.github.coolcrabs.brachyura.maven.Maven;
+import io.github.coolcrabs.brachyura.maven.HttpMavenRepository;
 import io.github.coolcrabs.brachyura.maven.MavenId;
+import io.github.coolcrabs.brachyura.maven.MavenResolver;
 import io.github.coolcrabs.brachyura.processing.sources.ProcessingSponge;
 import io.github.coolcrabs.brachyura.util.PathUtil;
 
@@ -85,9 +88,15 @@ class CompilerTest {
         Path dir = PathUtil.CWD.getParent().resolve("test").resolve("compiler").resolve("java").resolve("immutables");
         JavaCompilationResult compilationA;
         try {
+            MavenResolver resolver = new MavenResolver(MavenResolver.MAVEN_LOCAL);
+            resolver.addRepository(new HttpMavenRepository(MavenResolver.MAVEN_CENTRAL));
+            JavaJarDependency jarDep = resolver.getJarDepend(new MavenId("org.immutables:value:2.8.2"));
+            if (jarDep == null) {
+                throw new IOException("Unable to locate artifact: org.immutables:values:2.8.2");
+            }
             compilationA = new JavaCompilation()
                 .addSourceDir(dir)
-                .addClasspath(Maven.getMavenJarDep(Maven.MAVEN_CENTRAL, new MavenId("org.immutables:value:2.8.2")).jar)
+                .addClasspath(jarDep.jar)
                 .compile();
             ProcessingSponge a = new ProcessingSponge();
             compilationA.getInputs(a);
@@ -98,7 +107,7 @@ class CompilerTest {
                 System.out.println(id.path);
                 System.out.println(sourceFile);
             });
-        } catch (CompilationFailure e) {
+        } catch (Exception e) {
             assertDoesNotThrow(() -> {
                 throw e;
             });

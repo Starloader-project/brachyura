@@ -12,8 +12,8 @@ import org.junit.jupiter.api.Test;
 
 import io.github.coolcrabs.brachyura.decompiler.BrachyuraDecompiler;
 import io.github.coolcrabs.brachyura.mappings.Namespaces;
-import io.github.coolcrabs.brachyura.maven.Maven;
 import io.github.coolcrabs.brachyura.maven.MavenId;
+import io.github.coolcrabs.brachyura.maven.MavenResolver;
 import io.github.coolcrabs.brachyura.minecraft.Minecraft;
 import io.github.coolcrabs.brachyura.minecraft.VersionMeta;
 import io.github.coolcrabs.brachyura.util.JvmUtil;
@@ -47,7 +47,9 @@ class FabricProjectTest {
 
         @Override
         public MappingTree createMappings() {
-            MappingTree tree = Yarn.ofMaven(FabricMaven.URL, FabricMaven.yarn("21w39a+build.3")).tree;
+            MavenResolver resolver = new MavenResolver(MavenResolver.MAVEN_LOCAL);
+            resolver.addRepository(FabricMaven.REPOSITORY);
+            MappingTree tree = Yarn.ofMaven(resolver, FabricMaven.yarn("21w39a+build.3")).tree;
             return tree;
         }
 
@@ -65,9 +67,12 @@ class FabricProjectTest {
 
         @Override
         public void getModDependencies(ModDependencyCollector d) {
-            d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-resource-loader-v0", "0.4.8+a00e834b88"), ModDependencyFlag.RUNTIME, ModDependencyFlag.COMPILE, ModDependencyFlag.JIJ);
-            d.addMaven(FabricMaven.URL, new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-game-rule-api-v1", "1.0.7+cbda931888"), ModDependencyFlag.RUNTIME, ModDependencyFlag.COMPILE, ModDependencyFlag.JIJ);
-            d.addMaven(Maven.MAVEN_CENTRAL, new MavenId("org.ini4j:ini4j:0.5.4"), ModDependencyFlag.RUNTIME, ModDependencyFlag.COMPILE, ModDependencyFlag.JIJ);
+            MavenResolver resolver = new MavenResolver(MavenResolver.MAVEN_LOCAL);
+            resolver.addRepository(FabricMaven.REPOSITORY);
+            resolver.addRepository(MavenResolver.MAVEN_CENTRAL_REPO);
+            d.add(resolver.getJarDepend(new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-resource-loader-v0", "0.4.8+a00e834b88")), ModDependencyFlag.RUNTIME, ModDependencyFlag.COMPILE, ModDependencyFlag.JIJ);
+            d.add(resolver.getJarDepend(new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-game-rule-api-v1", "1.0.7+cbda931888")), ModDependencyFlag.RUNTIME, ModDependencyFlag.COMPILE, ModDependencyFlag.JIJ);
+            d.add(resolver.getJarDepend(new MavenId("org.ini4j", "ini4j", "0.5.4")), ModDependencyFlag.RUNTIME, ModDependencyFlag.COMPILE, ModDependencyFlag.JIJ);
         };
 
         @Override

@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 
 import io.github.coolcrabs.brachyura.fabric.FabricMaven;
 import io.github.coolcrabs.brachyura.fabric.Yarn;
+import io.github.coolcrabs.brachyura.maven.MavenResolver;
 import io.github.coolcrabs.brachyura.util.StreamUtil;
 import io.github.coolmineman.trieharder.FindReplaceSourceRemapper;
 import net.fabricmc.mappingio.tree.MappingTree;
@@ -18,7 +19,7 @@ import net.fabricmc.mappingio.tree.MappingTree;
 class BudgetSourceRemapperTest {
     @Test
     void smallYarn() throws Exception {
-        MappingTree tree = Yarn.ofMaven(FabricMaven.URL, FabricMaven.yarn("1.16.5+build.10")).tree;
+        MappingTree tree = Yarn.ofMaven(new MavenResolver(MavenResolver.MAVEN_LOCAL).addRepository(FabricMaven.REPOSITORY), FabricMaven.yarn("1.16.5+build.10")).tree;
         FindReplaceSourceRemapper remapper = new FindReplaceSourceRemapper(tree, tree.getNamespaceId(Namespaces.INTERMEDIARY), tree.getNamespaceId(Namespaces.NAMED));
         try (InputStream is = getClass().getResourceAsStream("/PlantInAJar1_16_Intermediary.java")) {
             long start = System.currentTimeMillis();
@@ -34,7 +35,7 @@ class BudgetSourceRemapperTest {
 
     @Test
     void smallYarn2() throws Exception {
-        MappingTree tree = Yarn.ofMaven(FabricMaven.URL, FabricMaven.yarn("1.16.5+build.10")).tree;
+        MappingTree tree = Yarn.ofMaven(new MavenResolver(MavenResolver.MAVEN_LOCAL).addRepository(FabricMaven.REPOSITORY), FabricMaven.yarn("1.16.5+build.10")).tree;
         FindReplaceSourceRemapper remapper = new FindReplaceSourceRemapper(tree, tree.getNamespaceId(Namespaces.INTERMEDIARY), tree.getNamespaceId(Namespaces.NAMED));
         try (InputStream is = getClass().getResourceAsStream("/PlantInAJar1_16_Intermediary.java")) {
             long start = System.currentTimeMillis();
@@ -52,7 +53,7 @@ class BudgetSourceRemapperTest {
 
     @Test
     void microYarn() throws Exception {
-        MappingTree tree = Yarn.ofMaven(FabricMaven.URL, FabricMaven.yarn("1.16.5+build.10")).tree;
+        MappingTree tree = Yarn.ofMaven(new MavenResolver(MavenResolver.MAVEN_LOCAL).addRepository(FabricMaven.REPOSITORY), FabricMaven.yarn("1.16.5+build.10")).tree;
         FindReplaceSourceRemapper remapper = new FindReplaceSourceRemapper(tree, tree.getNamespaceId(Namespaces.INTERMEDIARY), tree.getNamespaceId(Namespaces.NAMED));
         System.out.println(remapper.remapString("class_1792"));
     }

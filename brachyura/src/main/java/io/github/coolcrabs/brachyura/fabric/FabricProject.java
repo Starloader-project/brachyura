@@ -58,8 +58,8 @@ import io.github.coolcrabs.brachyura.mappings.tinyremapper.Jsr2JetbrainsMappingP
 import io.github.coolcrabs.brachyura.mappings.tinyremapper.MappingTreeMappingProvider;
 import io.github.coolcrabs.brachyura.mappings.tinyremapper.RemapperProcessor;
 import io.github.coolcrabs.brachyura.mappings.tinyremapper.TinyRemapperHelper;
-import io.github.coolcrabs.brachyura.maven.Maven;
 import io.github.coolcrabs.brachyura.maven.MavenId;
+import io.github.coolcrabs.brachyura.maven.MavenResolver;
 import io.github.coolcrabs.brachyura.minecraft.Minecraft;
 import io.github.coolcrabs.brachyura.minecraft.VersionMeta;
 import io.github.coolcrabs.brachyura.mixin.BrachyuraMixinCompileExtensions;
@@ -108,10 +108,17 @@ import net.fabricmc.tinyremapper.TinyRemapper;
 
 public abstract class FabricProject extends BaseJavaProject {
     public final Lazy<VersionMeta> versionMeta = new Lazy<>(this::createMcVersion);
+    protected final MavenResolver mavenResolver;
     public abstract VersionMeta createMcVersion();
     public final Lazy<MappingTree> mappings = new Lazy<>(this::createMappings);
     public abstract MappingTree createMappings();
     public abstract FabricLoader getLoader();
+
+    public FabricProject() {
+        this.mavenResolver = new MavenResolver(MavenResolver.MAVEN_LOCAL);
+        this.mavenResolver.addRepository(FabricMaven.REPOSITORY);
+        this.mavenResolver.addRepository(MavenResolver.MAVEN_CENTRAL_REPO);
+    }
 
     @Nullable
     public String getMavenGroup() {
@@ -178,8 +185,9 @@ public abstract class FabricProject extends BaseJavaProject {
     public static class ModDependencyCollector {
         public final List<ModDependency> dependencies = new ArrayList<>();
 
+        @Deprecated
         public void addMaven(String repo, MavenId id, ModDependencyFlag... flags) {
-            add(Maven.getMavenJarDep(repo, id), flags);
+            add(io.github.coolcrabs.brachyura.maven.Maven.getMavenJarDep(repo, id), flags);
         }
 
         public void add(JavaJarDependency jarDependency, ModDependencyFlag... flags) {
@@ -670,7 +678,7 @@ public abstract class FabricProject extends BaseJavaProject {
                 result.add((JavaJarDependency) dependency);
             }
         }
-        result.add(Maven.getMavenJarDep(FabricMaven.URL, FabricMaven.devLaunchInjector("0.2.1+build.8"))); // vscode moment
+        result.add(mavenResolver.getJarDepend(FabricMaven.devLaunchInjector("0.2.1+build.8"))); // vscode moment
         result.add(decompiledJar.get());
         for (ModDependency d : remappedModDependencies.get()) {
             if (d.flags.contains(ModDependencyFlag.COMPILE)) result.add(d.jarDependency);
@@ -688,8 +696,8 @@ public abstract class FabricProject extends BaseJavaProject {
                 result.add((JavaJarDependency) dependency);
             }
         }
-        result.add(Maven.getMavenJarDep(FabricMaven.URL, FabricMaven.devLaunchInjector("0.2.1+build.8")));
-        result.add(Maven.getMavenJarDep(Maven.MAVEN_CENTRAL, new MavenId("net.minecrell", "terminalconsoleappender", "1.2.0")));
+        result.add(mavenResolver.getJarDepend(FabricMaven.devLaunchInjector("0.2.1+build.8")));
+        result.add(mavenResolver.getJarDepend(new MavenId("net.minecrell", "terminalconsoleappender", "1.2.0")));
         result.add(decompiledJar.get());
         for (ModDependency d : remappedModDependencies.get()) {
             if (d.flags.contains(ModDependencyFlag.RUNTIME)) result.add(d.jarDependency);
@@ -839,7 +847,11 @@ public abstract class FabricProject extends BaseJavaProject {
 
     public final Lazy<MappingTree> intermediary = new Lazy<>(this::createIntermediary);
     public MappingTree createIntermediary() {
-        return Intermediary.ofMaven(FabricMaven.URL, FabricMaven.intermediary(versionMeta.get().version)).tree;
+        JavaJarDependency intermediary = mavenResolver.getJarDepend(FabricMaven.intermediary(versionMeta.get().version));
+        if (intermediary == null) {
+            throw new IllegalStateException("Unable to resolve intermediary jar depend!");
+        }
+        return Intermediary.ofV1Jar(intermediary.jar).tree;
     }
 
     public Path getMergedJar() {
@@ -953,7 +965,12 @@ public abstract class FabricProject extends BaseJavaProject {
         for (JavaJarDependency dep : mcClasspath.get()) {
             result.add(dep.jar);
         }
-        result.add(Maven.getMavenJarDep(FabricMaven.URL, FabricMaven.loader("0.9.3+build.207")).jar); // Just for the annotations added by fabric-merge
+        JavaJarDependency fabriloader = mavenResolver.getJarDepend(FabricMaven.loader("0.9.3+build.207"));
+        if (fabriloader != null) {
+            result.add(fabriloader.jar); // Just for the annotations added by fabric-merge
+        } else {
+            Logger.warn("Unable to resolve fabric loader via maven!");
+        }
         return result;
     }
     
@@ -980,7 +997,7 @@ public abstract class FabricProject extends BaseJavaProject {
     public final Lazy<List<Dependency>> mcDependencies = new Lazy<>(this::createMcDependencies);
     public List<Dependency> createMcDependencies() {
         ArrayList<Dependency> result = new ArrayList<>(Minecraft.getDependencies(versionMeta.get()));
-        result.add(Maven.getMavenJarDep(Maven.MAVEN_CENTRAL, new MavenId("org.jetbrains", "annotations", "19.0.0")));
+        result.add(mavenResolver.getJarDepend(new MavenId("org.jetbrains", "annotations", "19.0.0")));
         return result;
     }
 

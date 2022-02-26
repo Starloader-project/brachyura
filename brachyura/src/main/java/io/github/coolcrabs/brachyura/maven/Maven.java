@@ -27,6 +27,12 @@ import io.github.coolcrabs.brachyura.util.PathUtil;
 import io.github.coolcrabs.brachyura.util.StreamUtil;
 import io.github.coolcrabs.brachyura.util.Util;
 
+/**
+ * Class for resolving maven artifacts.
+ *
+ * @deprecated Replaced by {@link MavenResolver}, which is much more powerful
+ */
+@Deprecated
 public class Maven {
     private Maven() { }
 
@@ -60,7 +66,13 @@ public class Maven {
 
     private static Dependency getMavenDep(String mavenRepo, MavenId dep, String extension, boolean isJavaJar, boolean allowDownload, boolean checkChecksum) {
         try {
-            URI mavenRepoUri = new URI(addTrailSlash(mavenRepo));
+            String trailSlashRepo;
+            if (mavenRepo.codePointBefore(mavenRepo.length()) == '/') {
+                trailSlashRepo = mavenRepo;
+            } else {
+                trailSlashRepo = mavenRepo + '/';
+            }
+            URI mavenRepoUri = new URI(trailSlashRepo);
             boolean local = "file".equals(mavenRepoUri.getScheme());
             String mavenRepoHash = toHexHash(messageDigest(SHA256).digest((mavenRepoUri.getHost() + mavenRepoUri.getPath()).getBytes(StandardCharsets.UTF_8)));
             Path repoPath = local ? Paths.get(mavenRepoUri) : mavenCache().resolve(mavenRepoHash);
@@ -135,10 +147,6 @@ public class Maven {
             throw e;
         }
         PathUtil.moveAtoB(tempPath, path);
-    }
-
-    static String addTrailSlash(String string) {
-        return string.endsWith("/") ? string : string + "/";
     }
 
     private static Path mavenCache() {

@@ -43,7 +43,7 @@ public class MavenPublishing {
         }
         
         public static AuthenticatedMaven ofMavenLocal() {
-            return new AuthenticatedMaven(Maven.MAVEN_LOCAL, null, null);
+            return new AuthenticatedMaven(MavenResolver.MAVEN_LOCAL.toUri().toString(), null, null);
         }
         
         public static AuthenticatedMaven ofEnv() {
@@ -104,7 +104,14 @@ public class MavenPublishing {
     
     public static void rawPublish(AuthenticatedMaven maven, List<MavenPublishFile> files) {
         try {
-            URI mavenRepoUri = new URI(Maven.addTrailSlash(maven.mavenUrl));
+            String trailSlashRepo;
+            String mavenRepoUrl = maven.mavenUrl;
+            if (mavenRepoUrl.codePointBefore(mavenRepoUrl.length()) == '/') {
+                trailSlashRepo = mavenRepoUrl;
+            } else {
+                trailSlashRepo = mavenRepoUrl + '/';
+            }
+            URI mavenRepoUri = new URI(trailSlashRepo);
             if ("file".equals(mavenRepoUri.getScheme())) {
                 Path localMaven = Paths.get(mavenRepoUri);
                 Logger.info("Publishing to local maven {}", localMaven);

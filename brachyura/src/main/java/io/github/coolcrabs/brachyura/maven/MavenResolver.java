@@ -15,8 +15,10 @@ import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.tinylog.Logger;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -24,10 +26,11 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import io.github.coolcrabs.brachyura.dependency.JavaJarDependency;
+import io.github.coolcrabs.brachyura.util.PathUtil;
 
 /**
  * A small primitive resolver for maven artifacts.
- * All artifacts are cached to a local folder. Nonexisting artifacts
+ * All artifacts are cached to a local folder. Artifacts that do not exist
  * are not cached however.
  *
  * @author Geolykt
@@ -39,16 +42,48 @@ public class MavenResolver {
     @NotNull
     private final Path cacheFolder;
 
+    // FIXME while this usually works, this is not exactly right. See https://stackoverflow.com/a/47833316
+    @SuppressWarnings("null")
+    @NotNull
+    public static final Path MAVEN_LOCAL = PathUtil.HOME.resolve(".m2").resolve("repository");
+
+    @NotNull
+    public static final String MAVEN_CENTRAL = "https://repo.maven.apache.org/maven2/";
+    @NotNull
+    public static final MavenRepository MAVEN_CENTRAL_REPO = new HttpMavenRepository(MAVEN_CENTRAL);
+
     public MavenResolver(@NotNull Path cacheFolder) {
         this.cacheFolder = cacheFolder;
     }
 
-    public void addRepository(@NotNull MavenRepository repository) {
+    @NotNull
+    @Contract(mutates = "this", pure = false, value = "_ -> this")
+    public MavenResolver addRepository(@NotNull MavenRepository repository) {
         this.repositories.add(repository);
+        return this;
     }
 
-    public void addRepositories(@NotNull Collection<MavenRepository> repositories) {
+    @NotNull
+    @Contract(mutates = "this", pure = false, value = "!null -> this; null -> fail")
+    public MavenResolver addRepositories(@NotNull Collection<MavenRepository> repositories) {
         this.repositories.addAll(repositories);
+        return this;
+    }
+
+    @Nullable
+    public Path resolveArtifactLocationCached(@NotNull MavenId artifact, @NotNull String classifier, @NotNull String extension) {
+        String folder = artifact.groupId.replace('.', '/') + '/' + artifact.artifactId + '/' + artifact.version + '/';
+        String nameString;
+        if (classifier.isEmpty()) {
+            nameString = artifact.artifactId + '-' + artifact.version + '.' + extension;
+        } else {
+            nameString = artifact.artifactId + '-' + artifact.version + '-' + classifier + '.' + extension;
+        }
+        Path cacheFile = cacheFolder.resolve(folder).resolve(nameString);
+        if (Files.exists(cacheFile)) {
+            return cacheFile;
+        }
+        return null;
     }
 
     @NotNull
@@ -207,7 +242,7 @@ public class MavenResolver {
         Path noSourcesCacheFile;
         {
             String folder = artifact.groupId.replace('.', '/') + '/' + artifact.artifactId + '/' + artifact.version + '/';
-            String file = artifact.artifactId + '-' + artifact.version + "nosources";
+            String file = artifact.artifactId + '-' + artifact.version + ".nosources";
             noSourcesCacheFile = cacheFolder.resolve(folder).resolve(file);
         }
         ResolvedFile sources = null;
@@ -216,6 +251,7 @@ public class MavenResolver {
                 sources = resolveArtifact(artifact, "sources", "jar");
             } catch (Exception exception1) {
                 try {
+                    Files.createDirectories(noSourcesCacheFile.getParent());
                     Files.createFile(noSourcesCacheFile);
                 } catch (IOException exception2) {
                     IllegalStateException ex = new IllegalStateException("Cannot cache sources", exception2);

@@ -11,6 +11,7 @@ import io.github.coolcrabs.brachyura.dependency.FileDependency;
 import io.github.coolcrabs.brachyura.dependency.JavaJarDependency;
 import io.github.coolcrabs.brachyura.fabric.FabricMaven;
 
+@Deprecated
 class MavenTest {
     @Test
     void downloadFloader() {

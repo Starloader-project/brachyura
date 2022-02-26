@@ -8,13 +8,15 @@ import org.tinylog.Logger;
 
 import io.github.coolcrabs.brachyura.mappings.Namespaces;
 import io.github.coolcrabs.brachyura.maven.MavenId;
+import io.github.coolcrabs.brachyura.maven.MavenResolver;
+
 import net.fabricmc.mappingio.tree.MappingTree.MethodArgMapping;
 import net.fabricmc.mappingio.tree.MappingTree.MethodMapping;
 
 class YarnTest {
     @Test
     void modernYarn() {
-        Yarn yarn = Yarn.ofMaven(FabricMaven.URL, FabricMaven.yarn("1.16.5+build.10"));
+        Yarn yarn = Yarn.ofMaven(new MavenResolver(MavenResolver.MAVEN_LOCAL).addRepository(FabricMaven.REPOSITORY), FabricMaven.yarn("1.16.5+build.10"));
         assertNotNull(yarn.tree);
         assertEquals("net/minecraft/block/Block", yarn.tree.getClass("net/minecraft/class_2248", yarn.tree.getNamespaceId(Namespaces.INTERMEDIARY)).getName(Namespaces.NAMED));
         assertEquals(Namespaces.INTERMEDIARY, yarn.tree.getNamespaceName(yarn.tree.getNamespaceId(Namespaces.INTERMEDIARY)));
@@ -28,7 +30,7 @@ class YarnTest {
 
     @Test
     void oldYarn() {
-        Yarn yarn = Yarn.ofMaven(FabricMaven.URL, new MavenId("net.fabricmc", "pomf", "18w44a.1"));
+        Yarn yarn = Yarn.ofMaven(new MavenResolver(MavenResolver.MAVEN_LOCAL).addRepository(FabricMaven.REPOSITORY), new MavenId("net.fabricmc", "pomf", "18w44a.1"));
         assertNotNull(yarn.tree);
         assertEquals("net/minecraft/block/Block", yarn.tree.getClass("bet").getDstName(0));
         assertEquals(Namespaces.OBF, yarn.tree.getSrcNamespace());

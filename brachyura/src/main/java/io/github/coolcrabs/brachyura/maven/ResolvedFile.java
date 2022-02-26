@@ -5,6 +5,7 @@ import java.nio.file.Path;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import io.github.coolcrabs.brachyura.dependency.FileDependency;
 import io.github.coolcrabs.brachyura.util.MessageDigestUtil;
 
 public class ResolvedFile {
@@ -40,5 +41,19 @@ public class ResolvedFile {
     @NotNull
     public String getSHA1MessageDigest() {
         return MessageDigestUtil.toHexHash(MessageDigestUtil.messageDigest(MessageDigestUtil.SHA1).digest(data));
+    }
+
+    /**
+     * Converts the resolved file to a {@link FileDependency}. As this relies on a path being provided,
+     * this method may throw an {@link IllegalStateException} if this object was obtained from a class other than the
+     * {@link MavenResolver}.
+     */
+    @NotNull
+    public FileDependency asFileDependency() {
+        Path cachePath = this.cachePath;
+        if (cachePath == null) {
+            throw new IllegalStateException("Path not known.");
+        }
+        return new FileDependency(cachePath);
     }
 }

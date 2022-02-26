@@ -6,11 +6,12 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import org.junit.jupiter.api.Test;
 
 import io.github.coolcrabs.brachyura.mappings.Namespaces;
+import io.github.coolcrabs.brachyura.maven.MavenResolver;
 
 class IntermediaryTest {
     @Test
     void intermediary1_16_5() {
-        Intermediary standardIntermediary = Intermediary.ofMaven(FabricMaven.URL, FabricMaven.intermediary("1.16.5"));
+        Intermediary standardIntermediary = Intermediary.ofMaven(new MavenResolver(MavenResolver.MAVEN_LOCAL).addRepository(FabricMaven.REPOSITORY), FabricMaven.intermediary("1.16.5"));
         assertNotNull(standardIntermediary.tree);
         assertEquals(Namespaces.OBF, standardIntermediary.tree.getSrcNamespace());
         assertEquals(Namespaces.INTERMEDIARY, standardIntermediary.tree.getDstNamespaces().get(0));
