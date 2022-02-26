@@ -239,16 +239,14 @@ public class Main {
         return baos;
     }
 
-    static final String HEXES = "0123456789ABCDEF";
-
-    // https://www.rgagnon.com/javadetails/java-0596.html
     public static String toHexHash(byte[] hash) {
-        if (hash == null) {
-            return null;
-        }
         final StringBuilder hex = new StringBuilder(2 * hash.length);
         for (final byte b : hash) {
-            hex.append(HEXES.charAt((b & 0xF0) >> 4)).append(HEXES.charAt((b & 0x0F)));
+            int x = ((int) b) & 0x00FF;
+            if (x < 16) {
+                hex.append('0');
+            }
+            hex.append(Integer.toHexString(x));
         }
         return hex.toString();
     }

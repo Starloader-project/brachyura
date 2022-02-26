@@ -17,11 +17,7 @@ class LineNumberTableReplacerTest {
     @Test
     void readSelf() throws Exception {
         try (DataInputStream in = new DataInputStream(this.getClass().getClassLoader().getResourceAsStream("io/github/coolcrabs/brachyura/decompiler/LineNumberTableReplacerTest.class"))) {
-            ClassFile classFile = LineNumberTableReplacer.readClassFile(in);
-            double test = 5;
-            System.out.println(test);
-            System.out.println(a);
-            System.out.println(classFile);
+            LineNumberTableReplacer.readClassFile(in);
         }
     }
 

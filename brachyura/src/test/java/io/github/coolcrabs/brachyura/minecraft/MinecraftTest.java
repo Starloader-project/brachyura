@@ -83,7 +83,6 @@ class MinecraftTest {
     @Test
     void ojmap1_16() {
         MappingTree mappings = Minecraft.getMojmap(Minecraft.getVersion("1.16.5"));
-        System.out.println(mappings.getNamespaceId(Namespaces.OBF));
         assertEquals(-1, mappings.getNamespaceId(Namespaces.OBF));
         assertEquals(0, mappings.getNamespaceId(Namespaces.NAMED));
         assertEquals("youJustLostTheGame", mappings.getClass("ddt").getMethod("a", "()V").getName(0));

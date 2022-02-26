@@ -7,6 +7,7 @@ import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -14,9 +15,10 @@ import java.nio.file.StandardCopyOption;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
-@SuppressWarnings("all") // Sue me
 public class Main {
     public static final int VERSION = 0;
     static final Path BOOTSTRAP_DIR = Paths.get(System.getProperty("user.home")).resolve(".brachyura").resolve("bootstrap");
@@ -39,28 +41,13 @@ public class Main {
                 }
                 confReader = new BufferedReader(new InputStreamReader(confis));
             }
-            int confVersion = Integer.parseInt(confReader.readLine());
-            if (confVersion != VERSION) {
-                throw new RuntimeException("Unsupported config version " + confVersion + ". Supported version is " + VERSION + " you need to update or downgrade bootstrap jar to use this brachyura version.");
-            }
-            String line = null;
-            while ((line = confReader.readLine()) != null) {
-                if (line.isEmpty()) {
-                    continue;
-                }
-                String[] a = line.split("\\s+");
-                URL url = new URL(a[0].trim());
-                String hash = a[1].trim();
-                String fileName = a[2].trim();
-                boolean isjar = Boolean.parseBoolean(a[3].trim());
-                Path download = getDownload(url, hash, fileName);
-                if (isjar) classpath.add(download);
-            }
+            classpath.addAll(getDependencies(confReader, "brachyurabootstrapconf"));
         } finally {
             if (confReader != null) {
                 confReader.close();
             }
         }
+        classpath.addAll(getBuildscriptDependencies(projectPath));
         URL[] urls = new URL[classpath.size()];
         for (int i = 0; i < classpath.size(); i++) {
             urls[i] = classpath.get(i).toUri().toURL();
@@ -68,13 +55,49 @@ public class Main {
         // https://kostenko.org/blog/2019/06/runtime-class-loading.html
         URLClassLoader classLoader = new URLClassLoader(urls, ClassLoader.getSystemClassLoader());
         Thread.currentThread().setContextClassLoader(classLoader);
-        Class entry = Class.forName("io.github.coolcrabs.brachyura.project.BrachyuraEntry", true, classLoader);
+        Class<?> entry = Class.forName("io.github.coolcrabs.brachyura.project.BrachyuraEntry", true, classLoader);
         MethodHandles.publicLookup().findStatic(
             entry,
             "main",
             MethodType.methodType(void.class, String[].class, Path.class, List.class)
         )
         .invokeExact(args, projectPath, classpath);
+    }
+
+    private static Collection<? extends Path> getBuildscriptDependencies(Path projectPath) throws Exception {
+        Path buildscriptDir = projectPath.resolve("buildscript");
+        if (!Files.isDirectory(buildscriptDir)) {
+            return Collections.emptyList();
+        }
+        Path buildscriptDependsFile = buildscriptDir.resolve("build-dependencies.txt");
+        if (!Files.isRegularFile(buildscriptDependsFile)) {
+            return Collections.emptyList();
+        }
+        try (BufferedReader reader = Files.newBufferedReader(buildscriptDependsFile, StandardCharsets.UTF_8)) {
+            return getDependencies(reader, "build-dependencies.txt");
+        }
+    }
+
+    private static Collection<? extends Path> getDependencies(BufferedReader confReader, String name) throws Exception {
+        ArrayList<Path> dependencies = new ArrayList<>();
+        int confVersion = Integer.parseInt(confReader.readLine());
+        if (confVersion != VERSION) {
+            throw new RuntimeException("Unsupported " + name + " config version " + confVersion + ". Supported version is " + VERSION + " you need to update or downgrade bootstrap jar to use this brachyura version.");
+        }
+        String line = null;
+        while ((line = confReader.readLine()) != null) {
+            if (line.isEmpty()) {
+                continue;
+            }
+            String[] a = line.split("\\s+");
+            URL url = new URL(a[0].trim());
+            String hash = a[1].trim();
+            String fileName = a[2].trim();
+            boolean isjar = Boolean.parseBoolean(a[3].trim());
+            Path download = getDownload(url, hash, fileName);
+            if (isjar) dependencies.add(download);
+        }
+        return dependencies;
     }
 
     static Path getDownload(URL url, String hash, String fileName) throws Exception {
@@ -101,16 +124,14 @@ public class Main {
         return target;
     }
 
-    static final String HEXES = "0123456789ABCDEF";
-
-    // https://www.rgagnon.com/javadetails/java-0596.html
     public static String toHexHash(byte[] hash) {
-        if (hash == null) {
-            return null;
-        }
         final StringBuilder hex = new StringBuilder(2 * hash.length);
         for (final byte b : hash) {
-            hex.append(HEXES.charAt((b & 0xF0) >> 4)).append(HEXES.charAt((b & 0x0F)));
+            int x = ((int) b) & 0x00FF;
+            if (x < 16) {
+                hex.append('0');
+            }
+            hex.append(Integer.toHexString(x));
         }
         return hex.toString();
     }

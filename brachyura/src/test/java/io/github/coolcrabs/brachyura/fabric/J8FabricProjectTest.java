@@ -88,7 +88,6 @@ class J8FabricProjectTest {
 
     @Test
     void ide() {
-        long a = System.currentTimeMillis();
         //Todo better api for this?
         fabricProject.getTasks(p -> {
             try {
@@ -100,15 +99,12 @@ class J8FabricProjectTest {
                 throw e;
             }
         });
-        long b = System.currentTimeMillis();
-        System.out.println(b - a);
     }
-    
+
     @Disabled
     @Test
     void bruh() {
         fabricProject.getTasks(p -> {
-            System.out.println(p.name);
             if (p.name.equals("runMinecraftClient"))
                 try {
                     p.doTask(new String[]{}); 

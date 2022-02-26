@@ -39,7 +39,6 @@ class CompilerTest {
         a.getInputs((in, id) -> {
             count[0]++;
             Path sourceFile = compilation.getSourceFile(id);
-            System.out.println(sourceFile);
             assertTrue(sourceFile.startsWith(src));
         });
     }
@@ -78,8 +77,7 @@ class CompilerTest {
         int[] count = new int[1];
         b.getInputs((in, id) -> {
             count[0]++;
-            Path sourceFile = compilationB.getSourceFile(id);
-            System.out.println(sourceFile);
+            compilationB.getSourceFile(id);
         });
     }
 
@@ -103,9 +101,7 @@ class CompilerTest {
             int[] count = new int[1];
             a.getInputs((in, id) -> {
                 count[0]++;
-                Path sourceFile = compilationA.getSourceFile(id);
-                System.out.println(id.path);
-                System.out.println(sourceFile);
+                compilationA.getSourceFile(id);
             });
         } catch (Exception e) {
             assertDoesNotThrow(() -> {
