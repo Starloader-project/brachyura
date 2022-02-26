@@ -4,6 +4,7 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 
 import io.github.coolcrabs.brachyura.exception.TaskFailedException;
+import io.github.coolcrabs.brachyura.util.ThrowingRunnable;
 
 public abstract class Task {
     public final String name;
@@ -17,6 +18,10 @@ public abstract class Task {
     }
 
     public static Task of(String name, Runnable run) {
+        return new NoArgTask(name, run);
+    }
+
+    public static Task of(String name, ThrowingRunnable run) {
         return new NoArgTask(name, run);
     }
 
@@ -41,16 +46,25 @@ public abstract class Task {
     }
 
     static class NoArgTask extends Task {
-        final Runnable runnable;
+        final ThrowingRunnable runnable;
 
         NoArgTask(String name, Runnable runnable) {
+            super(name);
+            this.runnable = () -> runnable.run();
+        }
+
+        NoArgTask(String name, ThrowingRunnable runnable) {
             super(name);
             this.runnable = runnable;
         }
 
         @Override
         public void doTask(String[] args) {
-            runnable.run();
+            try {
+                runnable.run();
+            } catch (Exception e) {
+                throw new TaskFailedException("Task failed to execute!", e);
+            }
         }
     }
 

@@ -8,20 +8,22 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Supplier;
 
+import org.jetbrains.annotations.NotNull;
+
 import io.github.coolcrabs.brachyura.dependency.JavaJarDependency;
 import io.github.coolcrabs.brachyura.util.Lazy;
 
 public class IdeModule {
     public final String name;
     public final Path root;
-    public final Lazy<List<JavaJarDependency>> dependencies;
+    public final Lazy<@NotNull List<JavaJarDependency>> dependencies;
     public final List<IdeModule> dependencyModules;
     public final List<RunConfig> runConfigs;
     public final List<Path> sourcePaths;
     public final List<Path> resourcePaths;
     public final int javaVersion;
 
-    IdeModule(String name, Path root, Supplier<List<JavaJarDependency>> dependencies, List<IdeModule> dependencyModules, List<RunConfigBuilder> runConfigs, List<Path> sourcePaths, List<Path> resourcePaths, int javaVersion) {
+    IdeModule(String name, Path root, Supplier<@NotNull List<JavaJarDependency>> dependencies, List<IdeModule> dependencyModules, List<RunConfigBuilder> runConfigs, List<Path> sourcePaths, List<Path> resourcePaths, int javaVersion) {
         this.name = name;
         this.root = root;
         this.dependencies = new Lazy<>(dependencies);
@@ -38,7 +40,8 @@ public class IdeModule {
     public static class IdeModuleBuilder {
         private String name;
         private Path root;
-        private Supplier<List<JavaJarDependency>> dependencies = Collections::emptyList;
+        @SuppressWarnings("null")
+        private Supplier<@NotNull List<JavaJarDependency>> dependencies = Collections::emptyList;
         private List<IdeModule> dependencyModules = Collections.emptyList();
         private List<RunConfigBuilder> runConfigs = Collections.emptyList();
         private List<Path> sourcePaths = Collections.emptyList();
@@ -55,16 +58,17 @@ public class IdeModule {
             return this;
         }
 
-        public IdeModuleBuilder dependencies(Supplier<List<JavaJarDependency>> dependencies) {
+        public IdeModuleBuilder dependencies(Supplier<@NotNull List<JavaJarDependency>> dependencies) {
             this.dependencies = dependencies;
             return this;
         }
-        
-        public IdeModuleBuilder dependencies(List<JavaJarDependency> dependencies) {
+
+        public IdeModuleBuilder dependencies(@NotNull List<JavaJarDependency> dependencies) {
             this.dependencies = () -> dependencies;
             return this;
         }
 
+        @SuppressWarnings("null")
         public IdeModuleBuilder dependencies(JavaJarDependency... dependencies) {
             this.dependencies = () -> Arrays.asList(dependencies);
             return this;
@@ -121,6 +125,7 @@ public class IdeModule {
             return this;
         }
 
+        @NotNull
         public IdeModule build() {
             Objects.requireNonNull(name, "IdeModule missing name");
             Objects.requireNonNull(root, "IdeModule missing root");

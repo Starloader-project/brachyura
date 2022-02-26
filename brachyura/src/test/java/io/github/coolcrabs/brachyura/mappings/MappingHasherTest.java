@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.IOException;
 import java.security.MessageDigest;
+import java.util.Locale;
 
 import org.junit.jupiter.api.Test;
 import org.tinylog.Logger;
@@ -24,7 +25,7 @@ class MappingHasherTest {
         String hash = MessageDigestUtil.toHexHash(digest.digest());
         long time = System.currentTimeMillis() - start;
         Logger.info("Hashed yarn in " + time + "ms " + hash);
-        assertEquals("5FD5BBD59CF36860ABEFF50A73916A981E400A88D2902E4695513B5272387C2D", hash);
+        assertEquals("5FD5BBD59CF36860ABEFF50A73916A981E400A88D2902E4695513B5272387C2D", hash.toUpperCase(Locale.ROOT));
     }
 
     @Test
@@ -34,7 +35,7 @@ class MappingHasherTest {
         String hash = MappingHasher.hashSha256(yarn.tree);
         long time = System.currentTimeMillis() - start;
         Logger.info("Hashed yarn (test 2) in " + time + "ms " + hash);
-        assertEquals("5FD5BBD59CF36860ABEFF50A73916A981E400A88D2902E4695513B5272387C2D", hash);
+        assertEquals("5FD5BBD59CF36860ABEFF50A73916A981E400A88D2902E4695513B5272387C2D", hash.toUpperCase(Locale.ROOT));
     }
 
     @Test
@@ -47,6 +48,6 @@ class MappingHasherTest {
         String hash = MessageDigestUtil.toHexHash(digest.digest());
         long time = System.currentTimeMillis() - start;
         Logger.info("Hashed intermediary in " + time + "ms " + hash);
-        assertEquals("9B1063C9296B2588237B4DA89A171B6E781674BF93D080A16DC509044C44274D", hash);
+        assertEquals("9B1063C9296B2588237B4DA89A171B6E781674BF93D080A16DC509044C44274D", hash.toUpperCase(Locale.ROOT));
     }
 }

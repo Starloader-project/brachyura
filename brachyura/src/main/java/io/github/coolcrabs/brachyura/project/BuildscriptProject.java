@@ -14,6 +14,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import org.jetbrains.annotations.NotNull;
 import org.tinylog.Logger;
 
 import io.github.coolcrabs.brachyura.compiler.java.JavaCompilation;
@@ -43,6 +44,7 @@ class BuildscriptProject extends BaseJavaProject {
     }
 
     @Override
+    @NotNull
     public IdeModule[] getIdeModules() {
         Tasks t = new Tasks();
         Optional<Project> o = project.get();
@@ -66,7 +68,7 @@ class BuildscriptProject extends BaseJavaProject {
                     )
             );
         }
-        return new IdeModule[] {
+        return new @NotNull IdeModule[] {
             new IdeModule.IdeModuleBuilder()
                 .name("Buildscript")
                 .root(getProjectDir())
@@ -115,6 +117,7 @@ class BuildscriptProject extends BaseJavaProject {
         }
     }
 
+    @NotNull
     public List<JavaJarDependency> getIdeDependencies() {
         List<Path> compileDeps = getCompileDependencies();
         ArrayList<JavaJarDependency> result = new ArrayList<>(compileDeps.size());
@@ -127,8 +130,13 @@ class BuildscriptProject extends BaseJavaProject {
     }
 
     @Override
+    @NotNull
     public List<Path> getCompileDependencies() {
-        return EntryGlobals.buildscriptClasspath;
+        List<Path> buildscriptClasspath = EntryGlobals.buildscriptClasspath;
+        if (buildscriptClasspath == null) {
+            throw new IllegalStateException("The buildscript classpath was not set. Did you call BuildscriptDevEntry#main or BrachyuraEntry#main?");
+        }
+        return buildscriptClasspath;
     }
 
     static class BuildscriptClassloader extends ClassLoader implements ProcessingSink {

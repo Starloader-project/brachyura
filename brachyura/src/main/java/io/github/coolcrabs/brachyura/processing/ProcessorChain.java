@@ -5,18 +5,21 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.function.Supplier;
 
+import org.jetbrains.annotations.NotNull;
+
 import io.github.coolcrabs.brachyura.util.ArrayUtil;
 import io.github.coolcrabs.brachyura.util.Util;
 import java.util.Arrays;
 
 public class ProcessorChain {
+    @NotNull
     final Processor[] processors;
 
-    public ProcessorChain(Processor...processors) {
+    public ProcessorChain(@NotNull Processor...processors) {
         this.processors = processors;
     }
 
-    public ProcessorChain(ProcessorChain existing, Processor...processors) {
+    public ProcessorChain(ProcessorChain existing, @NotNull Processor... processors) {
         this.processors = ArrayUtil.join(Processor.class, existing.processors, processors);
     }
 

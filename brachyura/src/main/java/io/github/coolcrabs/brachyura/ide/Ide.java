@@ -32,5 +32,5 @@ public interface Ide {
     } 
 
     String ideName();
-    void updateProject(Path projectRoot, IdeModule... ideModules);
+    void updateProject(Path projectRoot, IdeModule[] ideModules);
 }

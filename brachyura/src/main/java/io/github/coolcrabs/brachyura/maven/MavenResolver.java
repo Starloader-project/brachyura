@@ -25,6 +25,13 @@ import org.xml.sax.SAXException;
 
 import io.github.coolcrabs.brachyura.dependency.JavaJarDependency;
 
+/**
+ * A small primitive resolver for maven artifacts.
+ * All artifacts are cached to a local folder. Nonexisting artifacts
+ * are not cached however.
+ *
+ * @author Geolykt
+ */
 public class MavenResolver {
 
     @NotNull

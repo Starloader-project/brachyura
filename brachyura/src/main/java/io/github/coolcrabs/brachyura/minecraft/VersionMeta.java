@@ -11,14 +11,17 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import io.github.coolcrabs.brachyura.util.OsUtil;
 
 public class VersionMeta {
+    @NotNull
     public final String version;
     JsonElement json;
 
+    @SuppressWarnings("null")
     VersionMeta(Reader reader) {
         json = JsonParser.parseReader(reader);
         this.version = json.getAsJsonObject().get("id").getAsString();
@@ -35,6 +38,7 @@ public class VersionMeta {
         for (int i = 0; i < libraries.size(); i++) {
             JsonObject library = libraries.get(i).getAsJsonObject();
             if (!Rules.allowed(library.get("rules"))) continue;
+            @SuppressWarnings("null")
             VMDependency dependency = result.computeIfAbsent(library.get("name").getAsString(), VMDependency::new);
             boolean hasNatives = false;
             String natives = null;
@@ -88,12 +92,13 @@ public class VersionMeta {
     }
 
     static class VMDependency {
+        @NotNull
         String name;
         @Nullable VMDependencyDownload artifact;
         @Nullable VMDependencyDownload natives;
         @Nullable VMDependencyDownload sources;
 
-        VMDependency(String name) {
+        VMDependency(@NotNull String name) {
             this.name = name;
         }
     }

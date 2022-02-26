@@ -11,6 +11,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.function.Consumer;
 
+import org.jetbrains.annotations.NotNull;
+
 import io.github.coolcrabs.brachyura.ide.Ide;
 import io.github.coolcrabs.brachyura.ide.IdeModule;
 import io.github.coolcrabs.brachyura.processing.ProcessorChain;
@@ -28,6 +30,8 @@ import java.util.ArrayList;
 import java.util.Objects;
 
 public abstract class BaseJavaProject extends Project {
+
+    @NotNull
     public abstract IdeModule[] getIdeModules();
 
     public int getJavaVersion() {
@@ -43,7 +47,7 @@ public abstract class BaseJavaProject extends Project {
 
     public void getIdeTasks(Consumer<Task> p) {
         for (Ide ide : Ide.getIdes()) {
-            p.accept(Task.of(ide.ideName(), () -> {
+            p.accept(Task.of(ide.ideName(), (Runnable) () -> {
                 BaseJavaProject buildscriptProject = getBuildscriptProject();
                 if (buildscriptProject != null) {
                     ide.updateProject(getProjectDir(), ArrayUtil.join(IdeModule.class, getIdeModules(), buildscriptProject.getIdeModules()));
@@ -59,7 +63,7 @@ public abstract class BaseJavaProject extends Project {
         for (IdeModule m : ms) {
             for (IdeModule.RunConfig rc : m.runConfigs) {
                 String tname = ms.length == 1 ? "run" + rc.name.replace(" ", "") : m.name.replace(" ", "") + ":run" + rc.name.replace(" ", "");
-                p.accept(Task.of(tname, () -> runRunConfig(m, rc)));
+                p.accept(Task.of(tname, (Runnable) () -> runRunConfig(m, rc)));
             }
         }
     }
@@ -126,11 +130,14 @@ public abstract class BaseJavaProject extends Project {
             throw Util.sneak(e);
         }
     }
-    
+
+    @SuppressWarnings("null")
+    @NotNull
     public List<Path> getCompileDependencies() {
         return Collections.emptyList();
     }
 
+    @NotNull
     public ProcessorChain resourcesProcessingChain() {
         return new ProcessorChain();
     }

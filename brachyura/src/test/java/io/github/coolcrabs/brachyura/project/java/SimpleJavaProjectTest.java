@@ -2,6 +2,8 @@ package io.github.coolcrabs.brachyura.project.java;
 
 import io.github.coolcrabs.brachyura.maven.MavenId;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+
 import java.nio.file.Path;
 
 import org.junit.jupiter.api.Test;
@@ -33,7 +35,9 @@ class SimpleJavaProjectTest {
             if (p.name.equals("vscode")) p.doTask(new String[]{});
             if (p.name.equals("netbeans")) p.doTask(new String[]{});
         });
-        Assertions.assertNotNull(project.build());
+        assertDoesNotThrow(() -> {
+            Assertions.assertNotNull(project.build());
+        });
         project.getTasks(p -> {
             if (p.name.equals("publishToMavenLocal")) p.doTask(new String[]{});
         });

@@ -37,6 +37,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Opcodes;
 import org.tinylog.Logger;
@@ -86,6 +87,7 @@ import io.github.coolcrabs.brachyura.util.MessageDigestUtil;
 import io.github.coolcrabs.brachyura.util.OsUtil;
 import io.github.coolcrabs.brachyura.util.PathUtil;
 import io.github.coolcrabs.brachyura.util.StreamUtil;
+import io.github.coolcrabs.brachyura.util.ThrowingRunnable;
 import io.github.coolcrabs.brachyura.util.UnzipUtil;
 import io.github.coolcrabs.brachyura.util.Util;
 import io.github.coolcrabs.brachyura.util.OsUtil.Os;
@@ -110,14 +112,19 @@ public abstract class FabricProject extends BaseJavaProject {
     public final Lazy<MappingTree> mappings = new Lazy<>(this::createMappings);
     public abstract MappingTree createMappings();
     public abstract FabricLoader getLoader();
+
+    @Nullable
     public String getMavenGroup() {
         return null;
     }
+
     public @Nullable Consumer<AccessWidenerVisitor> getAw() {
         return null;
     }
+
     public MavenId getId() {
-        return getMavenGroup() == null ? null : new MavenId(getMavenGroup(), getModId(), getVersion());
+        String group = getMavenGroup();
+        return group == null ? null : new MavenId(group, getModId(), getVersion());
     }
 
     public final Lazy<List<ModDependency>> modDependencies = new Lazy<>(() -> {
@@ -127,10 +134,14 @@ public abstract class FabricProject extends BaseJavaProject {
     });
     public abstract void getModDependencies(ModDependencyCollector d);
 
+    @SuppressWarnings("null")
+    @NotNull
     public String getModId() {
         return fmjParseThingy.get()[0];
     }
 
+    @SuppressWarnings("null")
+    @NotNull
     public String getVersion() {
         return fmjParseThingy.get()[1];
     }
@@ -197,14 +208,15 @@ public abstract class FabricProject extends BaseJavaProject {
     @Override
     public void getTasks(Consumer<Task> p) {
         super.getTasks(p);
-        p.accept(Task.of("build", this::build));
+        p.accept(Task.of("build", (ThrowingRunnable) this::build));
     }
-    
+
     public void getPublishTasks(Consumer<Task> p) {
         SimpleJavaProject.createPublishTasks(p, this::build);
     }
 
     @Override
+    @NotNull
     public IdeModule[] getIdeModules() {
         Path cwd = PathUtil.resolveAndCreateDir(getProjectDir(), "run");
         Lazy<List<Path>> classpath = new Lazy<>(() -> {
@@ -217,7 +229,7 @@ public abstract class FabricProject extends BaseJavaProject {
             return r;
         });
         Lazy<Path> launchConfig = new Lazy<>(this::writeLaunchCfg);
-        return new IdeModule[] {
+        return new @NotNull IdeModule[] {
             new IdeModule.IdeModuleBuilder()
                 .name(getModId())
                 .root(getProjectDir())
@@ -344,7 +356,7 @@ public abstract class FabricProject extends BaseJavaProject {
         return target;
     }
 
-
+    @NotNull
     public List<Path> getExtractedNatives() {
         List<Path> result = new ArrayList<>();
         for (Dependency dependency : mcDependencies.get()) {
@@ -363,6 +375,7 @@ public abstract class FabricProject extends BaseJavaProject {
         return result;
     }
 
+    @NotNull
     public JavaJarDependency build() {
         try {
             String mixinOut = "mixinmapout.tiny";
@@ -599,6 +612,7 @@ public abstract class FabricProject extends BaseJavaProject {
     }
 
     @Override
+    @NotNull
     public ProcessorChain resourcesProcessingChain() {
         Path fmjgen = getLocalBrachyuraPath().resolve("fmjgen");
         if (Files.exists(fmjgen)) PathUtil.deleteDirectory(fmjgen);
@@ -630,6 +644,7 @@ public abstract class FabricProject extends BaseJavaProject {
     }
 
     @Override
+    @NotNull
     public List<Path> getCompileDependencies() {
         List<Path> result = new ArrayList<>();
         for (Dependency dependency : dependencies.get()) {
@@ -645,7 +660,9 @@ public abstract class FabricProject extends BaseJavaProject {
         return result;
     }
 
-    public final Lazy<List<JavaJarDependency>> ideDependencies = new Lazy<>(this::createIdeDependencies);
+    public final Lazy<@NotNull List<JavaJarDependency>> ideDependencies = new Lazy<>(this::createIdeDependencies);
+
+    @NotNull
     public List<JavaJarDependency> createIdeDependencies() {
         List<JavaJarDependency> result = new ArrayList<>();
         for (Dependency dependency : dependencies.get()) {
@@ -661,7 +678,9 @@ public abstract class FabricProject extends BaseJavaProject {
         return result;
     }
 
-    public final Lazy<List<JavaJarDependency>> runtimeDependencies = new Lazy<>(this::createRuntimeDependencies);
+    public final Lazy<@NotNull List<JavaJarDependency>> runtimeDependencies = new Lazy<>(this::createRuntimeDependencies);
+
+    @NotNull
     public List<JavaJarDependency> createRuntimeDependencies() {
         List<JavaJarDependency> result = new ArrayList<>();
         for (Dependency dependency : dependencies.get()) {
@@ -678,7 +697,10 @@ public abstract class FabricProject extends BaseJavaProject {
         return result;
     }
 
-    public final Lazy<List<Dependency>> dependencies = new Lazy<>(this::createDependencies);
+    @NotNull
+    public final Lazy<@NotNull List<Dependency>> dependencies = new Lazy<>(this::createDependencies);
+
+    @NotNull
     public List<Dependency> createDependencies() {
         List<Dependency> result = new ArrayList<>(mcDependencies.get());
         FabricLoader floader = getLoader();

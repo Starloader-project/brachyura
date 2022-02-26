@@ -19,7 +19,9 @@ import io.github.coolcrabs.brachyura.processing.sources.ProcessingSponge;
 import io.github.coolcrabs.brachyura.project.Task;
 import io.github.coolcrabs.brachyura.util.JvmUtil;
 import io.github.coolcrabs.brachyura.util.Lazy;
-import java.util.function.Supplier;
+import io.github.coolcrabs.brachyura.util.ThrowingRunnable;
+
+import org.jetbrains.annotations.NotNull;
 
 public abstract class SimpleJavaProject extends BaseJavaProject {
     public abstract MavenId getId();
@@ -31,22 +33,24 @@ public abstract class SimpleJavaProject extends BaseJavaProject {
     @Override
     public void getTasks(Consumer<Task> p) {
         super.getTasks(p);
-        p.accept(Task.of("build", this::build));
+        p.accept(Task.of("build", (ThrowingRunnable) this::build));
         getPublishTasks(p);
     }
-    
+
     public void getPublishTasks(Consumer<Task> p) {
         createPublishTasks(p, this::build);
     }
-    
-    public static void createPublishTasks(Consumer<Task> p, Supplier<JavaJarDependency> build) {
-        p.accept(Task.of("publish", () -> MavenPublishing.publish(MavenPublishing.AuthenticatedMaven.ofEnv(), build.get())));
-        p.accept(Task.of("publishToMavenLocal", () -> MavenPublishing.publish(MavenPublishing.AuthenticatedMaven.ofMavenLocal(), build.get())));
+
+    public static void createPublishTasks(Consumer<Task> p, BuildSupplier build) {
+        p.accept(Task.of("publish", (ThrowingRunnable) () -> MavenPublishing.publish(MavenPublishing.AuthenticatedMaven.ofEnv(), build.get())));
+        p.accept(Task.of("publishToMavenLocal", (ThrowingRunnable) () -> MavenPublishing.publish(MavenPublishing.AuthenticatedMaven.ofMavenLocal(), build.get())));
     }
 
     @Override
+    @NotNull
     public IdeModule[] getIdeModules() {
-        return new IdeModule[] {new IdeModule.IdeModuleBuilder()
+        return new @NotNull IdeModule[] {
+            new IdeModule.IdeModuleBuilder()
             .name(getId().artifactId)
             .root(getProjectDir())
             .javaVersion(getJavaVersion())
@@ -57,17 +61,13 @@ public abstract class SimpleJavaProject extends BaseJavaProject {
         };
     }
 
-    public JavaJarDependency build() {
-        JavaCompilationResult compilation;
-        try {
-            compilation = new JavaCompilation()
+    @NotNull
+    public JavaJarDependency build() throws CompilationFailure {
+        JavaCompilationResult compilation = new JavaCompilation()
                 .addSourceDir(getSrcDir())
                 .addClasspath(getCompileDependencies())
                 .addOption(JvmUtil.compileArgs(JvmUtil.CURRENT_JAVA_VERSION, getJavaVersion()))
                 .compile();
-        } catch (CompilationFailure e) {
-            throw new IllegalStateException("Couldn't compile sources", e);
-        }
         ProcessingSponge classes = new ProcessingSponge();
         compilation.getInputs(classes);
         Path outjar = getBuildLibsDir().resolve(getJarBaseName() + ".jar");
@@ -85,11 +85,15 @@ public abstract class SimpleJavaProject extends BaseJavaProject {
         return new JavaJarDependency(outjar, outjar, getId());
     }
 
-    public final Lazy<List<JavaJarDependency>> dependencies = new Lazy<>(this::getDependencies);
+    public final Lazy<@NotNull List<JavaJarDependency>> dependencies = new Lazy<>(this::getDependencies);
+
+    @SuppressWarnings("null")
+    @NotNull
     public List<JavaJarDependency> getDependencies() {
         return Collections.emptyList();
     }
 
+    @NotNull
     @Override
     public List<Path> getCompileDependencies() {
         List<JavaJarDependency> deps = dependencies.get();

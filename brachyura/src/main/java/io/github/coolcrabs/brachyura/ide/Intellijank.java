@@ -46,7 +46,7 @@ public enum Intellijank implements Ide {
     }
 
     @Override
-    public void updateProject(Path projectRoot, IdeModule... ideModules) {
+    public void updateProject(Path projectRoot, IdeModule[] ideModules) {
         Ide.validate(ideModules);
         try {
             Path ideaPath = projectRoot.resolve(".idea");

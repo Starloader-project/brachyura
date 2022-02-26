@@ -33,7 +33,7 @@ public enum Eclipse implements Ide {
     }
 
     @Override
-    public void updateProject(Path projectRoot, IdeModule... ideModules) {
+    public void updateProject(Path projectRoot, IdeModule[] ideModules) {
         Ide.validate(ideModules);
         try {
             Files.walkFileTree(projectRoot, Collections.emptySet(), 1, new SimpleFileVisitor<Path>() {
@@ -149,6 +149,12 @@ public enum Eclipse implements Ide {
     void writeLaunchConfigs(Path projectDir, IdeModule ideProject) throws IOException, XMLStreamException {
         try {
             for (RunConfig rc : ideProject.runConfigs) {
+                if (rc.name.equals("idea")
+                        || rc.name.equals("netbeans")
+                        || rc.name.equals("publish")
+                        || rc.name.equals("publishToMavenLocal")) {
+                    continue;
+                }
                 String rcname = ideProject.name + " - " + rc.name;
                 try (FormattedXMLStreamWriter w = XmlUtil.newStreamWriter(Files.newBufferedWriter(projectDir.resolve(rcname + ".launch")))) {
                     w.writeStartDocument("UTF-8", "1.0");
