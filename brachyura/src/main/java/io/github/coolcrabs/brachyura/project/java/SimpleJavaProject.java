@@ -94,8 +94,8 @@ public abstract class SimpleJavaProject extends BaseJavaProject {
     public List<Path> getCompileDependencies() {
         List<JavaJarDependency> deps = dependencies.get();
         ArrayList<Path> result = new ArrayList<>(deps.size());
-        for (int i = 0; i < deps.size(); i++) {
-            result.set(i, deps.get(i).jar);
+        for (JavaJarDependency dep : deps) {
+            result.add(dep.jar);
         }
         return result;
     }

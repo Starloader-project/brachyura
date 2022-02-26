@@ -1,8 +1,5 @@
 package io.github.coolcrabs.brachyura.maven;
 
-import java.security.InvalidParameterException;
-import java.util.Objects;
-
 import org.jetbrains.annotations.NotNull;
 
 public final class MavenId {
@@ -16,7 +13,7 @@ public final class MavenId {
     public MavenId(@NotNull String maven) {
         String[] a = maven.split(":");
         if (a.length != 3) {
-            throw new InvalidParameterException("Bad maven id " + maven);
+            throw new IllegalArgumentException("Bad maven id " + maven);
         }
         String groupId = a[0];
         String artifactId = a[1];
@@ -37,7 +34,7 @@ public final class MavenId {
 
     @Override
     public int hashCode() {
-        return Objects.hash(groupId, artifactId, version);
+        return this.groupId.hashCode() ^ this.artifactId.hashCode() ^ this.version.hashCode();
     }
 
     @Override
