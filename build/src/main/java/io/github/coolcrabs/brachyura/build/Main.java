@@ -112,7 +112,7 @@ public class Main {
         try (BufferedWriter bootstrapConfigWriter = Files.newBufferedWriter(boostrapConfig)) {
             bootstrapConfigWriter.write(String.valueOf(0) + "\n");
             for (String lib : localLibs) {
-                Path a = workDirectory.getParent().resolve(lib).resolve("target");
+                Path a = workDirectory.resolveSibling(lib).resolve("target");
                 Stream<Path> b = Files.walk(a, 1);
                 Path jar = 
                     b.filter(p -> p.toString().endsWith(".jar") && !p.toString().endsWith("-sources.jar") && !p.toString().endsWith("-javadoc.jar"))
@@ -125,7 +125,7 @@ public class Main {
                     })).findFirst()
                     .orElseThrow(() -> new RuntimeException(lib));
                 b.close();
-                Path sources = jar.getParent().resolve(jar.getFileName().toString().replace(".jar", "-sources.jar"));
+                Path sources = jar.resolveSibling(jar.getFileName().toString().replace(".jar", "-sources.jar"));
                 Path targetjar = outDir.resolve(jar.getFileName());
                 Path targetSources = outDir.resolve(sources.getFileName());
                 if ("bootstrap".equals(lib)) {

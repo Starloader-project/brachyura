@@ -14,16 +14,18 @@ import io.github.coolcrabs.brachyura.dependency.JavaJarDependency;
 import io.github.coolcrabs.brachyura.util.Lazy;
 
 public class IdeModule {
+    @NotNull
     public final String name;
+    @NotNull
     public final Path root;
     public final Lazy<@NotNull List<JavaJarDependency>> dependencies;
     public final List<IdeModule> dependencyModules;
     public final List<RunConfig> runConfigs;
-    public final List<Path> sourcePaths;
-    public final List<Path> resourcePaths;
+    public final List<@NotNull Path> sourcePaths;
+    public final List<@NotNull Path> resourcePaths;
     public final int javaVersion;
 
-    IdeModule(String name, Path root, Supplier<@NotNull List<JavaJarDependency>> dependencies, List<IdeModule> dependencyModules, List<RunConfigBuilder> runConfigs, List<Path> sourcePaths, List<Path> resourcePaths, int javaVersion) {
+    IdeModule(@NotNull String name, @NotNull Path root, Supplier<@NotNull List<JavaJarDependency>> dependencies, List<IdeModule> dependencyModules, List<RunConfigBuilder> runConfigs, List<@NotNull Path> sourcePaths, List<@NotNull Path> resourcePaths, int javaVersion) {
         this.name = name;
         this.root = root;
         this.dependencies = new Lazy<>(dependencies);
@@ -44,8 +46,8 @@ public class IdeModule {
         private Supplier<@NotNull List<JavaJarDependency>> dependencies = Collections::emptyList;
         private List<IdeModule> dependencyModules = Collections.emptyList();
         private List<RunConfigBuilder> runConfigs = Collections.emptyList();
-        private List<Path> sourcePaths = Collections.emptyList();
-        private List<Path> resourcePaths = Collections.emptyList();
+        private List<@NotNull Path> sourcePaths = Collections.emptyList();
+        private List<@NotNull Path> resourcePaths = Collections.emptyList();
         private int javaVersion = 8;
         
         public IdeModuleBuilder name(String name) {
@@ -94,28 +96,28 @@ public class IdeModule {
             return this;
         }
 
-        public IdeModuleBuilder sourcePaths(List<Path> sourcePaths) {
+        public IdeModuleBuilder sourcePaths(List<@NotNull Path> sourcePaths) {
             this.sourcePaths = sourcePaths;
             return this;
         }
 
-        public IdeModuleBuilder sourcePaths(Path... sourcePaths) {
+        public IdeModuleBuilder sourcePaths(@NotNull Path... sourcePaths) {
             this.sourcePaths = Arrays.asList(sourcePaths);
             return this; 
         }
 
-        public IdeModuleBuilder sourcePath(Path sourcePath) {
+        public IdeModuleBuilder sourcePath(@NotNull Path sourcePath) {
             this.sourcePaths = new ArrayList<>();
             sourcePaths.add(sourcePath);
             return this;
         }
 
-        public IdeModuleBuilder resourcePaths(List<Path> resourcePaths) {
+        public IdeModuleBuilder resourcePaths(List<@NotNull Path> resourcePaths) {
             this.resourcePaths = resourcePaths;
             return this;
         }
 
-        public IdeModuleBuilder resourcePaths(Path... resourcePaths) {
+        public IdeModuleBuilder resourcePaths(@NotNull Path... resourcePaths) {
             this.resourcePaths = Arrays.asList(resourcePaths);
             return this;
         }
@@ -125,11 +127,10 @@ public class IdeModule {
             return this;
         }
 
+        @SuppressWarnings("null") // Generics are strange
         @NotNull
         public IdeModule build() {
-            Objects.requireNonNull(name, "IdeModule missing name");
-            Objects.requireNonNull(root, "IdeModule missing root");
-            return new IdeModule(name, root, dependencies, dependencyModules, runConfigs, sourcePaths, resourcePaths, javaVersion);
+            return new IdeModule(Objects.requireNonNull(name, "IdeModule missing name"), Objects.requireNonNull(root, "IdeModule missing root"), dependencies, dependencyModules, runConfigs, sourcePaths, resourcePaths, javaVersion);
         }
     }
 

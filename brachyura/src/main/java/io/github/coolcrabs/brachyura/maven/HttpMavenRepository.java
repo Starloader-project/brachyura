@@ -65,9 +65,6 @@ public final class HttpMavenRepository extends MavenRepository {
         }
         locationBuilder.append(file);
         String originalFileLocation = locationBuilder.toString();
-        if (originalFileLocation == null) {
-            throw new InternalError();
-        }
         ResolvedFile original = resolve0(originalFileLocation);
         if (original != null && checksums) {
             locationBuilder.append(".sha1");

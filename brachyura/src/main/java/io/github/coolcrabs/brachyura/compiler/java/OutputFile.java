@@ -10,15 +10,18 @@ import java.nio.charset.StandardCharsets;
 import javax.tools.FileObject;
 import javax.tools.SimpleJavaFileObject;
 
+import org.jetbrains.annotations.Nullable;
+
 import io.github.coolcrabs.brachyura.util.ByteArrayOutputStreamEx;
 import io.github.coolcrabs.brachyura.util.PathUtil;
 
 class OutputFile extends SimpleJavaFileObject {
     final ByteArrayOutputStreamEx bytes = new ByteArrayOutputStreamEx();
+    @Nullable
     final FileObject sibling;
     boolean exists = false;
 
-    protected OutputFile(URI uri, Kind kind, FileObject sibling) {
+    protected OutputFile(URI uri, Kind kind, @Nullable FileObject sibling) {
         super(uri, kind);
         this.sibling = sibling;
     }

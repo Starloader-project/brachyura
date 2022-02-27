@@ -25,5 +25,4 @@ class MemoryUrlConnection extends URLConnection {
     public InputStream getInputStream() throws IOException {
         return in.get();
     }
-
 }

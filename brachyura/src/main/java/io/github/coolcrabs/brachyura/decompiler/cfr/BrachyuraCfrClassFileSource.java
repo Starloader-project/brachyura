@@ -75,7 +75,11 @@ class BrachyuraCfrClassFileSource implements ClassFileSource, Closeable {
     }
 
     private void loadRtJ8() throws IOException {
-        String[] jars = System.getProperty("sun.boot.class.path").split(File.pathSeparator);
+        String classPath = System.getProperty("sun.boot.class.path");
+        if (classPath == null) {
+            throw new IllegalStateException("com.boot.class.path was not specified. Are you really running under Java 8?");
+        }
+        String[] jars = classPath.split(File.pathSeparator);
         for (String jar : jars) {
             Path path = Paths.get(jar);
             if (Files.exists(path)) { // ??? whatever sunrsasign.jar is claims to be on bootstrap classpath but doesn't exist

@@ -20,6 +20,8 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.zip.GZIPOutputStream;
 
+import org.jetbrains.annotations.NotNull;
+
 public class PathUtil {
     private PathUtil() { }
 
@@ -30,11 +32,14 @@ public class PathUtil {
         return HOME.resolve(".brachyura");
     }
 
+    @SuppressWarnings("null")
+    @NotNull
     public static Path cachePath() {
         return brachyuraPath().resolve("cache");
     }
 
-    public static Path resolveAndCreateDir(Path parent, String child) {
+    @NotNull
+    public static Path resolveAndCreateDir(Path parent, @NotNull String child) {
         try {
             Path result = parent.resolve(child);
             Files.createDirectories(result);
@@ -82,11 +87,13 @@ public class PathUtil {
     }
 
     // https://stackoverflow.com/a/22611925
+    @NotNull
     public static Path pathTransform(FileSystem fs, final Path path) {
         Path ret = fs.getPath(path.isAbsolute() ? fs.getSeparator() : "");
         for (Path component : path) {
             ret = ret.resolve(component.getFileName().toString());
         }
+        assert ret != null; // This is the only way for eclipse to suppress the null warning
         return ret;
     }
 

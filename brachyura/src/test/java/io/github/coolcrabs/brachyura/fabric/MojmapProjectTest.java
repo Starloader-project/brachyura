@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.function.Consumer;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 
 import io.github.coolcrabs.brachyura.decompiler.BrachyuraDecompiler;
@@ -56,8 +57,9 @@ class MojmapProjectTest {
         }
 
         @Override
+        @NotNull
         public Path getProjectDir() {
-            Path result = PathUtil.CWD.getParent().resolve("test").resolve("fabric").resolve("mojmap");
+            Path result = PathUtil.CWD.resolveSibling("test").resolve("fabric").resolve("mojmap");
             assertTrue(Files.isDirectory(result)); 
             return result;
         }

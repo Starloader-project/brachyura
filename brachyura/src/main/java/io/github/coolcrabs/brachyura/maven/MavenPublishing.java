@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Supplier;
+
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.tinylog.Logger;
 
@@ -73,10 +75,14 @@ public class MavenPublishing {
     public static void publish(AuthenticatedMaven maven, JavaJarDependency dep, Supplier<InputStream> pom) {
         Objects.requireNonNull(pom);
         ArrayList<MavenPublishFile> a = new ArrayList<>(3);
-        a.add(new MavenPublishFile(getMavenPath(dep.mavenId, ".pom"), pom));
-        a.add(new MavenPublishFile(getMavenPath(dep.mavenId, ".jar"), () -> PathUtil.inputStream(dep.jar)));
+        MavenId mavenId = dep.mavenId;
+        if (mavenId == null) {
+            throw new IllegalStateException("The mavenId must be supplied with the java jar dependency!");
+        }
+        a.add(new MavenPublishFile(getMavenPath(mavenId, ".pom"), pom));
+        a.add(new MavenPublishFile(getMavenPath(mavenId, ".jar"), () -> PathUtil.inputStream(dep.jar)));
         if (dep.sourcesJar != null) {
-            a.add(new MavenPublishFile(getMavenPath(dep.mavenId, "-sources.jar"), () -> PathUtil.inputStream(dep.sourcesJar)));
+            a.add(new MavenPublishFile(getMavenPath(mavenId, "-sources.jar"), () -> PathUtil.inputStream(dep.sourcesJar)));
         }
         publish(maven, a);
     }
@@ -137,16 +143,18 @@ public class MavenPublishing {
             throw Util.sneak(e);
         }
     }
-    
-    static String getMavenPath(MavenId id, String ext) {
+
+    @NotNull
+    static String getMavenPath(@NotNull MavenId id, @NotNull String ext) {
         return id.groupId.replace('.', '/') + "/" + id.artifactId + "/" + id.version + "/" + id.artifactId + "-" + id.version + ext;
     }
-    
+
     public static class MavenPublishFile {
+        @NotNull
         final String fileName;
         final Supplier<InputStream> in;
         
-        public MavenPublishFile(String fileName, Supplier<InputStream> in) {
+        public MavenPublishFile(@NotNull String fileName, Supplier<InputStream> in) {
             this.fileName = fileName;
             this.in = in;
         }

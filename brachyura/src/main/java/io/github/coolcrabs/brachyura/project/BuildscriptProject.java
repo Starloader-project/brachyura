@@ -15,6 +15,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.tinylog.Logger;
 
 import io.github.coolcrabs.brachyura.compiler.java.JavaCompilation;
@@ -34,6 +35,7 @@ import io.github.coolcrabs.brachyura.util.Util;
 
 class BuildscriptProject extends BaseJavaProject {
     @Override
+    @NotNull
     public Path getProjectDir() {
         return super.getProjectDir().resolve("buildscript");
     }
@@ -53,6 +55,7 @@ class BuildscriptProject extends BaseJavaProject {
         Path cwd = getProjectDir().resolve("run");
         PathUtil.createDirectories(cwd);
         for (Map.Entry<String, Task> e : t.t.entrySet()) {
+            String projectDir = super.getProjectDir().toString(); // eclipe's null evaluation can sometimes be a bit strange when generics are at play
             runConfigs.add(
                 new RunConfigBuilder()
                     .name(e.getKey())
@@ -61,7 +64,7 @@ class BuildscriptProject extends BaseJavaProject {
                     .classpath(getCompileDependencies())
                     .args(
                         () -> Arrays.asList(
-                            super.getProjectDir().toString(),
+                            projectDir,
                             getCompileDependencies().stream().map(Path::toString).collect(Collectors.joining(File.pathSeparator)),
                             e.getKey()
                         )
@@ -122,7 +125,7 @@ class BuildscriptProject extends BaseJavaProject {
         List<Path> compileDeps = getCompileDependencies();
         ArrayList<JavaJarDependency> result = new ArrayList<>(compileDeps.size());
         for (Path p : compileDeps) {
-            Path source = p.getParent().resolve(p.getFileName().toString().replace(".jar", "-sources.jar"));
+            Path source = p.resolveSibling(p.getFileName().toString().replace(".jar", "-sources.jar"));
             if (!Files.exists(source)) source = null;
             result.add(new JavaJarDependency(p, source, null));
         }
@@ -158,11 +161,13 @@ class BuildscriptProject extends BaseJavaProject {
                 throw Util.sneak(e);
             }
         }
-        
+
         @Override
-        protected Class<?> findClass(String name) throws ClassNotFoundException {
+        protected Class<?> findClass(@Nullable String name) throws ClassNotFoundException {
             byte[] data = classes.get(name);
-            if (data == null) return super.findClass(name);
+            if (data == null) {
+                return super.findClass(name);
+            }
             return defineClass(name, data, 0, data.length);
         }
     }

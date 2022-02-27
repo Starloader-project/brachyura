@@ -142,18 +142,24 @@ public abstract class BaseJavaProject extends Project {
         return new ProcessorChain();
     }
 
+    @NotNull
     public Path getBuildLibsDir() {
         return PathUtil.resolveAndCreateDir(getBuildDir(), "libs");
     }
 
+    @NotNull
     public Path getBuildDir() {
         return PathUtil.resolveAndCreateDir(getProjectDir(), "build");
     }
 
+    @SuppressWarnings("null")
+    @NotNull
     public Path getSrcDir() {
         return getProjectDir().resolve("src").resolve("main").resolve("java");
     }
 
+    @SuppressWarnings("null")
+    @NotNull
     public Path getResourcesDir() {
         return getProjectDir().resolve("src").resolve("main").resolve("resources");
     }

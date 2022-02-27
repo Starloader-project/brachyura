@@ -40,8 +40,13 @@ public class JavaCompilationResult extends ProcessingSource {
      * @param id
      * @return The source file an output came from or null if it is not from a source file (from an annotation processor etc)
      */
-    public @Nullable Path getSourceFile(ProcessingId id) {
-        FileObject fileObject = files.get(id).sibling;
+    @Nullable
+    public Path getSourceFile(ProcessingId id) {
+        OutputFile outFile = files.get(id);
+        if (outFile == null) {
+            return null;
+        }
+        FileObject fileObject = outFile.sibling;
         if (fileObject == null) return null;
         URI uri = fileObject.toUri();
         if ("file".equals(uri.getScheme())) {

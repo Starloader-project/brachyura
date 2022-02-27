@@ -34,7 +34,13 @@ import io.github.coolcrabs.brachyura.util.Util;
 
 class BrachyuraJavaFileManager extends ForwardingJavaFileManager<StandardJavaFileManager> implements StandardJavaFileManager {
     InputFiles extraCp = new InputFiles();
-    MemoryUrlProvider extraCpUrl = new MemoryUrlProvider(p -> extraCp.files.get(p).in);
+    MemoryUrlProvider extraCpUrl = new MemoryUrlProvider(p -> {
+        InputFile file = extraCp.files.get(p);
+        if (file == null) {
+            throw new IllegalStateException("File " + p + " not resolved!");
+        }
+        return file.in;
+    });
     HashMap<URI, OutputFile> output = new HashMap<>();
 
     public BrachyuraJavaFileManager() {

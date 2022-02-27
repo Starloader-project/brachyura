@@ -37,6 +37,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.jetbrains.annotations.NotNull;
+
 import io.github.coolcrabs.brachyura.mappings.tinyremapper.RemapperProcessor.BruhFileSystemProvider.BruhFileSystem.BruhPath;
 import io.github.coolcrabs.brachyura.mappings.tinyremapper.TinyRemapperHelper.JarType;
 import io.github.coolcrabs.brachyura.processing.ProcessingEntry;
@@ -114,9 +116,8 @@ public class RemapperProcessor implements Processor {
             }
     
             @Override
-            public String getSeparator() {
-                //  Auto-generated method stub
-                return null;
+            public @NotNull String getSeparator() {
+                throw new UnsupportedOperationException();
             }
     
             @Override
@@ -138,9 +139,9 @@ public class RemapperProcessor implements Processor {
             }
     
             @Override
-            public Path getPath(String first, String... more) {
-                //  Auto-generated method stub
-                return null;
+            @NotNull
+            public Path getPath(@NotNull String first, String... more) {
+                throw new UnsupportedOperationException();
             }
     
             @Override
@@ -171,7 +172,7 @@ public class RemapperProcessor implements Processor {
                 ProcessingEntry entry;
     
                 @Override
-                public FileSystem getFileSystem() {
+                public @NotNull FileSystem getFileSystem() {
                     return BruhFileSystem.this;
                 }
     
@@ -205,130 +206,116 @@ public class RemapperProcessor implements Processor {
                 }
     
                 @Override
-                public Path getName(int index) {
-                    //  Auto-generated method stub
-                    return null;
+                public @NotNull Path getName(int index) {
+                    throw new UnsupportedOperationException();
                 }
     
                 @Override
-                public Path subpath(int beginIndex, int endIndex) {
-                    //  Auto-generated method stub
-                    return null;
+                public @NotNull Path subpath(int beginIndex, int endIndex) {
+                    throw new UnsupportedOperationException();
                 }
     
                 @Override
-                public boolean startsWith(Path other) {
+                public boolean startsWith(@NotNull Path other) {
                     //  Auto-generated method stub
                     return false;
                 }
     
                 @Override
-                public boolean startsWith(String other) {
+                public boolean startsWith(@NotNull String other) {
                     //  Auto-generated method stub
                     return false;
                 }
     
                 @Override
-                public boolean endsWith(Path other) {
+                public boolean endsWith(@NotNull Path other) {
                     //  Auto-generated method stub
                     return false;
                 }
     
                 @Override
-                public boolean endsWith(String other) {
+                public boolean endsWith(@NotNull String other) {
                     //  Auto-generated method stub
                     return false;
                 }
     
                 @Override
-                public Path normalize() {
+                public @NotNull Path normalize() {
+                    throw new UnsupportedOperationException();
+                }
+    
+                @Override
+                public @NotNull Path resolve(@NotNull Path other) {
+                    throw new UnsupportedOperationException();
+                }
+    
+                @Override
+                public @NotNull Path resolve(@NotNull String other) {
+                    throw new UnsupportedOperationException();
+                }
+    
+                @Override
+                public @NotNull Path resolveSibling(@NotNull Path other) {
+                    throw new UnsupportedOperationException();
+                }
+    
+                @Override
+                public @NotNull Path resolveSibling(@NotNull String other) {
+                    throw new UnsupportedOperationException();
+                }
+    
+                @Override
+                public @NotNull Path relativize(@NotNull Path other) {
+                    throw new UnsupportedOperationException();
+                }
+    
+                @Override
+                public @NotNull URI toUri() {
+                    throw new UnsupportedOperationException();
+                }
+    
+                @Override
+                public @NotNull Path toAbsolutePath() {
+                    throw new UnsupportedOperationException();
+                }
+    
+                @Override
+                public Path toRealPath(@SuppressWarnings("null") LinkOption... options) throws IOException {
                     //  Auto-generated method stub
                     return null;
                 }
     
                 @Override
-                public Path resolve(Path other) {
-                    //  Auto-generated method stub
-                    return null;
+                public @NotNull File toFile() {
+                    throw new UnsupportedOperationException();
                 }
     
                 @Override
-                public Path resolve(String other) {
-                    //  Auto-generated method stub
-                    return null;
+                public @NotNull WatchKey register(@NotNull WatchService watcher, @NotNull Kind<?>@NotNull [] events, @SuppressWarnings("null") Modifier... modifiers) throws IOException {
+                    throw new UnsupportedOperationException();
                 }
     
                 @Override
-                public Path resolveSibling(Path other) {
-                    //  Auto-generated method stub
-                    return null;
+                public @NotNull WatchKey register(@NotNull WatchService watcher, @SuppressWarnings("null") Kind<?>... events) throws IOException {
+
+                    throw new UnsupportedOperationException();
                 }
     
                 @Override
-                public Path resolveSibling(String other) {
-                    //  Auto-generated method stub
-                    return null;
+                public @NotNull Iterator<Path> iterator() {
+                    throw new UnsupportedOperationException();
                 }
     
                 @Override
-                public Path relativize(Path other) {
-                    //  Auto-generated method stub
-                    return null;
-                }
-    
-                @Override
-                public URI toUri() {
-                    //  Auto-generated method stub
-                    return null;
-                }
-    
-                @Override
-                public Path toAbsolutePath() {
-                    //  Auto-generated method stub
-                    return null;
-                }
-    
-                @Override
-                public Path toRealPath(LinkOption... options) throws IOException {
-                    //  Auto-generated method stub
-                    return null;
-                }
-    
-                @Override
-                public File toFile() {
-                    //  Auto-generated method stub
-                    return null;
-                }
-    
-                @Override
-                public WatchKey register(WatchService watcher, Kind<?>[] events, Modifier... modifiers) throws IOException {
-                    //  Auto-generated method stub
-                    return null;
-                }
-    
-                @Override
-                public WatchKey register(WatchService watcher, Kind<?>... events) throws IOException {
-                    //  Auto-generated method stub
-                    return null;
-                }
-    
-                @Override
-                public Iterator<Path> iterator() {
-                    //  Auto-generated method stub
-                    return null;
-                }
-    
-                @Override
-                public int compareTo(Path other) {
+                public int compareTo(@NotNull Path other) {
                     //  Auto-generated method stub
                     return 0;
                 }
 
                 @Override
-                public String toString() {
+                public @NotNull String toString() {
                     return entry.id.path;
                 }
-                
             }
         }
 

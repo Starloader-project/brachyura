@@ -21,7 +21,7 @@ import io.github.coolcrabs.brachyura.util.PathUtil;
 class CompilerTest {
     @Test
     void e() {
-        Path src = PathUtil.CWD.getParent().resolve("testprogram").resolve("src").resolve("main").resolve("java");
+        Path src = PathUtil.CWD.resolveSibling("testprogram").resolve("src").resolve("main").resolve("java");
         JavaCompilationResult compilation;
         try {
             compilation = new JavaCompilation()
@@ -45,7 +45,7 @@ class CompilerTest {
 
     @Test
     void mem() {
-        Path dir = PathUtil.CWD.getParent().resolve("test").resolve("compiler").resolve("java").resolve("memclass");
+        Path dir = PathUtil.CWD.resolveSibling("test").resolve("compiler").resolve("java").resolve("memclass");
         JavaCompilationResult compilationA;
         try {
             compilationA = new JavaCompilation()
@@ -83,7 +83,7 @@ class CompilerTest {
 
     @Test
     void immutables() {
-        Path dir = PathUtil.CWD.getParent().resolve("test").resolve("compiler").resolve("java").resolve("immutables");
+        Path dir = PathUtil.CWD.resolveSibling("test").resolve("compiler").resolve("java").resolve("immutables");
         JavaCompilationResult compilationA;
         try {
             MavenResolver resolver = new MavenResolver(MavenResolver.MAVEN_LOCAL);

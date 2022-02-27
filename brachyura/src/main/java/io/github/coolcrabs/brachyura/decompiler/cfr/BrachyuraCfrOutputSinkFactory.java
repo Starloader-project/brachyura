@@ -122,10 +122,18 @@ class BrachyuraCfrOutputSinkFactory implements OutputSinkFactory, Closeable {
         
         @Override
         public void write(LineNumberMapping sinkable) {
-            Map<MethodId, DecompileLineNumberTable.MethodLineMap> a = decompileLineNumberTable.classes.computeIfAbsent(
-                sinkable.className().replace('.', '/'),
-                k -> new ClassLineMap(new ConcurrentHashMap<>())
-            ).methods;
+            Map<MethodId, DecompileLineNumberTable.MethodLineMap> a;
+            {
+                ClassLineMap var10001 = decompileLineNumberTable.classes.computeIfAbsent(
+                        sinkable.className().replace('.', '/'),
+                        k -> new ClassLineMap(new ConcurrentHashMap<>())
+                    );
+                if (var10001 == null) {
+                    // Not possible, but given that we do not have contract annotations, eclipse will not know about this
+                    throw new InternalError();
+                }
+                a = var10001.methods;
+            }
             MethodId id = new MethodId(sinkable.methodName(), sinkable.methodDescriptor());
             if (replace) {
                 List<LineNumberTableEntry> newLineNumbers = new ArrayList<>();

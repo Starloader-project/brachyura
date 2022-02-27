@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.security.MessageDigest;
 import java.util.List;
 
+import org.jetbrains.annotations.NotNull;
+
 import io.github.coolcrabs.brachyura.util.MessageDigestUtil;
 import io.github.coolcrabs.brachyura.util.Util;
 import net.fabricmc.mappingio.MappedElementKind;
@@ -17,6 +19,7 @@ public class MappingHasher implements MappingVisitor {
         this.messageDigest = messageDigest;
     }
 
+    @NotNull
     public static String hashSha256(MappingTree... trees) {
         MessageDigest digest = MessageDigestUtil.messageDigest(MessageDigestUtil.SHA256);
         hash(digest, trees);

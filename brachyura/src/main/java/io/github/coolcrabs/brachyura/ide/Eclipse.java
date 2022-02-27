@@ -13,6 +13,8 @@ import java.util.List;
 
 import javax.xml.stream.XMLStreamException;
 
+import org.jetbrains.annotations.NotNull;
+
 import com.google.gson.stream.JsonWriter;
 
 import io.github.coolcrabs.brachyura.dependency.JavaJarDependency;
@@ -287,7 +289,7 @@ public enum Eclipse implements Ide {
         w.writeAttribute("value", value);
     }
     
-    void sourceClasspathEntryAttributes(FormattedXMLStreamWriter w, Path projectDir, List<Path> paths) throws XMLStreamException {
+    void sourceClasspathEntryAttributes(FormattedXMLStreamWriter w, Path projectDir, List<@NotNull Path> paths) throws XMLStreamException {
         for (Path src : paths) {
             w.newline();
             w.writeEmptyElement("classpathentry");

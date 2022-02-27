@@ -20,6 +20,8 @@ import io.github.coolcrabs.brachyura.util.PathUtil;
 import net.fabricmc.accesswidener.AccessWidenerReader;
 import net.fabricmc.accesswidener.AccessWidenerVisitor;
 import net.fabricmc.mappingio.tree.MappingTree;
+
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Disabled;
 
 class J8FabricProjectTest {
@@ -54,8 +56,9 @@ class J8FabricProjectTest {
         }
 
         @Override
+        @NotNull
         public Path getProjectDir() {
-            Path result = PathUtil.CWD.getParent().resolve("testmod");
+            Path result = PathUtil.CWD.resolveSibling("testmod");
             assertTrue(Files.isDirectory(result)); 
             return result;
         }

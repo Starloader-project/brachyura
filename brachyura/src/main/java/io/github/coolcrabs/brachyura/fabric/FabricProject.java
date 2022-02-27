@@ -228,7 +228,11 @@ public abstract class FabricProject extends BaseJavaProject {
     public IdeModule[] getIdeModules() {
         Path cwd = PathUtil.resolveAndCreateDir(getProjectDir(), "run");
         Lazy<List<Path>> classpath = new Lazy<>(() -> {
-            Path mappingsClasspath = writeMappings4FabricStuff().getParent().getParent();
+            Path var10001 = writeMappings4FabricStuff().getParent();
+            if (var10001 == null) {
+                throw new IllegalStateException();
+            }
+            Path mappingsClasspath = var10001.getParent();
             ArrayList<Path> r = new ArrayList<>(runtimeDependencies.get().size() + 1);
             for (JavaJarDependency dependency : runtimeDependencies.get()) {
                 r.add(dependency.jar);
@@ -630,7 +634,11 @@ public abstract class FabricProject extends BaseJavaProject {
                 try {
                     try (ZipFile f = new ZipFile(modDependency.jarDependency.jar.toFile())) {
                         if (f.getEntry("fabric.mod.json") == null) {
-                            Path p = fmjgen.resolve(modDependency.jarDependency.jar.getFileName());
+                            Path filename = modDependency.jarDependency.jar.getFileName();
+                            if (filename == null) {
+                                throw new IllegalStateException();
+                            }
+                            Path p = fmjgen.resolve(filename);
                             try (
                                 ZipProcessingSource s = new ZipProcessingSource(modDependency.jarDependency.jar);
                                 AtomicZipProcessingSink sink = new AtomicZipProcessingSink(p)
@@ -782,7 +790,11 @@ public abstract class FabricProject extends BaseJavaProject {
                         for (RemapInfo ri : remapinfo) {
                             ZipProcessingSource s = new ZipProcessingSource(ri.source.jarDependency.jar);
                             toClose.add(s);
-                            ZipProcessingSink si = new ZipProcessingSink(a.tempPath.resolve(ri.target.jarDependency.jar.getFileName()));
+                            Path filename = ri.target.jarDependency.jar.getFileName();
+                            if (filename == null) {
+                                throw new IllegalStateException();
+                            }
+                            ZipProcessingSink si = new ZipProcessingSink(a.tempPath.resolve(filename));
                             toClose.add(si);
                             b.put(s, si);
                             c.put(s, ri.source.jarDependency.mavenId);
@@ -794,7 +806,13 @@ public abstract class FabricProject extends BaseJavaProject {
                             new AccessWidenerRemapper(mappings.get(), mappings.get().getNamespaceId(Namespaces.NAMED)),
                             new FmjGenerator(c)
                         ).apply(
-                            (in, id) -> b.get(id.source).sink(in, id),
+                            (in, id) -> {
+                                ZipProcessingSink sink = b.get(id.source);
+                                if (sink == null) {
+                                    throw new IllegalStateException();
+                                }
+                                sink.sink(in, id);
+                            },
                             b.keySet()
                         );
                     }

@@ -21,6 +21,7 @@ import io.github.coolcrabs.brachyura.util.FileSystemUtil;
 import io.github.coolcrabs.brachyura.util.PathUtil;
 import io.github.coolcrabs.brachyura.util.Util;
 
+import org.jetbrains.annotations.NotNull;
 import org.tinylog.Logger;
 
 // Basically a mini class file reader + writer
@@ -554,8 +555,9 @@ public class LineNumberTableReplacer {
         String data;
 
         @Override
+        @NotNull
         public String toString() {
-            return data;
+            return Objects.toString(data);
         }
     }
 

@@ -5,6 +5,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 
+import org.jetbrains.annotations.NotNull;
+
 import io.github.coolcrabs.brachyura.exception.TaskFailedException;
 
 class Tasks implements Consumer<Task> {
@@ -22,6 +24,7 @@ class Tasks implements Consumer<Task> {
     }
 
     @Override
+    @NotNull
     public String toString() {
         StringBuilder sb = new StringBuilder();
         for (Map.Entry<String, Task> a : t.entrySet()) {

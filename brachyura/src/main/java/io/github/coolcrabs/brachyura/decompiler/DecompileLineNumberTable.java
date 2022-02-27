@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.jetbrains.annotations.Nullable;
+
 public class DecompileLineNumberTable {
     // If true replaces existing tables
     // If false remaps existing table
@@ -59,7 +61,7 @@ public class DecompileLineNumberTable {
         }
 
         @Override
-        public boolean equals(Object o) {
+        public boolean equals(@Nullable Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             MethodId methodId = (MethodId) o;

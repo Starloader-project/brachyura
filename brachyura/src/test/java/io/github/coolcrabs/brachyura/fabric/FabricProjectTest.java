@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.function.Consumer;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 
 import io.github.coolcrabs.brachyura.decompiler.BrachyuraDecompiler;
@@ -59,8 +60,9 @@ class FabricProjectTest {
         }
 
         @Override
+        @NotNull
         public Path getProjectDir() {
-            Path result = PathUtil.CWD.getParent().resolve("testmod");
+            Path result = PathUtil.CWD.resolveSibling("testmod");
             assertTrue(Files.isDirectory(result)); 
             return result;
         }

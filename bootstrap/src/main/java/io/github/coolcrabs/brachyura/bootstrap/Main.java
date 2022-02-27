@@ -27,6 +27,9 @@ public class Main {
         System.out.println("Using brachyura bootstrap " + VERSION);
         // https://stackoverflow.com/a/2837287
         Path projectPath = Paths.get(Main.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent();
+        if (projectPath == null) {
+            throw new UnsupportedOperationException("Couldn't fully resolve the current path of the bootstrap jar");
+        }
         Files.createDirectories(BOOTSTRAP_DIR);
         Path conf = projectPath.resolve("brachyurabootstrapconf.txt");
         List<Path> classpath = new ArrayList<>();

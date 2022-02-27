@@ -9,6 +9,8 @@ import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 
 import io.github.coolcrabs.brachyura.util.PathUtil;
+
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Assertions;
 
 class SimpleJavaProjectTest {
@@ -26,8 +28,9 @@ class SimpleJavaProjectTest {
             }
 
             @Override
+            @NotNull
             public Path getProjectDir() {
-                return PathUtil.CWD.getParent().resolve("testprogram");
+                return PathUtil.CWD.resolveSibling("testprogram");
             }
         };
         //Todo better api for this?

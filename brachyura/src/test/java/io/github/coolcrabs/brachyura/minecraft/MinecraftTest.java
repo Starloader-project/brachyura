@@ -94,7 +94,11 @@ class MinecraftTest {
         LauncherMeta lmeta = LauncherMetaDownloader.getLauncherMeta();
         for (Version versionMeta : lmeta.versions) {
             if (versionMeta.type.equals("snapshot")) continue;
-            VersionMeta meta = Minecraft.getVersion(versionMeta.id);
+            String versionmetaId = versionMeta.id;
+            if (versionmetaId == null) {
+                throw new IllegalStateException("Invalid version metadata id (it is null)");
+            }
+            VersionMeta meta = Minecraft.getVersion(versionmetaId);
             for (Dependency lib : Minecraft.getDependencies(meta)) {
                 if (lib instanceof JavaJarDependency) {
                     assertNotNull(((JavaJarDependency)lib).jar);

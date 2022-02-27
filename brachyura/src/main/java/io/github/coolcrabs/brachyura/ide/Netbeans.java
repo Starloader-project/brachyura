@@ -11,6 +11,7 @@ import java.util.Properties;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.benf.cfr.reader.util.annotation.Nullable;
+import org.jetbrains.annotations.NotNull;
 import org.tinylog.Logger;
 
 import io.github.coolcrabs.brachyura.dependency.JavaJarDependency;
@@ -187,7 +188,7 @@ public enum Netbeans implements Ide {
             }
         }
 
-        void cp(Path dir, String... p) throws IOException {
+        void cp(Path dir, @NotNull String... p) throws IOException {
             Path target = dir;
             for (String p0 : p) {
                 target = target.resolve(p0);

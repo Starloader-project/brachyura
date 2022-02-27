@@ -26,6 +26,9 @@ public class DirectoryProcessingSource extends ProcessingSource {
             Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
                 @Override
                 public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    if (file == null) {
+                        throw new NullPointerException("File may not be null");
+                    }
                     Path r = path.relativize(file);
                     StringBuilder b = new StringBuilder();
                     for (Path ppart : r) {

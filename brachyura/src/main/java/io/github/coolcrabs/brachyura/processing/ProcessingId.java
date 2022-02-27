@@ -2,11 +2,14 @@ package io.github.coolcrabs.brachyura.processing;
 
 import java.util.Objects;
 
+import org.jetbrains.annotations.NotNull;
+
 public final class ProcessingId {
+    @NotNull
     public final String path;
     public final ProcessingSource source;
 
-    public ProcessingId(String path, ProcessingSource source) {
+    public ProcessingId(@NotNull String path, ProcessingSource source) {
         this.path = path;
         this.source = source;
     }

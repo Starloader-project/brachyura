@@ -20,6 +20,7 @@ import java.util.stream.Stream;
 
 import com.google.gson.Gson;
 
+import org.jetbrains.annotations.NotNull;
 import org.tinylog.Logger;
 
 import io.github.coolcrabs.brachyura.dependency.Dependency;
@@ -51,7 +52,7 @@ import net.fabricmc.mappingio.tree.MemoryMappingTree;
 public class Minecraft {
     private Minecraft() { }
 
-    public static VersionMeta getVersion(String version) {
+    public static VersionMeta getVersion(@NotNull String version) {
         try {
             Path versionJsonPath = mcVersions().resolve(version).resolve("version.json");
             if (!Files.isRegularFile(versionJsonPath)) {
@@ -118,7 +119,7 @@ public class Minecraft {
         throw new IllegalArgumentException("Unable to find experimental version json in requested url");
     }
 
-    public static Path getDownload(VersionMeta meta, String download) {
+    public static Path getDownload(VersionMeta meta, @NotNull String download) {
         try {
             Path downloadPath = mcVersions().resolve(meta.version).resolve(download);
             if (!Files.isRegularFile(downloadPath)) {
@@ -179,7 +180,11 @@ public class Minecraft {
                 Path sourcesPath = null;
                 VMDependencyDownload artifact = dependency.artifact;
                 if (artifact != null) {
-                    artifactPath = mcLibCache().resolve(artifact.path);
+                    String pathString = artifact.path;
+                    if (pathString == null) {
+                        throw new IllegalStateException();
+                    }
+                    artifactPath = mcLibCache().resolve(pathString);
                     if (!Files.isRegularFile(artifactPath)) {
                         downloadDep(artifactPath, new URL(artifact.url), artifact.sha1);
                     }
@@ -219,7 +224,11 @@ public class Minecraft {
                 }
                 VMDependencyDownload natives = dependency.natives;
                 if (natives != null) {
-                    nativesPath = mcLibCache().resolve(natives.path);
+                    String pathString = natives.path;
+                    if (pathString == null) {
+                        throw new IllegalStateException();
+                    }
+                    nativesPath = mcLibCache().resolve(pathString);
                     if (!Files.isRegularFile(nativesPath)) {
                         downloadDep(nativesPath, new URL(natives.url), natives.sha1);
                     }
@@ -269,9 +278,10 @@ public class Minecraft {
         }
         Path objects = assets().resolve("objects");
         for (Map.Entry<String, SizeHash> entry : assetsIndex.objects.entrySet()) {
-            String a = entry.getValue().hash.substring(0, 2); // first 2 chars
-            URL url = NetUtil.url("http://resources.download.minecraft.net/" + a + "/" + entry.getValue().hash);
-            Path target = objects.resolve(a).resolve(entry.getValue().hash);
+            String hash = entry.getValue().hash;
+            String a = hash.substring(0, 2); // first 2 chars
+            URL url = NetUtil.url("http://resources.download.minecraft.net/" + a + "/" + hash);
+            Path target = objects.resolve(a).resolve(hash);
             if (!Files.isRegularFile(target)) {
                 try (AtomicFile atomicFile = new AtomicFile(target)) {
                     Files.deleteIfExists(atomicFile.tempPath);
@@ -279,9 +289,9 @@ public class Minecraft {
                     try (DigestInputStream inputStream = new DigestInputStream(NetUtil.inputStream(url), messageDigest)) {
                         Files.copy(inputStream, atomicFile.tempPath);
                     }
-                    String hash = MessageDigestUtil.toHexHash(messageDigest.digest());
-                    if (!hash.equalsIgnoreCase(entry.getValue().hash)) {
-                        throw new IncorrectHashException(entry.getValue().hash, hash);
+                    String digestHash = MessageDigestUtil.toHexHash(messageDigest.digest());
+                    if (!digestHash.equalsIgnoreCase(hash)) {
+                        throw new IncorrectHashException(hash, hash);
                     }
                     atomicFile.commit();
                 }
