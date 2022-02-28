@@ -2,14 +2,17 @@ package io.github.coolcrabs.brachyura.maven;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -238,25 +241,45 @@ public class MavenResolver {
 
     @Nullable
     public JavaJarDependency getJarDepend(@NotNull MavenId artifact) {
-        Path noSourcesCacheFile;
+        // TODO some way of forcing refresh, even if jars are in the nolookup file
+        Set<String> nolookup = new HashSet<>();
+        Path nolookupCacheFile;
         {
             String folder = artifact.groupId.replace('.', '/') + '/' + artifact.artifactId + '/' + artifact.version + '/';
-            String file = artifact.artifactId + '-' + artifact.version + ".nosources";
-            noSourcesCacheFile = cacheFolder.resolve(folder).resolve(file);
+            String file = artifact.artifactId + '-' + artifact.version + ".nolookup";
+            nolookupCacheFile = cacheFolder.resolve(folder).resolve(file);
+            if (Files.exists(nolookupCacheFile)) {
+                try {
+                    nolookup.addAll(Files.readAllLines(nolookupCacheFile, StandardCharsets.UTF_8));
+                } catch (IOException e) {
+                    throw new IllegalStateException(e);
+                }
+            }
         }
         ResolvedFile sources = null;
-        if (Files.notExists(noSourcesCacheFile)) {
+        ResolvedFile ijAnnotations = null;
+        if (!nolookup.contains("sources")) {
             try {
                 sources = resolveArtifact(artifact, "sources", "jar");
             } catch (Exception exception1) {
-                try {
-                    Files.createDirectories(noSourcesCacheFile.getParent());
-                    Files.createFile(noSourcesCacheFile);
-                } catch (IOException exception2) {
-                    IllegalStateException ex = new IllegalStateException("Cannot cache sources", exception2);
-                    ex.addSuppressed(exception1);
-                    throw ex;
-                }
+                nolookup.add("sources");
+            }
+        }
+        if (!nolookup.contains("intelliJ-annotations")) {
+            try {
+                ijAnnotations = resolveArtifact(artifact, "annoations", "zip");
+            } catch (Exception exception1) {
+                // We aren't fully done here, but close enough. See:
+                // https://youtrack.jetbrains.com/issue/IDEA-132487#focus=streamItem-27-3082925.0-0
+                nolookup.add("intelliJ-annotations");
+            }
+        }
+        if (!nolookup.isEmpty()) {
+            try {
+                Files.createDirectories(nolookupCacheFile.getParent());
+                Files.write(nolookupCacheFile, nolookup);
+            } catch (Exception e) {
+                throw new IllegalStateException("Unable to cache failed lookups", e);
             }
         }
         try {
@@ -269,7 +292,11 @@ public class MavenResolver {
             if (jarPath == null) {
                 return null;
             }
-            return new JavaJarDependency(jarPath, sourcesPath, artifact);
+            Path ijAnnotPath = null;
+            if (ijAnnotations != null) {
+                ijAnnotPath = ijAnnotations.getCachePath();
+            }
+            return new JavaJarDependency(jarPath, sourcesPath, artifact, null, ijAnnotPath);
         } catch (Exception e) {
             return null;
         }

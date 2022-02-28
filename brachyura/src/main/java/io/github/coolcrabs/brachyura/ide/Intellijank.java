@@ -324,6 +324,17 @@ public enum Intellijank implements Ide {
                             w.newline();
                             w.writeEndElement();
                         }
+                        if (dep.intelliJExternalAnnotations != null) {
+                            w.newline();
+                            w.writeStartElement("ANNOTATIONS");
+                            w.indent();
+                            w.newline();
+                                w.writeEmptyElement("root");
+                                w.writeAttribute("url", toIntellijankPath(dep.intelliJExternalAnnotations));
+                            w.unindent();
+                            w.newline();
+                            w.writeEndElement();
+                        }
                     w.unindent();
                     w.newline();
                     w.writeEndElement();

@@ -128,13 +128,22 @@ public enum Eclipse implements Ide {
                 moduleDepClasspathEntries(w, project);
                 for (JavaJarDependency dep : project.dependencies.get()) {
                     w.newline();
-                    w.writeEmptyElement("classpathentry");
+                    w.writeStartElement("classpathentry");
                     w.writeAttribute("kind", "lib");
                     w.writeAttribute("path", dep.jar.toString());
                     Path sourcesJar = dep.sourcesJar;
                     if (sourcesJar != null) {
                         w.writeAttribute("sourcepath", sourcesJar.toString());
                     }
+                    w.writeStartElement("attributes");
+                    Path eclipseAnnotations = dep.eclipseExternalAnnotations;
+                    if (eclipseAnnotations != null) {
+                        w.writeEmptyElement("attribute");
+                        w.writeAttribute("name", "annotationpath");
+                        w.writeAttribute("value", eclipseAnnotations.toString());
+                    }
+                    w.writeEndElement();
+                    w.writeEndElement();
                 }
                 w.newline();
                 w.writeEmptyElement("classpathentry");

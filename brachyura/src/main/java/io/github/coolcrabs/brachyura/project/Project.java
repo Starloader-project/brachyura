@@ -1,6 +1,5 @@
 package io.github.coolcrabs.brachyura.project;
 
-import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.util.function.Consumer;
 
@@ -26,9 +25,6 @@ public class Project {
     @SuppressWarnings("null") // There are circumstances that this is null, but we are going to ignore these
     @NotNull
     public Path getProjectDir() {
-        @NotNull
-        ByteBuffer buf = ByteBuffer.allocate(10);
-        buf.array();
         return EntryGlobals.projectDir;
     }
 
@@ -37,6 +33,13 @@ public class Project {
         return PathUtil.resolveAndCreateDir(getProjectDir(), ".brachyura");
     }
 
+    /**
+     * Note: usually, this method returns null.
+     *
+     * <p>The only place where it does not return null is when the buildscript is invoked or something like that.
+     *
+     * @return Unknown
+     */
     @Nullable
     public BaseJavaProject getBuildscriptProject() {
         return buildscriptIdeProject;
