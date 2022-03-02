@@ -24,7 +24,7 @@ public class BrachyuraEntry {
             EntryGlobals.projectDir = projectDir;
             EntryGlobals.buildscriptClasspath = classpath;
             BuildscriptProject buildscriptProject = new BuildscriptProject();
-            if (args.length >= 1 && "buildscript".equals(args[0])) {
+            if (args.length >= 1 && "buildscript".equalsIgnoreCase(args[0])) {
                 Tasks t = new Tasks();
                 buildscriptProject.getTasks(t);
                 if (args.length >= 2) {

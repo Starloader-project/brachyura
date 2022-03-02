@@ -20,6 +20,7 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.zip.GZIPOutputStream;
 
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 public class PathUtil {
@@ -27,12 +28,50 @@ public class PathUtil {
 
     public static final Path HOME = Paths.get(System.getProperty("user.home"));
     public static final Path CWD = Paths.get("").toAbsolutePath();
+    private static Path brachyuraPath;
 
+    @NotNull
+    @Contract(value = "-> !null", pure = true)
     public static Path brachyuraPath() {
-        return HOME.resolve(".brachyura");
+        Path brachyuraPath = PathUtil.brachyuraPath;
+        if (brachyuraPath != null) {
+            return brachyuraPath;
+        }
+        // Follow https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
+        String xdgDataHome = System.getenv("XDG_DATA_HOME");
+        Path home;
+        boolean hide = false;
+        if (xdgDataHome == null || xdgDataHome.isEmpty()) {
+            // "If $XDG_DATA_HOME is either not set or empty, a default equal to $HOME/.local/share should be used."
+            Path userhome = Paths.get(System.getProperty("user.home"));
+            Path share = userhome.resolve(".local").resolve("share");
+            if (Files.exists(share)) {
+                home = share;
+            } else {
+                // Probably on windows or another OS that does not work with the XDG spec
+                Path windowsAppdataFolder = Paths.get(System.getenv("appdata"));
+                if (Files.exists(windowsAppdataFolder)) {
+                    // Make it in the appdata folder
+                    home = windowsAppdataFolder;
+                } else {
+                    // Just make it relative to the user home
+                    home = userhome;
+                    hide = true;
+                }
+            }
+        } else {
+            home = Paths.get(xdgDataHome);
+        }
+        if (hide) {
+            brachyuraPath = home.resolve("brachyura");
+        } else {
+            brachyuraPath = home.resolve(".brachyura");
+        }
+        brachyuraPath = brachyuraPath.resolve("starloader");
+        PathUtil.brachyuraPath = brachyuraPath;
+        return brachyuraPath;
     }
 
-    @SuppressWarnings("null")
     @NotNull
     public static Path cachePath() {
         return brachyuraPath().resolve("cache");

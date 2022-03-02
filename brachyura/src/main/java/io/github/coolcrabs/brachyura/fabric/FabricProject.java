@@ -541,7 +541,11 @@ public abstract class FabricProject extends BaseJavaProject {
                     }
                     JsonElement aw0 = fabricModJson.get("accessWidener");
                     if (aw0 != null) {
-                        aws.add(new ProcessingId(aw0.getAsString(), e.id.source));
+                        String stringValue = aw0.getAsString();
+                        if (stringValue == null) {
+                            throw new IllegalStateException();
+                        }
+                        aws.add(new ProcessingId(stringValue, e.id.source));
                     }
                 }
             }

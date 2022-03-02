@@ -21,7 +21,7 @@ import java.util.List;
 
 public class Main {
     public static final int VERSION = 0;
-    static final Path BOOTSTRAP_DIR = Paths.get(System.getProperty("user.home")).resolve(".brachyura").resolve("bootstrap");
+    static final Path BOOTSTRAP_DIR;
 
     public static void main(String[] args) throws Throwable {
         System.out.println("Using brachyura bootstrap " + VERSION);
@@ -107,6 +107,7 @@ public class Main {
         if ("file".equals(url.getProtocol())) return Paths.get(url.toURI()); // For debug usage
         Path target = BOOTSTRAP_DIR.resolve(fileName);
         if (!Files.isRegularFile(target)) {
+            System.out.println("Downloading " + url.toString());
             Path tempFile = Files.createTempFile(BOOTSTRAP_DIR, hash, ".tmp");
             try {
                 MessageDigest md = MessageDigest.getInstance("SHA-1");
@@ -137,5 +138,38 @@ public class Main {
             hex.append(Integer.toHexString(x));
         }
         return hex.toString();
+    }
+
+    static {
+        // Follow https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
+        String xdgDataHome = System.getenv("XDG_DATA_HOME");
+        Path home;
+        boolean hide = false;
+        if (xdgDataHome == null || xdgDataHome.isEmpty()) {
+            // "If $XDG_DATA_HOME is either not set or empty, a default equal to $HOME/.local/share should be used."
+            Path userhome = Paths.get(System.getProperty("user.home"));
+            Path share = userhome.resolve(".local").resolve("share");
+            if (Files.exists(share)) {
+                home = share;
+            } else {
+                // Probably on windows or another OS that does not work with the XDG spec
+                Path windowsAppdataFolder = Paths.get(System.getenv("appdata"));
+                if (Files.exists(windowsAppdataFolder)) {
+                    // Make it in the appdata folder
+                    home = windowsAppdataFolder;
+                } else {
+                    // Just make it relative to the user home
+                    home = userhome;
+                    hide = true;
+                }
+            }
+        } else {
+            home = Paths.get(xdgDataHome);
+        }
+        if (hide) {
+            BOOTSTRAP_DIR = home.resolve(".brachyura").resolve("starloader").resolve("bootstrap");
+        } else {
+            BOOTSTRAP_DIR = home.resolve("brachyura").resolve("starloader").resolve("bootstrap");
+        }
     }
 }

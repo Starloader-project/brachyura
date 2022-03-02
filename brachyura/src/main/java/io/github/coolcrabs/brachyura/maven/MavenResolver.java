@@ -267,7 +267,7 @@ public class MavenResolver {
         }
         if (!nolookup.contains("intelliJ-annotations")) {
             try {
-                ijAnnotations = resolveArtifact(artifact, "annoations", "zip");
+                ijAnnotations = resolveArtifact(artifact, "annotations", "zip");
             } catch (Exception exception1) {
                 // We aren't fully done here, but close enough. See:
                 // https://youtrack.jetbrains.com/issue/IDEA-132487#focus=streamItem-27-3082925.0-0

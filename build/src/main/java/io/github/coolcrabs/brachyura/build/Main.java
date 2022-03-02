@@ -33,8 +33,11 @@ import org.kohsuke.github.GitHubBuilder;
 
 public class Main {
 
-    static String ASM_VERSION = "9.2";
-    static String TINYLOG_VERSION = "2.3.2";
+    static final String ASM_VERSION = "9.2";
+    static final String TINYLOG_VERSION = "2.3.2";
+    static final String REMAPPER_VERSION = "0.8.1";
+    static final String ACCESSWIDENER_VERSION = "2.1.0";
+    static final String MAPPINGSIO_VERSION = "0.3.0";
 
     static String[] localLibs = new String[] {"fabricmerge", "cfr", "brachyura", "bootstrap", "brachyura-mixin-compile-extensions", "trieharder", "fernutil"};
     static String[] mavenLibs = new String[] {
@@ -54,12 +57,12 @@ public class Main {
         "https://repo.maven.apache.org/maven2/org/tinylog/tinylog-api/" + TINYLOG_VERSION + "/tinylog-api-" + TINYLOG_VERSION + "-sources.jar",
         "https://repo.maven.apache.org/maven2/org/tinylog/tinylog-impl/" + TINYLOG_VERSION + "/tinylog-impl-" + TINYLOG_VERSION + ".jar",
         "https://repo.maven.apache.org/maven2/org/tinylog/tinylog-impl/" + TINYLOG_VERSION + "/tinylog-impl-" + TINYLOG_VERSION + "-sources.jar",
-        "https://maven.fabricmc.net/net/fabricmc/mapping-io/0.1.7/mapping-io-0.1.7.jar",
-        "https://maven.fabricmc.net/net/fabricmc/mapping-io/0.1.7/mapping-io-0.1.7-sources.jar",
-        "https://maven.fabricmc.net/net/fabricmc/tiny-remapper/0.7.0/tiny-remapper-0.7.0.jar",
-        "https://maven.fabricmc.net/net/fabricmc/tiny-remapper/0.7.0/tiny-remapper-0.7.0-sources.jar",
-        "https://maven.fabricmc.net/net/fabricmc/access-widener/2.0.0/access-widener-2.0.0.jar",
-        "https://maven.fabricmc.net/net/fabricmc/access-widener/2.0.0/access-widener-2.0.0-sources.jar",
+        "https://maven.fabricmc.net/net/fabricmc/mapping-io/" + MAPPINGSIO_VERSION + "/mapping-io-" + MAPPINGSIO_VERSION + ".jar",
+        "https://maven.fabricmc.net/net/fabricmc/mapping-io/" + MAPPINGSIO_VERSION + "/mapping-io-" + MAPPINGSIO_VERSION + "-sources.jar",
+        "https://maven.fabricmc.net/net/fabricmc/tiny-remapper/" + REMAPPER_VERSION + "/tiny-remapper-" + REMAPPER_VERSION + ".jar",
+        "https://maven.fabricmc.net/net/fabricmc/tiny-remapper/" + REMAPPER_VERSION + "/tiny-remapper-" + REMAPPER_VERSION + "-sources.jar",
+        "https://maven.fabricmc.net/net/fabricmc/access-widener/" + ACCESSWIDENER_VERSION + "/access-widener-" + ACCESSWIDENER_VERSION + ".jar",
+        "https://maven.fabricmc.net/net/fabricmc/access-widener/" + ACCESSWIDENER_VERSION + "/access-widener-" + ACCESSWIDENER_VERSION + "-sources.jar",
         "https://repo.maven.apache.org/maven2/org/jetbrains/annotations/23.0.0/annotations-23.0.0.jar",
         "https://repo.maven.apache.org/maven2/org/jetbrains/annotations/23.0.0/annotations-23.0.0-sources.jar",
         "https://repo1.maven.org/maven2/org/apache/httpcomponents/httpclient/4.5.13/httpclient-4.5.13.jar",
@@ -67,6 +70,7 @@ public class Main {
         "https://repo1.maven.org/maven2/commons-codec/commons-codec/1.15/commons-codec-1.15.jar",
         "https://repo1.maven.org/maven2/commons-logging/commons-logging/1.2/commons-logging-1.2.jar"
     };
+
     static boolean github = Boolean.parseBoolean(System.getenv("CI"));
     static String commit = github ? getCommitHash() : null;
     static final String GITHUB_TOKEN = System.getenv("GITHUB_TOKEN");
