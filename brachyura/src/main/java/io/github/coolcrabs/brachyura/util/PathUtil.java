@@ -63,9 +63,9 @@ public class PathUtil {
             home = Paths.get(xdgDataHome);
         }
         if (hide) {
-            brachyuraPath = home.resolve("brachyura");
-        } else {
             brachyuraPath = home.resolve(".brachyura");
+        } else {
+            brachyuraPath = home.resolve("brachyura");
         }
         brachyuraPath = brachyuraPath.resolve("starloader");
         PathUtil.brachyuraPath = brachyuraPath;
