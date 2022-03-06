@@ -49,7 +49,10 @@ class BrachyuraMappingWriter implements IMappingWriter {
                 Writer writer;
                 if (output.matches("^.*[\\\\/:].*$")) {
                     File outFile = new File(output);
-                    outFile.getParentFile().mkdirs();
+                    File parent = outFile.getParentFile();
+                    if (parent != null) {
+                        parent.mkdirs();
+                    }
                     writer = Files.newBufferedWriter(outFile.toPath());
                 } else {
                     writer = new OutputStreamWriter(filer.createResource(StandardLocation.CLASS_OUTPUT, "", output).openOutputStream(), StandardCharsets.UTF_8);
