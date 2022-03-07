@@ -21,6 +21,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.tinylog.Logger;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -43,6 +44,7 @@ public class MavenResolver {
     private final List<MavenRepository> repositories = new ArrayList<>();
     @NotNull
     private final Path cacheFolder;
+    private boolean resolveTestDependencies = false;
 
     // FIXME while this usually works, this is not exactly right. See https://stackoverflow.com/a/47833316
     @SuppressWarnings("null")
@@ -140,6 +142,10 @@ public class MavenResolver {
         return null;
     }
 
+    public void setResolveTestDependencies(boolean resolveTestDependencies) {
+        this.resolveTestDependencies = resolveTestDependencies;
+    }
+
     private void getTransitiveDependencyVersions(@NotNull MavenId artifact, @NotNull Map<VersionlessMavenId, MavenId> versions) {
         VersionlessMavenId verlessMavenId = new VersionlessMavenId(artifact.groupId, artifact.artifactId);
         if (versions.containsKey(verlessMavenId)) {
@@ -186,14 +192,26 @@ public class MavenResolver {
             project.normalize();
             NodeList dependencies;
             {
-                dependencies = project.getElementsByTagName("dependencies");
-                if (dependencies.getLength() == 0) {
-                    return;
-                } else if (dependencies.getLength() != 1) {
-                    throw new IllegalStateException("Pom for artifact " + artifact.toString() + " contains multiple "
-                            + "dependencies blocks.");
+                NodeList children = project.getChildNodes();
+                Element dependenciesBlock = null;
+                for (int i = 0; i < children.getLength(); i++) {
+                    Node block = children.item(i);
+                    if (!block.hasChildNodes()) {
+                        continue;
+                    }
+                    Element blockElem = (Element) block;
+                    if (blockElem.getTagName().equals("dependencies")) {
+                        if (dependenciesBlock != null) {
+                            throw new IllegalStateException("Pom for artifact " + artifact.toString() + " contains multiple "
+                                    + "dependencies blocks.");
+                        }
+                        dependenciesBlock = blockElem;
+                    }
                 }
-                dependencies = ((Element) dependencies.item(0)).getElementsByTagName("dependency");
+                if (dependenciesBlock == null) {
+                    return;
+                }
+                dependencies = dependenciesBlock.getChildNodes();
             }
             for (int i = 0; i < dependencies.getLength(); i++) {
                 Node depend = dependencies.item(i);
@@ -201,13 +219,41 @@ public class MavenResolver {
                     continue;
                 }
                 Element elem = (Element) depend;
+                if (!elem.getTagName().equals("dependency")) {
+                    continue;
+                }
                 String groupId = elem.getElementsByTagName("groupId").item(0).getTextContent();
                 String artifactId = elem.getElementsByTagName("artifactId").item(0).getTextContent();
-                String version = elem.getElementsByTagName("version").item(0).getTextContent();
+                Node versionElement = elem.getElementsByTagName("version").item(0);
+                if (versionElement == null) {
+                    // TODO implicitly, the release tag should be used - let's do that eventually
+                    Logger.warn("Pom for Artifact " + artifact.toString() + " does not supply an "
+                            + "explicit version for artifact " + groupId + ":" + artifactId + ". It was not"
+                            + " added to the dependency tree. Consider adding it manually.");
+                    return;
+                }
+                String version = versionElement.getTextContent();
                 if (groupId == null || artifactId == null || version == null) {
                     throw new IllegalStateException("Dependency block in pom of " + artifact.toString() + " contains either"
                             + " no groupId, artifactId or version element.");
                 }
+
+                if (groupId.equals("${project.groupId}")) {
+                    // Okay, placeholders are going to be an issue ... Let's just implement the most common ones
+                    groupId = artifact.groupId;
+                }
+                if (version.equals("${project.version}")) {
+                    version = artifact.version;
+                }
+
+                Node scopeElement = elem.getElementsByTagName("scope").item(0);
+                if (scopeElement instanceof Element && !resolveTestDependencies) {
+                    Element scope = (Element) scopeElement;
+                    if (scope.getTextContent().equals("test")) {
+                        return;
+                    }
+                }
+
                 getTransitiveDependencyVersions(new MavenId(groupId, artifactId, version), versions);
             }
         } catch (SAXException | ParserConfigurationException e1) {
