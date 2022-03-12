@@ -129,12 +129,26 @@ public class MavenResolver {
         for (MavenRepository repo : repositories) {
             ResolvedFile resolved = repo.resolve(folder, file);
             if (resolved != null) {
+                IOException symlinkEx = null;
+                if (resolved.getCachePath() != null) {
+                    // Create symbol link to the resolved file
+                    try {
+                        Files.createDirectories(cacheFile.getParent());
+                        Files.createSymbolicLink(cacheFile, resolved.getCachePath());
+                        return resolved;
+                    } catch (IOException e) {
+                        // Cannot create symbolic link
+                        symlinkEx = e;
+                    }
+                }
                 try {
                     Files.createDirectories(cacheFile.getParent());
                     Files.write(cacheFile, resolved.data, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
                     resolved.setCachePath(cacheFile);
                 } catch (IOException e) {
-                    throw new IllegalStateException("Unable to write to cache", e);
+                    IllegalStateException toThrow = new IllegalStateException("Unable to write to cache", e);
+                    toThrow.addSuppressed(symlinkEx);
+                    throw toThrow;
                 }
                 return resolved;
             }
@@ -142,8 +156,11 @@ public class MavenResolver {
         return null;
     }
 
-    public void setResolveTestDependencies(boolean resolveTestDependencies) {
+    @Contract(mutates = "this", pure = false, value = "_ -> this")
+    @NotNull
+    public MavenResolver setResolveTestDependencies(boolean resolveTestDependencies) {
         this.resolveTestDependencies = resolveTestDependencies;
+        return this;
     }
 
     private void getTransitiveDependencyVersions(@NotNull MavenId artifact, @NotNull Map<VersionlessMavenId, MavenId> versions) {
