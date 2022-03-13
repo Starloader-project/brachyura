@@ -10,24 +10,31 @@ import org.jetbrains.annotations.NotNull;
 import io.github.coolcrabs.brachyura.exception.TaskFailedException;
 
 class Tasks implements Consumer<Task> {
-    public final Map<String, Task> t = new HashMap<>();
+
+    @NotNull
+    private final Map<String, Task> tasks = new HashMap<>();
 
     @Override
     public void accept(Task task) {
-        if (t.putIfAbsent(task.name, task) != null) {
+        if (tasks.putIfAbsent(task.name, task) != null) {
             throw new TaskFailedException("Duplicate task for " + task.name);
         }
     }
 
     Task get(String name) {
-        return Objects.requireNonNull(t.get(name), "Unknown task " + name);
+        return Objects.requireNonNull(tasks.get(name), "Unknown task " + name);
+    }
+
+    @NotNull
+    public Map<String, Task> getAllTasks() {
+        return tasks;
     }
 
     @Override
     @NotNull
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        for (Map.Entry<String, Task> a : t.entrySet()) {
+        for (Map.Entry<String, Task> a : tasks.entrySet()) {
             sb.append(a.getKey());
             sb.append(", ");
         }

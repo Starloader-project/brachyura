@@ -48,13 +48,20 @@ class BuildscriptProject extends BaseJavaProject {
     @Override
     @NotNull
     public IdeModule[] getIdeModules() {
-        Tasks t = new Tasks();
-        Optional<Project> o = project.get();
-        if (o.isPresent()) o.get().getTasks(t);
-        ArrayList<RunConfigBuilder> runConfigs = new ArrayList<>(t.t.size());
+        Tasks builtProjectTasks = new Tasks();
+        String ideBuildscriptName = "Buildscript";
+        Optional<Project> buildscriptInstance = project.get();
+        if (buildscriptInstance.isPresent()) {
+            Project concreteBuildscriptInstance = buildscriptInstance.get();
+            concreteBuildscriptInstance.getTasks(builtProjectTasks);
+            if (concreteBuildscriptInstance instanceof DescriptiveBuildscriptName) {
+                ideBuildscriptName = ((DescriptiveBuildscriptName) concreteBuildscriptInstance).getBuildscriptName();
+            }
+        }
+        ArrayList<RunConfigBuilder> runConfigs = new ArrayList<>(builtProjectTasks.getAllTasks().size());
         Path cwd = getProjectDir().resolve("run");
         PathUtil.createDirectories(cwd);
-        for (Map.Entry<String, Task> e : t.t.entrySet()) {
+        for (Map.Entry<String, Task> e : builtProjectTasks.getAllTasks().entrySet()) {
             String projectDir = super.getProjectDir().toString(); // eclipe's null evaluation can sometimes be a bit strange when generics are at play
             runConfigs.add(
                 new RunConfigBuilder()
@@ -71,9 +78,10 @@ class BuildscriptProject extends BaseJavaProject {
                     )
             );
         }
+
         return new @NotNull IdeModule[] {
             new IdeModule.IdeModuleBuilder()
-                .name("Buildscript")
+                .name(ideBuildscriptName)
                 .root(getProjectDir())
                 .sourcePath(getSrcDir())
                 .dependencies(this::getIdeDependencies)
