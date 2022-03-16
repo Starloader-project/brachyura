@@ -40,12 +40,6 @@ import io.github.coolcrabs.brachyura.util.PathUtil;
  */
 public class MavenResolver {
 
-    @NotNull
-    private final List<MavenRepository> repositories = new ArrayList<>();
-    @NotNull
-    private final Path cacheFolder;
-    private boolean resolveTestDependencies = false;
-
     // FIXME while this usually works, this is not exactly right. See https://stackoverflow.com/a/47833316
     @SuppressWarnings("null")
     @NotNull
@@ -55,6 +49,23 @@ public class MavenResolver {
     public static final String MAVEN_CENTRAL = "https://repo.maven.apache.org/maven2/";
     @NotNull
     public static final MavenRepository MAVEN_CENTRAL_REPO = new HttpMavenRepository(MAVEN_CENTRAL);
+
+    /**
+     * Set of all artifacts that may not be resolved via {@link #getTransitiveDependencies(MavenId)}.
+     * This means that all transitive child dependencies of the listed artifacts are also not resolved,
+     * unless they are included via other means (such as being declared by another artifact or by
+     * being directly resolved via the {@link #getTransitiveDependencies(MavenId)} method).
+     *
+     * <p>Any artifacts in this set may still get obtained directly via {@link #getJarDepend(MavenId)}.
+     */
+    @NotNull
+    private final Set<VersionlessMavenId> blacklistedArtifacts = new HashSet<>();
+
+    @NotNull
+    private final List<MavenRepository> repositories = new ArrayList<>();
+    @NotNull
+    private final Path cacheFolder;
+    private boolean resolveTestDependencies = false;
 
     public MavenResolver(@NotNull Path cacheFolder) {
         this.cacheFolder = cacheFolder;
@@ -241,34 +252,43 @@ public class MavenResolver {
                 }
                 String groupId = elem.getElementsByTagName("groupId").item(0).getTextContent();
                 String artifactId = elem.getElementsByTagName("artifactId").item(0).getTextContent();
-                Node versionElement = elem.getElementsByTagName("version").item(0);
-                if (versionElement == null) {
-                    // TODO implicitly, the release tag should be used - let's do that eventually
-                    Logger.warn("Pom for Artifact " + artifact.toString() + " does not supply an "
-                            + "explicit version for artifact " + groupId + ":" + artifactId + ". It was not"
-                            + " added to the dependency tree. Consider adding it manually.");
-                    return;
-                }
-                String version = versionElement.getTextContent();
-                if (groupId == null || artifactId == null || version == null) {
-                    throw new IllegalStateException("Dependency block in pom of " + artifact.toString() + " contains either"
-                            + " no groupId, artifactId or version element.");
-                }
 
                 if (groupId.equals("${project.groupId}")) {
                     // Okay, placeholders are going to be an issue ... Let's just implement the most common ones
                     groupId = artifact.groupId;
-                }
-                if (version.equals("${project.version}")) {
-                    version = artifact.version;
                 }
 
                 Node scopeElement = elem.getElementsByTagName("scope").item(0);
                 if (scopeElement instanceof Element && !resolveTestDependencies) {
                     Element scope = (Element) scopeElement;
                     if (scope.getTextContent().equals("test")) {
-                        return;
+                        continue;
                     }
+                }
+
+                if (artifactId == null) {
+                    throw new NullPointerException();
+                }
+
+                if (blacklistedArtifacts.contains(new VersionlessMavenId(groupId, artifactId))) {
+                    continue;
+                }
+
+                Node versionElement = elem.getElementsByTagName("version").item(0);
+                if (versionElement == null) {
+                    // TODO implicitly, the release tag should be used - let's do that eventually
+                    Logger.warn("Pom for Artifact " + artifact.toString() + " does not supply an "
+                            + "explicit version for artifact " + groupId + ":" + artifactId + ". It was not"
+                            + " added to the dependency tree. Consider adding it manually.");
+                    continue;
+                }
+                String version = versionElement.getTextContent();
+                if (version == null) {
+                    throw new IllegalStateException("Dependency block in pom of " + artifact.toString()
+                        + " does not contain a version element.");
+                }
+                if (version.equals("${project.version}")) {
+                    version = artifact.version;
                 }
 
                 getTransitiveDependencyVersions(new MavenId(groupId, artifactId, version), versions);
@@ -276,6 +296,44 @@ public class MavenResolver {
         } catch (SAXException | ParserConfigurationException e1) {
             e1.printStackTrace();
         } catch (IOException ignored) {}
+    }
+
+    /**
+     * Prevent the resolution of multiple artifacts (regardless of version) through the
+     * {@link #getTransitiveDependencies(MavenId)} method. This means that all transitive child dependencies of
+     * these artifacts are not resolved, unless they are included via other means (such as being declared by
+     * another artifact or by being directly resolved via the {@link #getTransitiveDependencies(MavenId)} method).
+     *
+     * <p>Any artifacts in the set of blacklisted artifacts may still get obtained directly via {@link #getJarDepend(MavenId)}.
+     *
+     * @param artifacts The artifacts to blacklist
+     * @return The current {@link MavenResolver} instance.
+     */
+    @Contract(mutates = "this", pure = false, value = "_ -> this")
+    @NotNull
+    public MavenResolver preventTransitiveResolution(@NotNull Iterable<MavenId> artifacts) {
+        for (MavenId artifact : artifacts) {
+            this.blacklistedArtifacts.add(new VersionlessMavenId(artifact.groupId, artifact.artifactId));
+        }
+        return this;
+    }
+
+    /**
+     * Prevent the resolution of an artifact (regardless of version) through the {@link #getTransitiveDependencies(MavenId)} method.
+     * This means that all transitive child dependencies of this artifact are not resolved, unless they are included via
+     * other means (such as being declared by another artifact or by being directly resolved via the
+     * {@link #getTransitiveDependencies(MavenId)} method).
+     *
+     * <p>Any artifacts in the set of blacklisted artifacts may still get obtained directly via {@link #getJarDepend(MavenId)}.
+     *
+     * @param artifact The artifact to blacklist
+     * @return The current {@link MavenResolver} instance.
+     */
+    @Contract(mutates = "this", pure = false, value = "_ -> this")
+    @NotNull
+    public MavenResolver preventTransitiveResolution(@NotNull MavenId artifact) {
+        this.blacklistedArtifacts.add(new VersionlessMavenId(artifact.groupId, artifact.artifactId));
+        return this;
     }
 
     /**

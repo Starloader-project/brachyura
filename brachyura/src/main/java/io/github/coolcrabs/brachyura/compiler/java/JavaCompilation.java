@@ -107,7 +107,7 @@ public class JavaCompilation {
         return this;
     }
 
-    ArrayList<File> bruh(ArrayList<Path> p) {
+    ArrayList<File> toJavaIOFileArray(ArrayList<Path> p) {
         ArrayList<File> r = new ArrayList<>(p.size());
         for (int i = 0; i < p.size(); i++) {
             r.add(p.get(i).toFile());
@@ -120,13 +120,13 @@ public class JavaCompilation {
         try {
             try (BrachyuraJavaFileManager fileManager = new BrachyuraJavaFileManager()) {
                 boolean success;
-                fileManager.setLocation(StandardLocation.CLASS_PATH, bruh(classpath));
-                fileManager.setLocation(StandardLocation.SOURCE_PATH, bruh(sourcePath));
+                fileManager.setLocation(StandardLocation.CLASS_PATH, toJavaIOFileArray(classpath));
+                fileManager.setLocation(StandardLocation.SOURCE_PATH, toJavaIOFileArray(sourcePath));
                 for (ProcessingSource s : classpathSources) {
                     fileManager.extraCp.add(s);
                 }
                 try (LoggerWriter w = new LoggerWriter()) {
-                    CompilationTask compilationTask = compiler.getTask(w, fileManager, BrachyuraDiagnosticListener.INSTANCE, options, null, fileManager.getJavaFileObjectsFromFiles(bruh(sourceFiles)));
+                    CompilationTask compilationTask = compiler.getTask(w, fileManager, BrachyuraDiagnosticListener.INSTANCE, options, null, fileManager.getJavaFileObjectsFromFiles(toJavaIOFileArray(sourceFiles)));
                     success = compilationTask.call();
                 }
                 if (success) {

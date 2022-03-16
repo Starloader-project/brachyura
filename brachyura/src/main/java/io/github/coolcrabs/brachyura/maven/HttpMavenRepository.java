@@ -9,6 +9,7 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.NoConnectionReuseStrategy;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.tinylog.Logger;
@@ -81,7 +82,19 @@ public final class HttpMavenRepository extends MavenRepository {
         return original;
     }
 
-    public void setCheckingChecksums(boolean value) {
+    /**
+     * Sets whether this instance of the {@link HttpMavenRepository} class should check checksums and report checksum violations.
+     * This may be needed in instances where the maven repository is not maintained properly, for example because it is maintained
+     * by hand and thus from time to time checksums are omitted. In most cases it is better to report these issues to the maintainer
+     * of the repository but this method can act as a band-aid. It should however not be a permanent one.
+     *
+     * @param value True to check checksums, false to not check them
+     * @return Always the current instance of the class, for chaining
+     */
+    @NotNull
+    @Contract(mutates = "this", pure = false, value = "_ -> this")
+    public HttpMavenRepository setCheckingChecksums(boolean value) {
         this.checksums = value;
+        return this;
     }
 }
