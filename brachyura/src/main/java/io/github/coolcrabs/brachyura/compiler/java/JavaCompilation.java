@@ -8,14 +8,16 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
 import javax.tools.JavaCompiler;
+import javax.tools.JavaCompiler.CompilationTask;
 import javax.tools.StandardLocation;
 import javax.tools.ToolProvider;
-import javax.tools.JavaCompiler.CompilationTask;
 
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.tinylog.Logger;
 
@@ -31,9 +33,24 @@ public class JavaCompilation {
     private ArrayList<ProcessingSource> classpathSources = new ArrayList<>();
     private JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
 
+    @NotNull
+    @Contract(mutates = "this", pure = false, value = "_ -> this")
     public JavaCompilation addOption(String... options) {
         Collections.addAll(this.options, options);
         return this;
+    }
+
+    @NotNull
+    @Contract(mutates = "this", pure = false, value = "_ -> this")
+    public JavaCompilation addOptions(@NotNull Collection<String> options) {
+        this.options.addAll(options);
+        return this;
+    }
+
+    @NotNull
+    @Contract(mutates = "this", pure = false, value = "_ -> this")
+    public JavaCompilation addOptions(@NotNull JavaCompilationOptions compileOptions) {
+        return compileOptions.commit(this);
     }
 
     public JavaCompilation addSourceFile(Path path) {
@@ -102,7 +119,7 @@ public class JavaCompilation {
         return this;
     }
 
-    public JavaCompilation setCompiler(JavaCompiler compiler) {
+    public JavaCompilation setCompiler(@NotNull JavaCompiler compiler) {
         this.compiler = compiler;
         return this;
     }

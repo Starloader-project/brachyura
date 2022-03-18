@@ -2,15 +2,19 @@ package io.github.coolcrabs.brachyura.util;
 
 import java.io.File;
 
+import org.jetbrains.annotations.NotNull;
 import org.tinylog.Logger;
 
 public class JvmUtil {
     private JvmUtil() { }
 
     public static final int CURRENT_JAVA_VERSION;
+
+    @NotNull
     public static final String CURRENT_JAVA_EXECUTABLE;
 
-    private static final String[] NO_ARGS = new String[0];
+    @NotNull
+    private static final String @NotNull[] NO_ARGS = new String[0];
 
     static {
         // https://stackoverflow.com/a/2591122
@@ -46,13 +50,15 @@ public class JvmUtil {
         return compilerversion == targetversion || (compilerversion >= 9 && targetversion >= 7);
     }
 
+    @NotNull
     public static String javaVersionString(int javaversion) {
         return javaversion < 9 ? "1." + javaversion : Integer.toString(javaversion);
     }
 
-    public static String[] compileArgs(int compilerversion, int targetversion) {
+    @NotNull
+    public static String @NotNull[] compileArgs(int compilerversion, int targetversion) {
         if (compilerversion == targetversion) return NO_ARGS;
-        if (compilerversion >= 9 && targetversion >= 7) return new String[] {"--release", String.valueOf(targetversion)}; // Doesn't accept 1.8 etc for some reason
+        if (compilerversion >= 9 && targetversion >= 7) return new @NotNull String[] {"--release", String.valueOf(targetversion)}; // Doesn't accept 1.8 etc for some reason
         throw new UnsupportedOperationException("Target Version: " + targetversion + " " + "Compiler Version: " + compilerversion);
     }
 }
