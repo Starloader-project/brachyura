@@ -3,20 +3,21 @@
 Brachyura is a WIP build tool with a strong focus on minecraft mods. Buildscripts are written in java.
 This particular fork attempts to clean up the mess of upstream, making it more pleasant to use.
 Unlike upstream, this fork is specialised in general purpose modding, though it is mainly built
-to power the next generation of galimulator mod loaders.
+to power the next generation of galimulator mod loaders - minecraft modding will still be supported
+nonetheless.
 
 ## Goals
 
  - Predictable
  - Simple
  - Flexible
- - Frequent nullabillity annotations
+ - Frequent nullabillity or contract annotations
  - Good Class names
+ - Ease of use
 
 ## Non-goals
 
  - Performance
- - Minecraft modding
  - Enterprise development
 
 ## Changes
@@ -25,6 +26,12 @@ to power the next generation of galimulator mod loaders.
  - Merged the brachyurabootstrapconf.txt into the bootstrap jar
  - Additional dependencies can now be supplied via buildscript/build-dependencies.txt
  - CFR compiled with Java 1.8 instead of Java 1.6 so newer JDKs properly compile this project
+ - Abillity to name buildscript projects
+ - Eclipse External Annotations and IntelliJ Annotations support
+ - "createTemplate" argument, which creates a small template project to get the ball rolling
+ - API for passing arguments more or less directly to the compiler (however not honored in the fabric project right now)
+ - XDG_DATA_HOME is now honored by default (Resolves upstream's https://github.com/CoolCrabs/brachyura/issues/8)
+ - Snapshot repository support
 
 ## Community
 

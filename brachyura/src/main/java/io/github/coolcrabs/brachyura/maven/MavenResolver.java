@@ -29,6 +29,7 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import io.github.coolcrabs.brachyura.dependency.JavaJarDependency;
+import io.github.coolcrabs.brachyura.util.IterableNodeList;
 import io.github.coolcrabs.brachyura.util.PathUtil;
 
 /**
@@ -47,6 +48,7 @@ public class MavenResolver {
 
     @NotNull
     public static final String MAVEN_CENTRAL = "https://repo.maven.apache.org/maven2/";
+
     @NotNull
     public static final MavenRepository MAVEN_CENTRAL_REPO = new HttpMavenRepository(MAVEN_CENTRAL);
 
@@ -102,10 +104,11 @@ public class MavenResolver {
     }
 
     @NotNull
-    public ResolvedFile resolveArtifact(@NotNull MavenId artifact, @NotNull String classifier, @NotNull String extension) throws IOException {
+    public ResolvedFile resolveArtifact(@NotNull MavenId artifact, @Nullable String classifier, @NotNull String extension) throws IOException {
         String folder = artifact.groupId.replace('.', '/') + '/' + artifact.artifactId + '/' + artifact.version + '/';
         String nameString;
-        if (classifier.isEmpty()) {
+        if (classifier == null || classifier.isEmpty()) {
+            classifier = null;
             nameString = artifact.artifactId + '-' + artifact.version + '.' + extension;
         } else {
             nameString = artifact.artifactId + '-' + artifact.version + '-' + classifier + '.' + extension;
@@ -117,8 +120,21 @@ public class MavenResolver {
 
         ResolvedFile mavenMeta = resolveFileContents(folder, "maven-metadata.xml");
         if (mavenMeta != null) {
-            // TODO evaluate using the maven meta
-            throw new UnsupportedOperationException("Not yet supported!");
+            String snapshotVer = getLastSnapshotVersion(mavenMeta, classifier, extension);
+            if (snapshotVer == null) {
+                throw new IOException("Cannot find artifact " + artifact + " in maven-metadata.xml. It couldn't be resolved directly either");
+            }
+            if (classifier == null) {
+                nameString = artifact.artifactId + '-' + snapshotVer + '.' + extension;
+            } else {
+                nameString = artifact.artifactId + '-' + snapshotVer + '-' + classifier + '.' + extension;
+            }
+            directFile = resolveFileContents(folder, nameString);
+            if (directFile == null) {
+                throw new IOException("Unable to resolve artifact: " + folder + "," + nameString
+                        + " despite it being defined in the maven-metadata.xml file!");
+            }
+            return directFile;
         } else {
             throw new IOException("Unable to resolve artifact: maven-metadata.xml is missing and the file"
                     + " was not able to be fetched directly.");
@@ -174,7 +190,8 @@ public class MavenResolver {
         return this;
     }
 
-    private void getTransitiveDependencyVersions(@NotNull MavenId artifact, @NotNull Map<VersionlessMavenId, MavenId> versions) {
+    private void getTransitiveDependencyVersions(@NotNull MavenId artifact, @NotNull Map<VersionlessMavenId, MavenId> versions,
+            Set<VersionlessMavenId> unknownVersions) {
         VersionlessMavenId verlessMavenId = new VersionlessMavenId(artifact.groupId, artifact.artifactId);
         if (versions.containsKey(verlessMavenId)) {
             String currentver = versions.get(verlessMavenId).version;
@@ -208,6 +225,7 @@ public class MavenResolver {
             }
         }
         versions.put(verlessMavenId, artifact);
+        unknownVersions.remove(verlessMavenId);
         try {
             Document xmlDoc;
             {
@@ -220,11 +238,10 @@ public class MavenResolver {
             project.normalize();
             NodeList dependencies;
             Map<String, String> placeholders = new HashMap<>();
+            parsePlaceholders(xmlDoc, artifact, placeholders);
             {
-                NodeList children = project.getChildNodes();
                 Element dependenciesBlock = null;
-                for (int i = 0; i < children.getLength(); i++) {
-                    Node block = children.item(i);
+                for (Node block : new IterableNodeList(project.getChildNodes())) {
                     if (!block.hasChildNodes() || !(block instanceof Element)) {
                         continue;
                     }
@@ -235,15 +252,6 @@ public class MavenResolver {
                                     + "dependencies blocks.");
                         }
                         dependenciesBlock = blockElem;
-                    } else if (blockElem.getTagName().equals("properties")) {
-                        NodeList properties = blockElem.getChildNodes();
-                        for (int j = 0; j < properties.getLength(); j++) {
-                            Node property = properties.item(j);
-                            if (property instanceof Element) {
-                                Element propertyElement = (Element) property;
-                                placeholders.put("${" + propertyElement.getTagName() + "}", propertyElement.getTextContent());
-                            }
-                        }
                     }
                 }
                 if (dependenciesBlock == null) {
@@ -252,9 +260,8 @@ public class MavenResolver {
                 dependencies = dependenciesBlock.getChildNodes();
             }
 
-            for (int i = 0; i < dependencies.getLength(); i++) {
-                Node depend = dependencies.item(i);
-                if (!depend.hasChildNodes()) {
+            for (Node depend : new IterableNodeList(dependencies)) {
+                if (!depend.hasChildNodes() || !(depend instanceof Element)) {
                     continue;
                 }
                 Element elem = (Element) depend;
@@ -277,20 +284,24 @@ public class MavenResolver {
                     }
                 }
 
-                if (artifactId == null) {
+                artifactId = placeholders.getOrDefault(artifactId, artifactId);
+                groupId = placeholders.getOrDefault(groupId, groupId);
+
+                if (artifactId == null || groupId == null) {
                     throw new NullPointerException();
                 }
 
-                if (blacklistedArtifacts.contains(new VersionlessMavenId(groupId, artifactId))) {
+                VersionlessMavenId dependencyVerlessId = new VersionlessMavenId(groupId, artifactId);
+                if (blacklistedArtifacts.contains(dependencyVerlessId)) {
                     continue;
                 }
 
                 Node versionElement = elem.getElementsByTagName("version").item(0);
                 if (versionElement == null) {
-                    // TODO implicitly, the release tag should be used - let's do that eventually
-                    Logger.warn("Pom for Artifact " + artifact.toString() + " does not supply an "
-                            + "explicit version for artifact " + groupId + ":" + artifactId + ". It was not"
-                            + " added to the dependency tree. Consider adding it manually.");
+                    if (!versions.containsKey(verlessMavenId)) {
+                        Logger.info(dependencyVerlessId);
+                        unknownVersions.add(dependencyVerlessId);
+                    }
                     continue;
                 }
                 String version = versionElement.getTextContent();
@@ -300,18 +311,89 @@ public class MavenResolver {
                     // We might need to apply placeholders recursively, but for the meantime this ought to do
                     version = placeholders.getOrDefault(version, version);
                 }
-                artifactId = placeholders.getOrDefault(artifactId, artifactId);
-                groupId = placeholders.getOrDefault(groupId, groupId);
 
-                if (artifactId == null || groupId == null || version == null) {
-                    throw new IllegalStateException("Logical error");
+                if (version == null) {
+                    throw new NullPointerException("Logical error");
                 }
 
-                getTransitiveDependencyVersions(new MavenId(groupId, artifactId, version), versions);
+                if (version.startsWith("${") || groupId.startsWith("${") || artifactId.startsWith("${")) {
+                    throw new IllegalStateException("Illegal artifact " + new MavenId(groupId, artifactId, version)
+                            + " declared by artifact " + artifact + ". This is most probably an error with the implementation"
+                            + " of the maven resolver.");
+                }
+
+                getTransitiveDependencyVersions(new MavenId(groupId, artifactId, version), versions, unknownVersions);
             }
         } catch (SAXException | ParserConfigurationException e1) {
             e1.printStackTrace();
         } catch (IOException ignored) {}
+    }
+
+    /**
+     * Parse the placeholders based on the properties block of a maven pom.
+     * If a parent artifact is specified in the pom, it will also be used for placeholders.
+     * However the properties block from the child artifact has always precedence over the parent artifact.
+     *
+     * @param xmlDoc The xml document that represents the maven pom
+     * @param artifact The artifact that is current resolved. The pom should come from this artifact.
+     * @param out The map of placeholders. Keys are in the format of "${key}". Values are never overwritten.
+     * @throws IOException In case the pom of the parent module of the artifact cannot be resolved or in case the pom cannot be parsed
+     */
+    @Contract(pure = false, mutates = "param3")
+    private void parsePlaceholders(@NotNull Document xmlDoc, @NotNull MavenId artifact, @NotNull Map<String, String> out) throws IOException {
+        Element project = xmlDoc.getDocumentElement();
+        project.normalize();
+        Element parentArtifactNode = null;
+        for (Node block : new IterableNodeList(project.getChildNodes())) {
+            if (!block.hasChildNodes() || !(block instanceof Element)) {
+                continue;
+            }
+            Element blockElem = (Element) block;
+            if (blockElem.getTagName().equals("properties")) {
+                for (Node property : new IterableNodeList(blockElem.getChildNodes())) {
+                    if (property instanceof Element) {
+                        Element propertyElement = (Element) property;
+                        out.putIfAbsent("${" + propertyElement.getTagName() + "}", propertyElement.getTextContent());
+                    }
+                }
+            } else if (blockElem.getTagName().equals("parent")) {
+                parentArtifactNode = blockElem;
+            }
+        }
+        if (parentArtifactNode == null) {
+            return;
+        }
+        NodeList groupId = parentArtifactNode.getElementsByTagName("groupId");
+        NodeList artifactId = parentArtifactNode.getElementsByTagName("artifactId");
+        NodeList version = parentArtifactNode.getElementsByTagName("version");
+
+        if (groupId.getLength() != 1) {
+            throw new IllegalStateException("Pom of artifact " + artifact + " does not specify the groupId of it's parent correctly.");
+        }
+        if (artifactId.getLength() != 1) {
+            throw new IllegalStateException("Pom of artifact " + artifact + " does not specify the artifactId of it's parent correctly.");
+        }
+        if (version.getLength() != 1) {
+            throw new IllegalStateException("Pom of artifact " + artifact + " does not specify the version of it's parent correctly.");
+        }
+
+        @SuppressWarnings("null")
+        MavenId parentMavenId = new MavenId(groupId.item(0).getTextContent(), artifactId.item(0).getTextContent(), version.item(0).getTextContent());
+
+        Document parentDocument;
+        try {
+            ResolvedFile file = resolveArtifact(parentMavenId, "", "pom");
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+            parentDocument = factory.newDocumentBuilder().parse(new ByteArrayInputStream(file.data));
+            if (parentDocument == null) {
+                throw new NullPointerException("parentDocument is null");
+            }
+            parsePlaceholders(parentDocument, parentMavenId, out);
+        } catch (ParserConfigurationException | SAXException e) {
+            throw new IOException("Cannot parse maven pom of artifact " + parentMavenId + ", which is the parent module of "
+                    + artifact, e);
+        }
     }
 
     /**
@@ -353,6 +435,74 @@ public class MavenResolver {
     }
 
     /**
+     * Obtains the latest valid "value" value for a snapshot repository based on a maven-metadata.xml file
+     * and a classifier and extension. A null classifier is treated as not existent.
+     *
+     * @param mavenMeta The maven-metadata.xml file
+     * @param classifier The classifier of the artifact
+     * @param extension The extension of the artifact
+     * @return The "value" value that corresponds to the artifact, or null if undefined
+     * @throws IOException If an exception happened while parsing the file
+     */
+    @Nullable
+    private String getLastSnapshotVersion(@NotNull ResolvedFile mavenMeta, @Nullable String classifier, @NotNull String extension) throws IOException {
+        Document xmlDoc;
+        try {
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+            xmlDoc = factory.newDocumentBuilder().parse(new ByteArrayInputStream(mavenMeta.data));
+        } catch (ParserConfigurationException | SAXException e) {
+            throw new IOException("Unable to parse maven-metadata.xml", e);
+        }
+
+        Element versioningElement = new IterableNodeList(xmlDoc.getDocumentElement().getChildNodes()).resolveFirstElement("versioning");
+        if (versioningElement == null) {
+            return null;
+        }
+
+        Element snapshotVersionsElement = new IterableNodeList(versioningElement.getChildNodes()).resolveFirstElement("snapshotVersions");
+        if (snapshotVersionsElement == null) {
+            return null;
+        }
+
+        for (Node node : new IterableNodeList(snapshotVersionsElement.getChildNodes())) {
+            if (!(node instanceof Element)) {
+                continue;
+            }
+            Element snapshotVersion = (Element) node;
+            if (!snapshotVersion.getTagName().equals("snapshotVersion")) {
+                // I do not think that any other tag is allowed there, but safe is safe
+                continue;
+            }
+            if (!snapshotVersion.getElementsByTagName("extension").item(0).getTextContent().equals(extension)) {
+                continue;
+            }
+            NodeList classifierNode = snapshotVersion.getElementsByTagName("classifier");
+            if (classifierNode.getLength() == 0 && classifier != null
+                    || classifier == null && classifierNode.getLength() != 0) {
+                continue;
+            }
+            if (classifier == null) {
+                if (classifierNode.getLength() != 0) {
+                    continue;
+                }
+            } else if (classifierNode.getLength() == 0) {
+                continue;
+            } else {
+                if (!classifierNode.item(0).getTextContent().equals(classifier)) {
+                    continue;
+                }
+            }
+            NodeList valueNode = snapshotVersion.getElementsByTagName("value");
+            if (valueNode.getLength() == 0) {
+                return null;
+            }
+            return valueNode.item(0).getTextContent();
+        }
+        return null;
+    }
+
+    /**
      * Obtains the jar dependency that corresponds to a maven artifact and if applicable obtains
      * all transitive dependencies of that dependency in a cyclic manner. The highest version is used for
      * each artifact, provided the artifact could be resolved.
@@ -365,7 +515,11 @@ public class MavenResolver {
     public Collection<JavaJarDependency> getTransitiveDependencies(@NotNull MavenId artifact) {
         Map<VersionlessMavenId, MavenId> versions = new HashMap<>();
         Map<MavenId, JavaJarDependency> dependencies = new HashMap<>();
-        getTransitiveDependencyVersions(artifact, versions);
+        Set<VersionlessMavenId> unknownVersions = new HashSet<>();
+        getTransitiveDependencyVersions(artifact, versions, unknownVersions);
+        unknownVersions.forEach(mavenid -> {
+            Logger.warn("The artifact \"" + artifact + "\" was required by a dependency, but the version was left unspecified! It was thus not resolved");
+        });
         versions.values().forEach(shouldBeDependency -> {
             JavaJarDependency resolvedDependency = getJarDepend(shouldBeDependency);
             if (resolvedDependency == null) {
@@ -462,5 +616,10 @@ public class MavenResolver {
             return other.groupId.equals(this.groupId) && other.artifactId.equals(this.artifactId);
         }
         return false;
+    }
+
+    @Override
+    public String toString() {
+        return groupId + ":" + artifactId;
     }
 }
