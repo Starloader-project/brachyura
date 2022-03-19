@@ -42,5 +42,4 @@ public class LocalMavenRepository extends MavenRepository {
             return null;
         }
     }
-
 }

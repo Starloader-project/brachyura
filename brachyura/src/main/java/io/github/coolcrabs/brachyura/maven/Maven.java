@@ -128,7 +128,7 @@ public class Maven {
                     throw e;
                 }
             }
-            if (targetHash != null) {   
+            if (targetHash != null) {
                 MessageDigest messageDigest = MessageDigestUtil.messageDigest(MessageDigestUtil.SHA1);
                 try (DigestInputStream inputStream = new DigestInputStream(NetUtil.inputStream(targetUri.toURL()), messageDigest)) {
                     Files.copy(inputStream, tempPath, StandardCopyOption.REPLACE_EXISTING);

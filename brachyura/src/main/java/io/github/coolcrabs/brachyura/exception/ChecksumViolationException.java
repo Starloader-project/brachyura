@@ -14,7 +14,7 @@ public class ChecksumViolationException extends IllegalStateException {
     private final String file;
 
     public ChecksumViolationException(@NotNull String dataChecksum, @Nullable String recievedChecksum, @NotNull String file) {
-        super("Checksum violation: Got " + dataChecksum + " but the maven repository stored " + recievedChecksum + " as the checksum for the file \"" + file + "\"");
+        super("Checksum violation: Got \"" + dataChecksum + "\" but the maven repository stored \"" + recievedChecksum + "\" as the checksum for the file \"" + file + "\"");
         this.file = file;
     }
 

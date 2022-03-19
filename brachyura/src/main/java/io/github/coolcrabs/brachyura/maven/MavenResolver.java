@@ -219,12 +219,13 @@ public class MavenResolver {
             Element project = xmlDoc.getDocumentElement();
             project.normalize();
             NodeList dependencies;
+            Map<String, String> placeholders = new HashMap<>();
             {
                 NodeList children = project.getChildNodes();
                 Element dependenciesBlock = null;
                 for (int i = 0; i < children.getLength(); i++) {
                     Node block = children.item(i);
-                    if (!block.hasChildNodes()) {
+                    if (!block.hasChildNodes() || !(block instanceof Element)) {
                         continue;
                     }
                     Element blockElem = (Element) block;
@@ -234,6 +235,15 @@ public class MavenResolver {
                                     + "dependencies blocks.");
                         }
                         dependenciesBlock = blockElem;
+                    } else if (blockElem.getTagName().equals("properties")) {
+                        NodeList properties = blockElem.getChildNodes();
+                        for (int j = 0; j < properties.getLength(); j++) {
+                            Node property = properties.item(j);
+                            if (property instanceof Element) {
+                                Element propertyElement = (Element) property;
+                                placeholders.put("${" + propertyElement.getTagName() + "}", propertyElement.getTextContent());
+                            }
+                        }
                     }
                 }
                 if (dependenciesBlock == null) {
@@ -241,6 +251,7 @@ public class MavenResolver {
                 }
                 dependencies = dependenciesBlock.getChildNodes();
             }
+
             for (int i = 0; i < dependencies.getLength(); i++) {
                 Node depend = dependencies.item(i);
                 if (!depend.hasChildNodes()) {
@@ -283,12 +294,17 @@ public class MavenResolver {
                     continue;
                 }
                 String version = versionElement.getTextContent();
-                if (version == null) {
-                    throw new IllegalStateException("Dependency block in pom of " + artifact.toString()
-                        + " does not contain a version element.");
-                }
                 if (version.equals("${project.version}")) {
                     version = artifact.version;
+                } else {
+                    // We might need to apply placeholders recursively, but for the meantime this ought to do
+                    version = placeholders.getOrDefault(version, version);
+                }
+                artifactId = placeholders.getOrDefault(artifactId, artifactId);
+                groupId = placeholders.getOrDefault(groupId, groupId);
+
+                if (artifactId == null || groupId == null || version == null) {
+                    throw new IllegalStateException("Logical error");
                 }
 
                 getTransitiveDependencyVersions(new MavenId(groupId, artifactId, version), versions);
