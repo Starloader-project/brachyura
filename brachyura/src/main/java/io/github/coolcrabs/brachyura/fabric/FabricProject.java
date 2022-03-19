@@ -215,7 +215,7 @@ public abstract class FabricProject extends BaseJavaProject {
     }
 
     @Override
-    public void getTasks(Consumer<Task> p) {
+    public void getTasks(@NotNull Consumer<Task> p) {
         super.getTasks(p);
         p.accept(Task.of("build", (ThrowingRunnable) this::build));
     }

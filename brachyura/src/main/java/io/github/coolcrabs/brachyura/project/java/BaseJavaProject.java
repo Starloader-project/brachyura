@@ -39,7 +39,7 @@ public abstract class BaseJavaProject extends Project {
     }
 
     @Override
-    public void getTasks(Consumer<Task> p) {
+    public void getTasks(@NotNull Consumer<Task> p) {
         super.getTasks(p);
         getIdeTasks(p);
         getRunConfigTasks(p);

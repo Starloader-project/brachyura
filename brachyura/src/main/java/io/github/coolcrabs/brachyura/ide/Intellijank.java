@@ -14,6 +14,8 @@ import java.util.List;
 
 import javax.xml.stream.XMLStreamException;
 
+import org.jetbrains.annotations.NotNull;
+
 import io.github.coolcrabs.brachyura.dependency.JavaJarDependency;
 import io.github.coolcrabs.brachyura.ide.IdeModule.RunConfig;
 import io.github.coolcrabs.brachyura.util.JvmUtil;
@@ -27,6 +29,7 @@ public enum Intellijank implements Ide {
     INSTANCE;
 
     @Override
+    @NotNull
     public String ideName() {
         return "idea";
     }

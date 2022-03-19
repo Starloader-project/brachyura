@@ -3,29 +3,32 @@ package io.github.coolcrabs.brachyura.project;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 
+import org.jetbrains.annotations.NotNull;
+
 import io.github.coolcrabs.brachyura.exception.TaskFailedException;
 import io.github.coolcrabs.brachyura.util.ThrowingRunnable;
 
 public abstract class Task {
+    @NotNull
     public final String name;
 
-    Task(String name) {
+    Task(@NotNull String name) {
         this.name = name;
     }
 
-    public static Task of(String name, BooleanSupplier run) {
+    public static Task of(@NotNull String name, BooleanSupplier run) {
         return new FailableNoArgTask(name, run);
     }
 
-    public static Task of(String name, Runnable run) {
+    public static Task of(@NotNull String name, Runnable run) {
         return new NoArgTask(name, run);
     }
 
-    public static Task of(String name, ThrowingRunnable run) {
+    public static Task of(@NotNull String name, ThrowingRunnable run) {
         return new NoArgTask(name, run);
     }
 
-    public static Task of(String name, Consumer<String[]> run) {
+    public static Task of(@NotNull String name, Consumer<String[]> run) {
         return new TaskWithArgs(name, run);
     }
 
@@ -34,7 +37,7 @@ public abstract class Task {
     static class FailableNoArgTask extends Task {
         final BooleanSupplier runnable;
 
-        FailableNoArgTask(String name, BooleanSupplier runnable) {
+        FailableNoArgTask(@NotNull String name, BooleanSupplier runnable) {
             super(name);
             this.runnable = runnable;
         }
@@ -48,12 +51,12 @@ public abstract class Task {
     static class NoArgTask extends Task {
         final ThrowingRunnable runnable;
 
-        NoArgTask(String name, Runnable runnable) {
+        NoArgTask(@NotNull String name, Runnable runnable) {
             super(name);
             this.runnable = () -> runnable.run();
         }
 
-        NoArgTask(String name, ThrowingRunnable runnable) {
+        NoArgTask(@NotNull String name, ThrowingRunnable runnable) {
             super(name);
             this.runnable = runnable;
         }
@@ -71,7 +74,7 @@ public abstract class Task {
     static class TaskWithArgs extends Task {
         final Consumer<String[]> task;
 
-        TaskWithArgs(String name, Consumer<String[]> task) {
+        TaskWithArgs(@NotNull String name, Consumer<String[]> task) {
             super(name);
             this.task = task;
         }

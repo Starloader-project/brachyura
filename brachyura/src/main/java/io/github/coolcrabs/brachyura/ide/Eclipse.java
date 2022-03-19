@@ -30,6 +30,7 @@ public enum Eclipse implements Ide {
     INSTANCE;
 
     @Override
+    @NotNull
     public String ideName() {
         return "jdt";
     }

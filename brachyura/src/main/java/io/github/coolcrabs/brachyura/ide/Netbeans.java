@@ -38,6 +38,7 @@ public enum Netbeans implements Ide {
     }
 
     @Override
+    @NotNull
     public String ideName() {
         return "netbeans";
     }

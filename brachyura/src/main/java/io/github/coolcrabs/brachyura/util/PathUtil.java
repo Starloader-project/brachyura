@@ -49,14 +49,21 @@ public class PathUtil {
                 home = share;
             } else {
                 // Probably on windows or another OS that does not work with the XDG spec
-                Path windowsAppdataFolder = Paths.get(System.getenv("appdata"));
-                if (Files.exists(windowsAppdataFolder)) {
-                    // Make it in the appdata folder
-                    home = windowsAppdataFolder;
-                } else {
-                    // Just make it relative to the user home
+                String appdataLocationString = System.getenv("appdata");
+                if (appdataLocationString == null) {
+                    // Does not work with the XDG Spec, but also not on windows
                     home = userhome;
                     hide = true;
+                } else {
+                    Path windowsAppdataFolder = Paths.get(appdataLocationString);
+                    if (Files.exists(windowsAppdataFolder)) {
+                        // Make it in the appdata folder
+                        home = windowsAppdataFolder;
+                    } else {
+                        // Just make it relative to the user home
+                        home = userhome;
+                        hide = true;
+                    }
                 }
             }
         } else {

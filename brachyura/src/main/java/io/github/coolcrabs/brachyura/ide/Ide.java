@@ -4,6 +4,8 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashSet;
 
+import org.jetbrains.annotations.NotNull;
+
 import io.github.coolcrabs.brachyura.ide.IdeModule.RunConfig;
 
 public interface Ide {
@@ -31,6 +33,7 @@ public interface Ide {
         }
     } 
 
+    @NotNull
     String ideName();
     void updateProject(Path projectRoot, IdeModule[] ideModules);
 }
