@@ -55,8 +55,10 @@ import io.github.coolcrabs.brachyura.mappings.MappingHelper;
 import io.github.coolcrabs.brachyura.mappings.Namespaces;
 import io.github.coolcrabs.brachyura.mappings.tinyremapper.Jsr2JetbrainsMappingProvider;
 import io.github.coolcrabs.brachyura.mappings.tinyremapper.MappingTreeMappingProvider;
+import io.github.coolcrabs.brachyura.mappings.tinyremapper.MetaInfFixer;
 import io.github.coolcrabs.brachyura.mappings.tinyremapper.RemapperProcessor;
 import io.github.coolcrabs.brachyura.mappings.tinyremapper.TinyRemapperHelper;
+import io.github.coolcrabs.brachyura.mappings.tinyremapper.TrWrapper;
 import io.github.coolcrabs.brachyura.maven.MavenId;
 import io.github.coolcrabs.brachyura.maven.MavenResolver;
 import io.github.coolcrabs.brachyura.minecraft.Minecraft;
@@ -394,14 +396,16 @@ public abstract class FabricProject extends BaseJavaProject {
                 }
             }
             ProcessingSponge trout = new ProcessingSponge();
-            new ProcessorChain(
-                new RemapperProcessor(TinyRemapper.newRemapper().withMappings(new MappingTreeMappingProvider(compmappings, Namespaces.NAMED, Namespaces.INTERMEDIARY)), getCompileDependencies())
-            ).apply(trout, compilationOutput);
-            try (AtomicZipProcessingSink out = new AtomicZipProcessingSink(getBuildJarPath())) {
-                resourcesProcessingChain().apply(out, new DirectoryProcessingSource(getResourcesDir()));
-                trout.getInputs(out);
-                out.commit();
-            }
+            try (TrWrapper trw = new TrWrapper(TinyRemapper.newRemapper().withMappings(new MappingTreeMappingProvider(compmappings, Namespaces.NAMED, Namespaces.INTERMEDIARY)))) {
+                new ProcessorChain(
+                    new RemapperProcessor(trw, getCompileDependencies())
+                ).apply(trout, compilationOutput);
+                try (AtomicZipProcessingSink out = new AtomicZipProcessingSink(getBuildJarPath())) {
+                    resourcesProcessingChain().apply(out, new DirectoryProcessingSource(getResourcesDir()));
+                    trout.getInputs(out);
+                    out.commit();
+                }
+            }   
             return new JavaJarDependency(getBuildJarPath(), null, getId());
         } catch (Exception e) {
             throw Util.sneak(e);
@@ -722,7 +726,7 @@ public abstract class FabricProject extends BaseJavaProject {
             List<RemapInfo> remapinfo = new ArrayList<>(unmapped.size());
             List<ModDependency> remapped = new ArrayList<>(unmapped.size());
             MessageDigest dephasher = MessageDigestUtil.messageDigest(MessageDigestUtil.SHA256);
-            dephasher.update((byte) 7); // Bump this if the logic changes
+            dephasher.update((byte) 8); // Bump this if the logic changes
             for (ModDependency dep : unmapped) {
                 hashDep(dephasher, dep);
             }
@@ -768,33 +772,31 @@ public abstract class FabricProject extends BaseJavaProject {
                     HashMap<ProcessingSource, MavenId> c = new HashMap<>();
                     try (CloseableArrayList toClose = new CloseableArrayList()) {
                         for (RemapInfo ri : remapinfo) {
+                            // Make sure sink closes before source
+                            Path fileName = ri.target.jarDependency.jar.getFileName();
+                            if (fileName == null) {
+                                throw new NullPointerException("fileName is null.");
+                            }
+                            ZipProcessingSink si = new ZipProcessingSink(a.tempPath.resolve(fileName));
+                            toClose.add(si);
                             ZipProcessingSource s = new ZipProcessingSource(ri.source.jarDependency.jar);
                             toClose.add(s);
-                            Path filename = ri.target.jarDependency.jar.getFileName();
-                            if (filename == null) {
-                                throw new IllegalStateException();
-                            }
-                            ZipProcessingSink si = new ZipProcessingSink(a.tempPath.resolve(filename));
-                            toClose.add(si);
                             b.put(s, si);
                             c.put(s, ri.source.jarDependency.mavenId);
                         }
                         Logger.info("Remapping {} mods", b.size());
-                        new ProcessorChain(
-                            new RemapperProcessor(tr, cp),
-                            JijRemover.INSTANCE,
-                            new AccessWidenerRemapper(mappings.get(), mappings.get().getNamespaceId(Namespaces.NAMED)),
-                            new FmjGenerator(c)
-                        ).apply(
-                            (in, id) -> {
-                                ZipProcessingSink sink = b.get(id.source);
-                                if (sink == null) {
-                                    throw new IllegalStateException();
-                                }
-                                sink.sink(in, id);
-                            },
-                            b.keySet()
-                        );
+                        try (TrWrapper trw = new TrWrapper(tr)) {
+                            new ProcessorChain(
+                                new RemapperProcessor(trw, cp),
+                                new MetaInfFixer(trw),
+                                JijRemover.INSTANCE,
+                                new AccessWidenerRemapper(mappings.get(), mappings.get().getNamespaceId(Namespaces.NAMED)),
+                                new FmjGenerator(c)
+                            ).apply(
+                                (in, id) -> b.get(id.source).sink(in, id),
+                                b.keySet()
+                            );
+                        }
                     }
                     FindReplaceSourceRemapper sourceRemapper = new FindReplaceSourceRemapper(mappings.get(), mappings.get().getNamespaceId(Namespaces.INTERMEDIARY), mappings.get().getNamespaceId(Namespaces.NAMED));
                     for (ModDependency u : unmapped) { 
@@ -953,9 +955,10 @@ public abstract class FabricProject extends BaseJavaProject {
         }
         try (
             ZipProcessingSource source = new ZipProcessingSource(inputJar);
-            ZipProcessingSink sink = new ZipProcessingSink(outputJar)
+            ZipProcessingSink sink = new ZipProcessingSink(outputJar);
+            TrWrapper trw = new TrWrapper(remapperBuilder);
         ) {
-            new ProcessorChain(new RemapperProcessor(remapperBuilder, classpath)).apply(sink, source);
+            new ProcessorChain(new RemapperProcessor(trw, classpath)).apply(sink, source);
         }
     }
 

@@ -3,6 +3,7 @@ package io.github.coolcrabs.brachyura.util;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 public class MessageDigestUtil {
@@ -31,6 +32,13 @@ public class MessageDigestUtil {
             hex.append(Integer.toHexString(x));
         }
         return hex.toString();
+    }
+
+    @NotNull
+    @Deprecated
+    @Contract(pure = true, value = "_ -> new")
+    public static String toLowerCaseHexHash(byte[] digest) {
+        return toHexHash(digest); // Method exists for ABI Compatibillity with upstream.
     }
 
     public static void update(MessageDigest md, String string) {

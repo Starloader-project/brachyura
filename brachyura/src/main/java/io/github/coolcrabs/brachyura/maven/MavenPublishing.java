@@ -191,7 +191,7 @@ public class MavenPublishing {
                 w.newline();
                 w.writeEndElement();
                 w.newline();
-                return () -> new ByteArrayInputStream(o.buf(), 0, o.size());
+                return o::toIs;
             }
         } catch (Exception e) {
             throw Util.sneak(e);
