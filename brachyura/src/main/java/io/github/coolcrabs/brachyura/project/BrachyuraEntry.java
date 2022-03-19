@@ -15,6 +15,9 @@ public class BrachyuraEntry {
 
     // Called via reflection by bootstrap
     public static void main(String[] args, Path projectDir, List<Path> classpath) {
+        if (args.length != 0 && args[0].equalsIgnoreCase("createTemplate")) {
+            return;
+        }
         int exitcode = 0;
         List<Plugin> plugins = Plugins.getPlugins();
         for (Plugin plugin : plugins) {
@@ -48,6 +51,7 @@ public class BrachyuraEntry {
                     }
                 } else {
                     Logger.warn("Invalid build script :(");
+                    Logger.info("Tip: If you invoke the bootstrap with \"createTemplate\" a template project will be created.");
                 }
             }
         } catch (Exception e) {

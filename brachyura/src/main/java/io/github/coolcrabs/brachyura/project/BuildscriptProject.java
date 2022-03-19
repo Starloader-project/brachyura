@@ -91,6 +91,7 @@ class BuildscriptProject extends BaseJavaProject {
     }
 
     public final Lazy<Optional<Project>> project = new Lazy<>(this::createProject);
+
     @SuppressWarnings("all")
     public Optional<Project> createProject() {
         try {

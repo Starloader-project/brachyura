@@ -1,6 +1,7 @@
 package io.github.coolcrabs.brachyura.bootstrap;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.invoke.MethodHandles;
@@ -25,6 +26,11 @@ public class Main {
 
     public static void main(String[] args) throws Throwable {
         System.out.println("Using brachyura bootstrap " + VERSION);
+
+        if (args.length != 0 && args[0].equalsIgnoreCase("createTemplate")) {
+            createTemplate(args);
+        }
+
         // https://stackoverflow.com/a/2837287
         Path projectPath = Paths.get(Main.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent();
         if (projectPath == null) {
@@ -63,8 +69,35 @@ public class Main {
             entry,
             "main",
             MethodType.methodType(void.class, String[].class, Path.class, List.class)
-        )
-        .invokeExact(args, projectPath, classpath);
+        ).invokeExact(args, projectPath, classpath);
+    }
+
+    private static void createTemplate(String[] args) throws IOException {
+        Path javaSourceFolder = Paths.get("src", "main", "java");
+        if (Files.exists(javaSourceFolder)) {
+            System.out.println("Cannot create template: The source folder (" + javaSourceFolder.toAbsolutePath().toString() + ") already exists. Consider deleting it if you are sure of your actions.");
+            return;
+        }
+        Path buildscriptSourceFolder = Paths.get("buildscript").resolve(javaSourceFolder);
+        if (Files.exists(buildscriptSourceFolder)) {
+            System.out.println("Cannot create template: Buildscript folder already exists. Consider deleting it if you are sure of your actions.");
+            return;
+        }
+        Path mainResourceFolder = Paths.get("src", "main", "resources");
+        if (Files.exists(mainResourceFolder)) {
+            System.out.println("Cannot create template: The resources folder (" + mainResourceFolder.toAbsolutePath().toString() + ") already exists. Consider deleting it if you are sure of your actions.");
+            return;
+        }
+
+        Files.createDirectories(javaSourceFolder);
+        Files.createDirectories(buildscriptSourceFolder);
+        Files.createDirectories(mainResourceFolder);
+
+        Path buildscriptFile = buildscriptSourceFolder.resolve("Buildscript.java");
+        Path exampleApplicationFile = javaSourceFolder.resolve("ExampleApplication.java");
+
+        Files.copy(Main.class.getClassLoader().getResourceAsStream("Buildscript.java"), buildscriptFile);
+        Files.copy(Main.class.getClassLoader().getResourceAsStream("ExampleApplication.java"), exampleApplicationFile);
     }
 
     private static Collection<? extends Path> getBuildscriptDependencies(Path projectPath) throws Exception {
