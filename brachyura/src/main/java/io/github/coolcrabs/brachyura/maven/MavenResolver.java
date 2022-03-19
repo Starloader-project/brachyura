@@ -67,6 +67,7 @@ public class MavenResolver {
     private final List<MavenRepository> repositories = new ArrayList<>();
     @NotNull
     private final Path cacheFolder;
+    private boolean resolveProvidedDependencies = false;
     private boolean resolveTestDependencies = false;
 
     public MavenResolver(@NotNull Path cacheFolder) {
@@ -183,13 +184,6 @@ public class MavenResolver {
         return null;
     }
 
-    @Contract(mutates = "this", pure = false, value = "_ -> this")
-    @NotNull
-    public MavenResolver setResolveTestDependencies(boolean resolveTestDependencies) {
-        this.resolveTestDependencies = resolveTestDependencies;
-        return this;
-    }
-
     private void getTransitiveDependencyVersions(@NotNull MavenId artifact, @NotNull Map<VersionlessMavenId, MavenId> versions,
             Set<VersionlessMavenId> unknownVersions) {
         VersionlessMavenId verlessMavenId = new VersionlessMavenId(artifact.groupId, artifact.artifactId);
@@ -277,9 +271,11 @@ public class MavenResolver {
                 }
 
                 Node scopeElement = elem.getElementsByTagName("scope").item(0);
-                if (scopeElement instanceof Element && !resolveTestDependencies) {
+                if (scopeElement instanceof Element) {
                     Element scope = (Element) scopeElement;
-                    if (scope.getTextContent().equals("test")) {
+                    if (!resolveTestDependencies && scope.getTextContent().equals("test")) {
+                        continue;
+                    } else if (!resolveProvidedDependencies && scope.getTextContent().equals("provided")) {
                         continue;
                     }
                 }
@@ -591,6 +587,40 @@ public class MavenResolver {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    /**
+     * Sets whether dependencies of artifacts which have the "test" scope should be resolved.
+     * This only affects transitive dependencies, dependencies that are directly resolved via {@link #getTransitiveDependencies(MavenId)}
+     * or {@link #getJarDepend(MavenId)} are excluded.
+     *
+     * <p>The default value is false, which disables the resolution of artifacts with the "test" scope.
+     *
+     * @param resolveProvidedDependencies The new value
+     * @return The current {@link MavenResolver} instance, for chaining
+     */
+    @Contract(mutates = "this", pure = false, value = "_ -> this")
+    @NotNull
+    public MavenResolver setResolveTestDependencies(boolean resolveTestDependencies) {
+        this.resolveTestDependencies = resolveTestDependencies;
+        return this;
+    }
+
+    /**
+     * Sets whether dependencies of artifacts which have the "provided" scope should be resolved.
+     * This only affects transitive dependencies, dependencies that are directly resolved via {@link #getTransitiveDependencies(MavenId)}
+     * or {@link #getJarDepend(MavenId)} are excluded.
+     *
+     * <p>The default value is false, which disables the resolution of artifacts with the "provided" scope.
+     *
+     * @param resolveProvidedDependencies The new value
+     * @return The current {@link MavenResolver} instance, for chaining
+     */
+    @Contract(mutates = "this", pure = false, value = "_ -> this")
+    @NotNull
+    public MavenResolver setResolveProvidedDependencies(boolean resolveProvidedDependencies) {
+        this.resolveProvidedDependencies = resolveProvidedDependencies;
+        return this;
     }
 } class VersionlessMavenId {
 

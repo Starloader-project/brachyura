@@ -24,6 +24,7 @@ import io.github.coolcrabs.brachyura.util.JvmUtil;
 import io.github.coolcrabs.brachyura.util.PathUtil;
 import io.github.coolcrabs.brachyura.util.Util;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -158,9 +159,16 @@ public abstract class BaseJavaProject extends Project {
         return getProjectDir().resolve("src").resolve("main").resolve("java");
     }
 
-    @SuppressWarnings("null")
     @NotNull
     public Path getResourcesDir() {
-        return getProjectDir().resolve("src").resolve("main").resolve("resources");
+        Path resourceDir = getProjectDir().resolve("src").resolve("main").resolve("resources");
+        if (!Files.exists(resourceDir)) {
+            try {
+                Files.createDirectories(resourceDir);
+            } catch (IOException e) {
+                throw new IllegalStateException(e);
+            }
+        }
+        return resourceDir;
     }
 }
