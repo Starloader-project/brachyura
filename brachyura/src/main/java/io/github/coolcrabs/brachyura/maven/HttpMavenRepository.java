@@ -74,7 +74,7 @@ public final class HttpMavenRepository extends MavenRepository {
             if (checksumFile == null) {
                 throw new ChecksumViolationException(dataChecksum, null, originalFileLocation);
             }
-            String actualChecksum = new String(checksumFile.data, StandardCharsets.UTF_8).trim().split(" ")[0];
+            String actualChecksum = new String(checksumFile.getData(), StandardCharsets.UTF_8).trim().split(" ")[0];
             if (!actualChecksum.equalsIgnoreCase(dataChecksum)) {
                 throw new ChecksumViolationException(dataChecksum, actualChecksum, originalFileLocation);
             }

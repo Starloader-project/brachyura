@@ -1,5 +1,7 @@
 package io.github.coolcrabs.brachyura.maven;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 import org.jetbrains.annotations.NotNull;
@@ -13,7 +15,7 @@ public class ResolvedFile {
     @Nullable // Null demonstrates cache repository
     public final MavenRepository repo;
 
-    public final byte[] data;
+    private byte @Nullable[] data;
 
     @Nullable
     private Path cachePath;
@@ -21,6 +23,11 @@ public class ResolvedFile {
     public ResolvedFile(@Nullable MavenRepository repo, byte[] data) {
         this.repo = repo;
         this.data = data;
+    }
+
+    public ResolvedFile(@Nullable MavenRepository repo, @NotNull Path cachePath) {
+        this.repo = repo;
+        this.cachePath = cachePath;
     }
 
     void setCachePath(Path cachePath) {
@@ -32,6 +39,26 @@ public class ResolvedFile {
         return this.cachePath;
     }
 
+    public byte @NotNull[] getData() {
+        byte[] data = this.data;
+        if (data != null) {
+            return data;
+        }
+        Path cachePath = this.cachePath;
+        if (cachePath == null) {
+            throw new NullPointerException();
+        }
+        try {
+            this.data = data = Files.readAllBytes(cachePath);
+        } catch (IOException e) {
+            throw new IllegalStateException("Cannot read data.");
+        }
+        if (data == null) {
+            throw new NullPointerException();
+        }
+        return data;
+    }
+
     /**
      * Obtains the {@link MessageDigestUtil#SHA1 SHA1 Message Digest} of the content data of this object.
      * It represents it as a hexadecimal string and is not cached.
@@ -40,7 +67,7 @@ public class ResolvedFile {
      */
     @NotNull
     public String getSHA1MessageDigest() {
-        return MessageDigestUtil.toHexHash(MessageDigestUtil.messageDigest(MessageDigestUtil.SHA1).digest(data));
+        return MessageDigestUtil.toHexHash(MessageDigestUtil.messageDigest(MessageDigestUtil.SHA1).digest(getData()));
     }
 
     /**

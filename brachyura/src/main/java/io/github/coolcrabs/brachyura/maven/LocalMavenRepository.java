@@ -1,6 +1,5 @@
 package io.github.coolcrabs.brachyura.maven;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -34,12 +33,6 @@ public class LocalMavenRepository extends MavenRepository {
         if (!Files.exists(resolvedFile)) {
             return null;
         }
-        try {
-            ResolvedFile resolved = new ResolvedFile(this, Files.readAllBytes(resolvedFile));
-            resolved.setCachePath(resolvedFile);
-            return resolved;
-        } catch (IOException e) {
-            return null;
-        }
+        return new ResolvedFile(this, resolvedFile);
     }
 }

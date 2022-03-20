@@ -2,7 +2,6 @@ package io.github.coolcrabs.brachyura.maven;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -74,6 +73,21 @@ public class MavenResolver {
         this.cacheFolder = cacheFolder;
     }
 
+    /**
+     * Adds multiple repositories to the resolver. The repositories will be fetched in the order they occur in the iterator of the
+     * collection. They will however not take precedence over currently existing repositories or the cache and they will be only
+     * queried should the cache not contain a given file and if no preceding repositories were able to resolve the file.
+     *
+     * @param repositories The repositories to add
+     * @return The current {@link MavenResolver} instance, for chaining
+     */
+    @NotNull
+    @Contract(mutates = "this", pure = false, value = "!null -> this; null -> fail")
+    public MavenResolver addRepositories(@NotNull Collection<MavenRepository> repositories) {
+        this.repositories.addAll(repositories);
+        return this;
+    }
+
     @NotNull
     @Contract(mutates = "this", pure = false, value = "_ -> this")
     public MavenResolver addRepository(@NotNull MavenRepository repository) {
@@ -81,11 +95,22 @@ public class MavenResolver {
         return this;
     }
 
+    @SuppressWarnings("null")
     @NotNull
-    @Contract(mutates = "this", pure = false, value = "!null -> this; null -> fail")
-    public MavenResolver addRepositories(@NotNull Collection<MavenRepository> repositories) {
-        this.repositories.addAll(repositories);
-        return this;
+    private String applyPlaceholders(String string, @NotNull String groupId, @NotNull String artifactId, @NotNull String version, @NotNull Map<String, String> properties) {
+        if (!string.contains("${")) {
+            return string;
+        }
+        string = string.replace("${pom.", "${").replace("${project.", "${").replace("${groupId}", groupId).replace("${artifactId}", artifactId).replace("${version}", version);
+        String str2 = string;
+        string = properties.getOrDefault(string, string);
+        if (string == str2) {
+            if (string.contains("${")) {
+                throw new IllegalStateException("Cannot simplify placeholders of string \"" + string + "\" further."
+                        + " Placeholder used in: " + groupId + ":" + artifactId + ":" + version);
+            }
+        }
+        return applyPlaceholders(string, groupId, artifactId, version, properties);
     }
 
     @Nullable
@@ -144,14 +169,15 @@ public class MavenResolver {
 
     @Nullable
     private ResolvedFile resolveFileContents(@NotNull String folder, @NotNull String file) {
-        Path cacheFile = cacheFolder.resolve(folder).resolve(file);
-        if (Files.exists(cacheFile)) {
-            try {
-                ResolvedFile f = new ResolvedFile(null, Files.readAllBytes(cacheFile));
-                f.setCachePath(cacheFile);
-                return f;
-            } catch (IOException e) {
-                e.printStackTrace();
+        Path cacheFileParent = cacheFolder.resolve(folder);
+        Path cacheFile = cacheFileParent.resolve(file);
+        if (Files.exists(cacheFileParent)) {
+            if (Files.exists(cacheFile)) {
+                return new ResolvedFile(null, cacheFile);
+            }
+            Path nolookupFile = cacheFileParent.resolve(file + ".nolookup");
+            if (Files.exists(nolookupFile)) {
+                return null;
             }
         }
         for (MavenRepository repo : repositories) {
@@ -171,15 +197,24 @@ public class MavenResolver {
                 }
                 try {
                     Files.createDirectories(cacheFile.getParent());
-                    Files.write(cacheFile, resolved.data, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
+                    Files.write(cacheFile, resolved.getData(), StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
                     resolved.setCachePath(cacheFile);
                 } catch (IOException e) {
                     IllegalStateException toThrow = new IllegalStateException("Unable to write to cache", e);
-                    toThrow.addSuppressed(symlinkEx);
+                    if (symlinkEx != null) {
+                        toThrow.addSuppressed(symlinkEx);
+                    }
                     throw toThrow;
                 }
                 return resolved;
             }
+        }
+        try {
+            Files.createDirectories(cacheFileParent);
+            Path nolookupFile = cacheFileParent.resolve(file + ".nolookup");
+            Files.createFile(nolookupFile);
+        } catch (IOException e) {
+            throw new IllegalStateException("Unable to write to cache", e);
         }
         return null;
     }
@@ -226,7 +261,7 @@ public class MavenResolver {
                 ResolvedFile file = resolveArtifact(artifact, "", "pom");
                 DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
                 factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
-                xmlDoc = factory.newDocumentBuilder().parse(new ByteArrayInputStream(file.data));
+                xmlDoc = factory.newDocumentBuilder().parse(new ByteArrayInputStream(file.getData()));
             }
             Element project = xmlDoc.getDocumentElement();
             project.normalize();
@@ -262,13 +297,6 @@ public class MavenResolver {
                 if (!elem.getTagName().equals("dependency")) {
                     continue;
                 }
-                String groupId = elem.getElementsByTagName("groupId").item(0).getTextContent();
-                String artifactId = elem.getElementsByTagName("artifactId").item(0).getTextContent();
-
-                if (groupId.equals("${project.groupId}")) {
-                    // Okay, placeholders are going to be an issue ... Let's just implement the most common ones
-                    groupId = artifact.groupId;
-                }
 
                 Node scopeElement = elem.getElementsByTagName("scope").item(0);
                 if (scopeElement instanceof Element) {
@@ -280,12 +308,10 @@ public class MavenResolver {
                     }
                 }
 
-                artifactId = placeholders.getOrDefault(artifactId, artifactId);
-                groupId = placeholders.getOrDefault(groupId, groupId);
-
-                if (artifactId == null || groupId == null) {
-                    throw new NullPointerException();
-                }
+                String groupId = elem.getElementsByTagName("groupId").item(0).getTextContent();
+                String artifactId = elem.getElementsByTagName("artifactId").item(0).getTextContent();
+                groupId = applyPlaceholders(groupId, artifact.groupId, artifact.artifactId, artifact.version, placeholders);
+                artifactId = applyPlaceholders(artifactId, artifact.groupId, artifact.artifactId, artifact.version, placeholders);
 
                 VersionlessMavenId dependencyVerlessId = new VersionlessMavenId(groupId, artifactId);
                 if (blacklistedArtifacts.contains(dependencyVerlessId)) {
@@ -300,24 +326,20 @@ public class MavenResolver {
                     }
                     continue;
                 }
+
                 String version = versionElement.getTextContent();
-                if (version.equals("${project.version}")) {
-                    version = artifact.version;
-                } else {
-                    // We might need to apply placeholders recursively, but for the meantime this ought to do
-                    version = placeholders.getOrDefault(version, version);
-                }
+                version = applyPlaceholders(version, artifact.groupId, artifact.artifactId, artifact.version, placeholders);
 
-                if (version == null) {
-                    throw new NullPointerException("Logical error");
+                if (version.charAt(0) == '[') {
+                    // Version range
+                    if (version.endsWith(",)")) {
+                        // No idea how to treat all these scenarios - I'll just do something that works
+                        version = version.substring(1, version.length() - 2);
+                    } else if (version.endsWith(")") && version.contains(", ")) {
+                        int seperator = version.indexOf(", ");
+                        version = version.substring(seperator + 2, version.length() - 1);
+                    }
                 }
-
-                if (version.startsWith("${") || groupId.startsWith("${") || artifactId.startsWith("${")) {
-                    throw new IllegalStateException("Illegal artifact " + new MavenId(groupId, artifactId, version)
-                            + " declared by artifact " + artifact + ". This is most probably an error with the implementation"
-                            + " of the maven resolver.");
-                }
-
                 getTransitiveDependencyVersions(new MavenId(groupId, artifactId, version), versions, unknownVersions);
             }
         } catch (SAXException | ParserConfigurationException e1) {
@@ -381,7 +403,7 @@ public class MavenResolver {
             ResolvedFile file = resolveArtifact(parentMavenId, "", "pom");
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
-            parentDocument = factory.newDocumentBuilder().parse(new ByteArrayInputStream(file.data));
+            parentDocument = factory.newDocumentBuilder().parse(new ByteArrayInputStream(file.getData()));
             if (parentDocument == null) {
                 throw new NullPointerException("parentDocument is null");
             }
@@ -446,7 +468,7 @@ public class MavenResolver {
         try {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
-            xmlDoc = factory.newDocumentBuilder().parse(new ByteArrayInputStream(mavenMeta.data));
+            xmlDoc = factory.newDocumentBuilder().parse(new ByteArrayInputStream(mavenMeta.getData()));
         } catch (ParserConfigurationException | SAXException e) {
             throw new IOException("Unable to parse maven-metadata.xml", e);
         }
@@ -528,46 +550,17 @@ public class MavenResolver {
 
     @Nullable
     public JavaJarDependency getJarDepend(@NotNull MavenId artifact) {
-        // TODO some way of forcing refresh, even if jars are in the nolookup file
-        Set<String> nolookup = new HashSet<>();
-        Path nolookupCacheFile;
-        {
-            String folder = artifact.groupId.replace('.', '/') + '/' + artifact.artifactId + '/' + artifact.version + '/';
-            String file = artifact.artifactId + '-' + artifact.version + ".nolookup";
-            nolookupCacheFile = cacheFolder.resolve(folder).resolve(file);
-            if (Files.exists(nolookupCacheFile)) {
-                try {
-                    nolookup.addAll(Files.readAllLines(nolookupCacheFile, StandardCharsets.UTF_8));
-                } catch (IOException e) {
-                    throw new IllegalStateException(e);
-                }
-            }
-        }
         ResolvedFile sources = null;
         ResolvedFile ijAnnotations = null;
-        if (!nolookup.contains("sources")) {
-            try {
-                sources = resolveArtifact(artifact, "sources", "jar");
-            } catch (Exception exception1) {
-                nolookup.add("sources");
-            }
+        try {
+            sources = resolveArtifact(artifact, "sources", "jar");
+        } catch (Exception ignored) {
         }
-        if (!nolookup.contains("intelliJ-annotations")) {
-            try {
-                ijAnnotations = resolveArtifact(artifact, "annotations", "zip");
-            } catch (Exception exception1) {
-                // We aren't fully done here, but close enough. See:
-                // https://youtrack.jetbrains.com/issue/IDEA-132487#focus=streamItem-27-3082925.0-0
-                nolookup.add("intelliJ-annotations");
-            }
-        }
-        if (!nolookup.isEmpty()) {
-            try {
-                Files.createDirectories(nolookupCacheFile.getParent());
-                Files.write(nolookupCacheFile, nolookup);
-            } catch (Exception e) {
-                throw new IllegalStateException("Unable to cache failed lookups", e);
-            }
+        try {
+            ijAnnotations = resolveArtifact(artifact, "annotations", "zip");
+        } catch (Exception ignored) {
+            // We aren't fully done here, but close enough. See:
+            // https://youtrack.jetbrains.com/issue/IDEA-132487#focus=streamItem-27-3082925.0-0
         }
         try {
             Path sourcesPath = null;
