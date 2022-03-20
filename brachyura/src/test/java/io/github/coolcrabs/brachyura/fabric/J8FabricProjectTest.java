@@ -18,6 +18,7 @@ import io.github.coolcrabs.brachyura.maven.MavenId;
 import io.github.coolcrabs.brachyura.maven.MavenResolver;
 import io.github.coolcrabs.brachyura.minecraft.Minecraft;
 import io.github.coolcrabs.brachyura.minecraft.VersionMeta;
+import io.github.coolcrabs.brachyura.util.JvmUtil;
 import io.github.coolcrabs.brachyura.util.PathUtil;
 import net.fabricmc.accesswidener.AccessWidenerReader;
 import net.fabricmc.accesswidener.AccessWidenerVisitor;
@@ -82,11 +83,12 @@ class J8FabricProjectTest {
     };
 
     @Test
-    @Disabled(value = "Known to fail - Will probably be fixed upstream")
     void compile() {
         try {
             JavaJarDependency b = fabricProject.build();
-            TestUtil.assertSha256(b.jar, "c7ee5d98a960e6d49d6fa55bbd3eab2b7de301bc5b0c8be8ad60a8b5de8f86b9");
+            if (JvmUtil.CURRENT_JAVA_VERSION == 8) { // TestMod.java produces different cp order in j8 and j17
+                TestUtil.assertSha256(b.jar, "e0dbaa897a5f86f77e3fec2a7fd43dbf4df830a10b9c75dd0ae23f28e5da3c67");
+            }
         } catch (Exception e) {
             e.printStackTrace();
             throw e;
