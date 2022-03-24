@@ -10,19 +10,13 @@ enum BrachyuraDiagnosticListener implements DiagnosticListener<Object> {
 
     @Override
     public void report(Diagnostic<? extends Object> diagnostic) {
-        switch (diagnostic.getKind()) {
-            case ERROR:
-                Logger.error(diagnostic.toString());
-                break;
-            case WARNING:
-            case MANDATORY_WARNING:
-                Logger.warn(diagnostic.toString());
-                break;
-            case NOTE:
-            case OTHER:
-            default:
-                Logger.info(diagnostic.toString());
-                break;
+        Diagnostic.Kind diagnosticKind = diagnostic.getKind();
+        if (diagnosticKind == Diagnostic.Kind.ERROR) {
+            Logger.error(diagnostic.toString());
+        } else if (diagnosticKind == Diagnostic.Kind.MANDATORY_WARNING || diagnosticKind == Diagnostic.Kind.WARNING) {
+            Logger.warn(diagnostic.toString());
+        } else {
+            Logger.info(diagnostic.toString());
         }
     }
 }
