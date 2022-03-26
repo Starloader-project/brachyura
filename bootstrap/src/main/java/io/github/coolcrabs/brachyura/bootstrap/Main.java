@@ -50,7 +50,7 @@ public class Main {
                 }
                 confReader = new BufferedReader(new InputStreamReader(confis));
             }
-            classpath.addAll(getDependencies(confReader, "brachyurabootstrapconf"));
+            classpath.addAll(getDependencies(null, confReader, "brachyurabootstrapconf"));
         } finally {
             if (confReader != null) {
                 confReader.close();
@@ -110,11 +110,11 @@ public class Main {
             return Collections.emptyList();
         }
         try (BufferedReader reader = Files.newBufferedReader(buildscriptDependsFile, StandardCharsets.UTF_8)) {
-            return getDependencies(reader, "build-dependencies.txt");
+            return getDependencies(buildscriptDir, reader, "build-dependencies.txt");
         }
     }
 
-    private static Collection<? extends Path> getDependencies(BufferedReader confReader, String name) throws Exception {
+    private static Collection<? extends Path> getDependencies(Path relativePath, BufferedReader confReader, String name) throws Exception {
         ArrayList<Path> dependencies = new ArrayList<>();
         int confVersion = Integer.parseInt(confReader.readLine());
         if (confVersion != VERSION) {
@@ -126,18 +126,32 @@ public class Main {
                 continue;
             }
             String[] a = line.split("\\s+");
-            URL url = new URL(a[0].trim());
             String hash = a[1].trim();
             String fileName = a[2].trim();
             boolean isjar = Boolean.parseBoolean(a[3].trim());
-            Path download = getDownload(url, hash, fileName);
+            Path download = getDownload(relativePath, a[0].trim(), hash, fileName);
             if (isjar) dependencies.add(download);
         }
         return dependencies;
     }
 
-    static Path getDownload(URL url, String hash, String fileName) throws Exception {
-        if ("file".equals(url.getProtocol())) return Paths.get(url.toURI()); // For debug usage
+    static Path getDownload(Path relativePath, String path, String hash, String fileName) throws Exception {
+        if (!path.contains(":")) {
+            // There are circumstances where a dependency for the buildscript project does not need to be downloaded from
+            // the Internet but instead be bundled with the project. Requiring an absolute path is also nonsensical, so
+            // we need to introduce some way of having relative paths.
+            // The path will always be relative to the "relativePath", which is the buildscript.txt file as of now.
+            // "relativePath" will be null for the brachyurabootstrapconf.txt file for practical reasons, so the application will
+            // throw an exception in that case.
+            if (relativePath == null) {
+                throw new IllegalStateException("Relative paths cannot be used in this circumstance. You need to define a protocol");
+            }
+            return relativePath.resolve(path);
+        }
+        URL url = new URL(path);
+        if ("file".equals(url.getProtocol())) {
+            return Paths.get(url.toURI()); // For debug usage
+        }
         Path target = BOOTSTRAP_DIR.resolve(fileName);
         if (!Files.isRegularFile(target)) {
             System.out.println("Downloading " + url.toString());

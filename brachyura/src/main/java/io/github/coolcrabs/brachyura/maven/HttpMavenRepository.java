@@ -61,7 +61,7 @@ public final class HttpMavenRepository extends MavenRepository {
     public ResolvedFile resolve(@NotNull String folder, @NotNull String file) {
         StringBuilder locationBuilder = new StringBuilder(this.repoUrl.length() + folder.length() + file.length() + 6);
         locationBuilder.append(this.repoUrl).append(folder);
-        if (folder.codePointBefore(folder.length()) != '/') {
+        if (folder.codePointBefore(folder.length()) != '/' && file.codePointAt(0) != '/') {
             locationBuilder.append('/');
         }
         locationBuilder.append(file);
