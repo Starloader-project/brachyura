@@ -1,17 +1,23 @@
 package io.github.coolcrabs.brachyura.maven;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.security.DigestInputStream;
 
+import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.tinylog.Logger;
 
 import io.github.coolcrabs.brachyura.maven.publish.PublicationId;
 import io.github.coolcrabs.brachyura.maven.publish.PublishRepository;
+import io.github.coolcrabs.brachyura.util.PathUtil;
 
 /**
  * A simple implementation of the {@link MavenRepository} class that makes use of flatfile storage
@@ -39,23 +45,32 @@ public class LocalMavenRepository extends MavenRepository implements PublishRepo
 
     @Override
     public void publish(@NotNull PublicationId id, byte @NotNull [] source) throws IOException {
-        Path target = root.resolve(id.toPath());
-        Logger.info("Publishing " + id.toString() + " to " + target.toAbsolutePath().toString());
-        Files.write(target, source);
+        publish(id, new ByteArrayInputStream(source));
     }
 
     @Override
     public void publish(@NotNull PublicationId id, @NotNull InputStream source) throws IOException {
         Path target = root.resolve(id.toPath());
+        Files.createDirectories(target.getParent());
         Logger.info("Publishing " + id.toString() + " to " + target.toAbsolutePath().toString());
-        Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
+        try (DigestInputStream digestInSha256 = new DigestInputStream(source, DigestUtils.getSha256Digest())) {
+            try (DigestInputStream digestInMd5 = new DigestInputStream(digestInSha256, DigestUtils.getMd5Digest())) {
+                try (DigestInputStream digestInSha1 = new DigestInputStream(digestInMd5, DigestUtils.getSha1Digest())) {
+                    Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
+                    byte[] checksum = Hex.encodeHexString(digestInMd5.getMessageDigest().digest()).getBytes(StandardCharsets.UTF_8);
+                    Files.write(target.resolveSibling(target.getFileName() + ".sha1"), checksum);
+                }
+                byte[] checksum = Hex.encodeHexString(digestInMd5.getMessageDigest().digest()).getBytes(StandardCharsets.UTF_8);
+                Files.write(target.resolveSibling(target.getFileName() + ".md5"), checksum);
+            }
+            byte[] checksum = Hex.encodeHexString(digestInSha256.getMessageDigest().digest()).getBytes(StandardCharsets.UTF_8);
+            Files.write(target.resolveSibling(target.getFileName() + ".sha256"), checksum);
+        }
     }
 
     @Override
     public void publish(@NotNull PublicationId id, @NotNull Path source) throws IOException {
-        Path target = root.resolve(id.toPath());
-        Logger.info("Installing " + id.toString() + " (" + source.toAbsolutePath().toString() + ") to " + target.toAbsolutePath().toString());
-        Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
+        publish(id, PathUtil.inputStream(source));
     }
 
     @Override

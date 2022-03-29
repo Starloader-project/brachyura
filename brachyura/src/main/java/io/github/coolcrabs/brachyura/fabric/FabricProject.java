@@ -64,6 +64,7 @@ import io.github.coolcrabs.brachyura.mappings.tinyremapper.TrWrapper;
 import io.github.coolcrabs.brachyura.maven.LocalMavenRepository;
 import io.github.coolcrabs.brachyura.maven.MavenId;
 import io.github.coolcrabs.brachyura.maven.MavenResolver;
+import io.github.coolcrabs.brachyura.maven.publish.AuthentificatedMavenPublishRepository;
 import io.github.coolcrabs.brachyura.maven.publish.MavenPublisher;
 import io.github.coolcrabs.brachyura.minecraft.Minecraft;
 import io.github.coolcrabs.brachyura.minecraft.VersionMeta;
@@ -81,7 +82,6 @@ import io.github.coolcrabs.brachyura.processing.sources.ProcessingSponge;
 import io.github.coolcrabs.brachyura.processing.sources.ZipProcessingSource;
 import io.github.coolcrabs.brachyura.project.Task;
 import io.github.coolcrabs.brachyura.project.java.BaseJavaProject;
-import io.github.coolcrabs.brachyura.project.java.SimpleJavaProject;
 import io.github.coolcrabs.brachyura.util.AtomicDirectory;
 import io.github.coolcrabs.brachyura.util.AtomicFile;
 import io.github.coolcrabs.brachyura.util.CloseableArrayList;
@@ -226,9 +226,21 @@ public abstract class FabricProject extends BaseJavaProject {
     }
 
     public void getPublishTasks(Consumer<Task> p) {
-        SimpleJavaProject.createPublishTasks(p, this::build);
         p.accept(Task.of("publishToMavenLocal", (ThrowingRunnable) () -> {
             MavenPublisher publisher = new MavenPublisher().addRepository(new LocalMavenRepository(MavenResolver.MAVEN_LOCAL));
+            List<MavenDependency> mavendeps = new ArrayList<>();
+            dependencies.get().forEach(dep -> {
+                if (dep instanceof MavenDependency) {
+                    mavendeps.add((MavenDependency) dep);
+                }
+            });
+            modDependencies.get().forEach(modDep -> {
+                mavendeps.add(modDep.jarDependency);
+            });
+            publisher.publishJar(build(), mavendeps);
+        }));
+        p.accept(Task.of("publish", (ThrowingRunnable) () -> {
+            MavenPublisher publisher = new MavenPublisher().addRepository(AuthentificatedMavenPublishRepository.fromEnvironmentVariables());
             List<MavenDependency> mavendeps = new ArrayList<>();
             dependencies.get().forEach(dep -> {
                 if (dep instanceof MavenDependency) {

@@ -17,8 +17,8 @@ import io.github.coolcrabs.brachyura.exception.CompilationFailure;
 import io.github.coolcrabs.brachyura.ide.IdeModule;
 import io.github.coolcrabs.brachyura.maven.LocalMavenRepository;
 import io.github.coolcrabs.brachyura.maven.MavenId;
-import io.github.coolcrabs.brachyura.maven.MavenPublishing;
 import io.github.coolcrabs.brachyura.maven.MavenResolver;
+import io.github.coolcrabs.brachyura.maven.publish.AuthentificatedMavenPublishRepository;
 import io.github.coolcrabs.brachyura.maven.publish.MavenPublisher;
 import io.github.coolcrabs.brachyura.processing.sinks.AtomicZipProcessingSink;
 import io.github.coolcrabs.brachyura.processing.sources.DirectoryProcessingSource;
@@ -50,16 +50,14 @@ public abstract class SimpleJavaProject extends BaseJavaProject {
     }
 
     public void getPublishTasks(Consumer<Task> p) {
-        createPublishTasks(p, this::build);
         p.accept(Task.of("publishToMavenLocal", (ThrowingRunnable) () -> {
             MavenPublisher publisher = new MavenPublisher().addRepository(new LocalMavenRepository(MavenResolver.MAVEN_LOCAL));
             publisher.publishJar(build(), dependencies.get());
         }));
-    }
-
-    @Deprecated
-    public static void createPublishTasks(Consumer<Task> p, BuildSupplier build) {
-        p.accept(Task.of("publish", (ThrowingRunnable) () -> MavenPublishing.publish(MavenPublishing.AuthenticatedMaven.ofEnv(), build.get())));
+        p.accept(Task.of("publish", (ThrowingRunnable) () -> {
+            MavenPublisher publisher = new MavenPublisher().addRepository(AuthentificatedMavenPublishRepository.fromEnvironmentVariables());
+            publisher.publishJar(build(), dependencies.get());
+        }));
     }
 
     @Override

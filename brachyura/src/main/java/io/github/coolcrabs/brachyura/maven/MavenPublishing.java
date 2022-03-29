@@ -28,14 +28,17 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.tinylog.Logger;
 
+@Deprecated
 public class MavenPublishing {
     private MavenPublishing() { }
 
+    @Deprecated
     public static class AuthenticatedMaven {
         final String mavenUrl;
         final String username;
         final String password;
 
+        @Deprecated
         public AuthenticatedMaven(String mavenUrl, @Nullable String username, @Nullable String password) {
             Objects.requireNonNull(mavenUrl, "Unset maven url");
             if ((username == null) != (password == null)) throw new UnsupportedOperationException("Username and password should both be set or not set");
@@ -44,10 +47,12 @@ public class MavenPublishing {
             this.password = password;
         }
 
+        @Deprecated
         public static AuthenticatedMaven ofMavenLocal() {
             return new AuthenticatedMaven(MavenResolver.MAVEN_LOCAL.toUri().toString(), null, null);
         }
 
+        @Deprecated
         public static AuthenticatedMaven ofEnv() {
             return new AuthenticatedMaven(
                 System.getenv("BRACHYURA_PUBLISH_MAVEN"),
@@ -62,6 +67,7 @@ public class MavenPublishing {
      * @param maven
      * @param dep
      */
+    @Deprecated
     public static void publish(AuthenticatedMaven maven, JavaJarDependency dep) {
         publish(maven, dep, stubPom(dep.mavenId));
     }
@@ -72,6 +78,7 @@ public class MavenPublishing {
      * @param dep
      * @param pom
      */
+    @Deprecated
     public static void publish(AuthenticatedMaven maven, JavaJarDependency dep, Supplier<InputStream> pom) {
         Objects.requireNonNull(pom);
         ArrayList<MavenPublishFile> a = new ArrayList<>(3);
@@ -86,6 +93,7 @@ public class MavenPublishing {
         publish(maven, a);
     }
 
+    @Deprecated
     public static void publish(AuthenticatedMaven maven, List<MavenPublishFile> files) {
         try {
             ArrayList<MavenPublishFile> a = new ArrayList<>(files.size() * 2);
@@ -107,6 +115,7 @@ public class MavenPublishing {
         }
     }
 
+    @Deprecated
     public static void rawPublish(AuthenticatedMaven maven, List<MavenPublishFile> files) {
         try {
             String trailSlashRepo;
@@ -148,6 +157,7 @@ public class MavenPublishing {
         return id.groupId.replace('.', '/') + "/" + id.artifactId + "/" + id.version + "/" + id.artifactId + "-" + id.version + ext;
     }
 
+    @Deprecated
     public static class MavenPublishFile {
         @NotNull
         final String fileName;
@@ -159,6 +169,7 @@ public class MavenPublishing {
         }
     }
 
+    @Deprecated
     public static Supplier<InputStream> stubPom(MavenId id) {
         try {
             ByteArrayOutputStreamEx o = new ByteArrayOutputStreamEx();

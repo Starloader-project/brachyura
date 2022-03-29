@@ -139,10 +139,10 @@ public class PathUtil {
         for (Path component : path) {
             ret = ret.resolve(component.getFileName().toString());
         }
-        assert ret != null; // This is the only way for eclipse to suppress the null warning
         return ret;
     }
 
+    @NotNull
     public static InputStream inputStream(@NotNull Path path) {
         try {
             return new BufferedInputStream(Files.newInputStream(path));
