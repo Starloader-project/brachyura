@@ -143,7 +143,7 @@ public class PathUtil {
         return ret;
     }
 
-    public static InputStream inputStream(Path path) {
+    public static InputStream inputStream(@NotNull Path path) {
         try {
             return new BufferedInputStream(Files.newInputStream(path));
         } catch (IOException e) {

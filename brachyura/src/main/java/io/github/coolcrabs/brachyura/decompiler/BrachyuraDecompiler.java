@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import net.fabricmc.mappingio.tree.MappingTree;
@@ -51,16 +52,17 @@ public abstract class BrachyuraDecompiler {
     public static class DecompileResult {
         // Original jar but is linemapped in some capacity if decompiler can do so
         // Otherwise it is just the input jar
+        @NotNull
         public final Path jar;
         // Decompiled sources
         public final Path sourcesJar;
-        
-        public DecompileResult(Path jar, Path sourcesJar) {
+
+        public DecompileResult(@NotNull Path jar, Path sourcesJar) {
             this.jar = jar;
             this.sourcesJar = sourcesJar;
         }
-        
-        public JavaJarDependency toJavaJarDep(@Nullable MavenId id) {
+
+        public JavaJarDependency toJavaJarDep(@NotNull MavenId id) {
             return new JavaJarDependency(jar, sourcesJar, id);
         }
     }

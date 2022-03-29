@@ -7,11 +7,13 @@ import java.nio.file.StandardCopyOption;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import org.jetbrains.annotations.NotNull;
+
 // Based on https://mkyong.com/java/how-to-decompress-files-from-a-zip-file/
 public class UnzipUtil {
     private UnzipUtil() { }
 
-    public static void unzipToDir(Path sourceFile, Path targetDir) {
+    public static void unzipToDir(@NotNull Path sourceFile, Path targetDir) {
         try {
             try (ZipInputStream zis = new ZipInputStream(PathUtil.inputStream(sourceFile))) {
                 ZipEntry zipEntry = zis.getNextEntry();

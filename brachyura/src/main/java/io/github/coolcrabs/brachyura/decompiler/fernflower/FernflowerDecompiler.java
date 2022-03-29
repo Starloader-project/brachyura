@@ -5,14 +5,15 @@ import java.util.List;
 
 import org.jetbrains.annotations.Nullable;
 
+import net.fabricmc.mappingio.tree.MappingTree;
+
 import io.github.coolcrabs.brachyura.decompiler.BrachyuraDecompiler;
 import io.github.coolcrabs.brachyura.decompiler.DecompileLineNumberTable;
-import io.github.coolcrabs.brachyura.decompiler.LineNumberTableReplacer;
 import io.github.coolcrabs.brachyura.decompiler.DecompileLineNumberTable.ClassLineMap;
+import io.github.coolcrabs.brachyura.decompiler.LineNumberTableReplacer;
 import io.github.coolcrabs.brachyura.dependency.JavaJarDependency;
 import io.github.coolcrabs.brachyura.maven.MavenId;
 import io.github.coolcrabs.fernutil.FernUtil;
-import net.fabricmc.mappingio.tree.MappingTree;
 
 public class FernflowerDecompiler extends BrachyuraDecompiler {
     JavaJarDependency ff;
@@ -24,19 +25,12 @@ public class FernflowerDecompiler extends BrachyuraDecompiler {
     @Override
     public String getName() {
         MavenId mavenid = ff.mavenId;
-        if (mavenid == null) {
-            throw new NullPointerException("ff.mavenId is null!");
-        }
         return mavenid.artifactId + " (" + mavenid.groupId + ")";
     }
 
     @Override
     public String getVersion() {
-        MavenId mavenid = ff.mavenId;
-        if (mavenid == null) {
-            throw new NullPointerException("ff.mavenId is null!");
-        }
-        return mavenid.version;
+        return ff.mavenId.version;
     }
 
     @Override

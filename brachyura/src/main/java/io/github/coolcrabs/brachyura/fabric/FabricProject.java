@@ -23,6 +23,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
@@ -47,6 +48,7 @@ import io.github.coolcrabs.brachyura.decompiler.BrachyuraDecompiler;
 import io.github.coolcrabs.brachyura.decompiler.cfr.CfrDecompiler;
 import io.github.coolcrabs.brachyura.dependency.Dependency;
 import io.github.coolcrabs.brachyura.dependency.JavaJarDependency;
+import io.github.coolcrabs.brachyura.dependency.MavenDependency;
 import io.github.coolcrabs.brachyura.dependency.NativesJarDependency;
 import io.github.coolcrabs.brachyura.exception.UnknownJsonException;
 import io.github.coolcrabs.brachyura.ide.IdeModule;
@@ -59,8 +61,10 @@ import io.github.coolcrabs.brachyura.mappings.tinyremapper.MetaInfFixer;
 import io.github.coolcrabs.brachyura.mappings.tinyremapper.RemapperProcessor;
 import io.github.coolcrabs.brachyura.mappings.tinyremapper.TinyRemapperHelper;
 import io.github.coolcrabs.brachyura.mappings.tinyremapper.TrWrapper;
+import io.github.coolcrabs.brachyura.maven.LocalMavenRepository;
 import io.github.coolcrabs.brachyura.maven.MavenId;
 import io.github.coolcrabs.brachyura.maven.MavenResolver;
+import io.github.coolcrabs.brachyura.maven.publish.MavenPublisher;
 import io.github.coolcrabs.brachyura.minecraft.Minecraft;
 import io.github.coolcrabs.brachyura.minecraft.VersionMeta;
 import io.github.coolcrabs.brachyura.mixin.BrachyuraMixinCompileExtensions;
@@ -130,9 +134,10 @@ public abstract class FabricProject extends BaseJavaProject {
         return null;
     }
 
+    @NotNull
     public MavenId getId() {
         String group = getMavenGroup();
-        return group == null ? null : new MavenId(group, getModId(), getVersion());
+        return group == null ? new MavenId(getModId(), getModId(), getVersion()) : new MavenId(group, getModId(), getVersion());
     }
 
     public final Lazy<List<ModDependency>> modDependencies = new Lazy<>(() -> {
@@ -222,6 +227,19 @@ public abstract class FabricProject extends BaseJavaProject {
 
     public void getPublishTasks(Consumer<Task> p) {
         SimpleJavaProject.createPublishTasks(p, this::build);
+        p.accept(Task.of("publishToMavenLocal", (ThrowingRunnable) () -> {
+            MavenPublisher publisher = new MavenPublisher().addRepository(new LocalMavenRepository(MavenResolver.MAVEN_LOCAL));
+            List<MavenDependency> mavendeps = new ArrayList<>();
+            dependencies.get().forEach(dep -> {
+                if (dep instanceof MavenDependency) {
+                    mavendeps.add((MavenDependency) dep);
+                }
+            });
+            modDependencies.get().forEach(modDep -> {
+                mavendeps.add(modDep.jarDependency);
+            });
+            publisher.publishJar(build(), mavendeps);
+        }));
     }
 
     @Override
@@ -627,7 +645,7 @@ public abstract class FabricProject extends BaseJavaProject {
                                 ZipProcessingSource s = new ZipProcessingSource(modDependency.jarDependency.jar);
                                 AtomicZipProcessingSink sink = new AtomicZipProcessingSink(p)
                             ) {
-                                new ProcessorChain(new FmjGenerator(Collections.singletonMap(s, modDependency.jarDependency.mavenId))).apply(sink, s);
+                                new ProcessorChain(new FmjGenerator(Collections.<ProcessingSource, MavenId>singletonMap(s, modDependency.jarDependency.mavenId))).apply(sink, s);
                                 sink.commit();
                             }
                             jij.add(p);
@@ -823,7 +841,7 @@ public abstract class FabricProject extends BaseJavaProject {
 
     public void hashDep(MessageDigest md, JavaJarDependency dep) {
         MavenId mavenId = dep.mavenId;
-        if (mavenId == null) {
+        if (Objects.isNull(mavenId)) {
             // Hash all the metadata if no id
             MessageDigestUtil.update(md, dep.jar.toAbsolutePath().toString());
             try {
@@ -925,15 +943,19 @@ public abstract class FabricProject extends BaseJavaProject {
     }
 
     public final Lazy<JavaJarDependency> decompiledJar = new Lazy<>(this::createDecompiledJar);
+
     public JavaJarDependency createDecompiledJar() {
         RemappedJar named = namedJar.get();
         BrachyuraDecompiler decompiler = decompiler();
-        if (decompiler == null) return new JavaJarDependency(named.jar, null, null);
+        if (decompiler == null) {
+            return new JavaJarDependency(named.jar, null, new MavenId("undecompiled", "null", versionMeta.get().version));
+        }
         // Different Java Versions have different classes
         // This will lead to missing classes if ran on an older jdk and MC uses newer jdk
         // Adding the JVM version to the directory avoids this issue if you rerun with a newer jdk
         Path resultDir = fabricCache().resolve("decompiled").resolve(decompiler.getName() + "-" + decompiler.getVersion()).resolve(versionMeta.get().version + TinyRemapperHelper.getFileVersionTag() + "named-" + named.mappingHash + "-J" + JvmUtil.CURRENT_JAVA_VERSION);
-        return decompiler.getDecompiled(named.jar, decompClasspath(), resultDir, mappings.get(), Namespaces.NAMED).toJavaJarDep(null);
+        return decompiler.getDecompiled(named.jar, decompClasspath(), resultDir, mappings.get(), Namespaces.NAMED)
+                .toJavaJarDep(new MavenId("decompiled", decompiler.getName() + "-" + decompiler.getVersion(), versionMeta.get().version));
     }
 
     public void remapJar(MappingTree mappings, @Nullable Consumer<AccessWidenerVisitor> aw, String src, String dst, Path inputJar, Path outputJar, List<Path> classpath) {
@@ -1003,10 +1025,12 @@ public abstract class FabricProject extends BaseJavaProject {
         return result;
     }
 
-    public @Nullable BrachyuraDecompiler decompiler() {
+    @Nullable
+    public BrachyuraDecompiler decompiler() {
         return new CfrDecompiler();
     }
 
+    @NotNull
     public Path getBuildJarPath() {
         return getBuildLibsDir().resolve(getModId() + "-" + getVersion() + ".jar");
     }
@@ -1016,10 +1040,11 @@ public abstract class FabricProject extends BaseJavaProject {
     }
 
     public class RemappedJar {
+        @NotNull
         public final Path jar;
         public final String mappingHash;
 
-        public RemappedJar(Path jar, String mappingHash) {
+        public RemappedJar(@NotNull Path jar, String mappingHash) {
             this.jar = jar;
             this.mappingHash = mappingHash;
         }

@@ -30,12 +30,12 @@ import org.tinylog.Logger;
 
 public class MavenPublishing {
     private MavenPublishing() { }
-    
+
     public static class AuthenticatedMaven {
         final String mavenUrl;
         final String username;
         final String password;
-        
+
         public AuthenticatedMaven(String mavenUrl, @Nullable String username, @Nullable String password) {
             Objects.requireNonNull(mavenUrl, "Unset maven url");
             if ((username == null) != (password == null)) throw new UnsupportedOperationException("Username and password should both be set or not set");
@@ -43,11 +43,11 @@ public class MavenPublishing {
             this.username = username;
             this.password = password;
         }
-        
+
         public static AuthenticatedMaven ofMavenLocal() {
             return new AuthenticatedMaven(MavenResolver.MAVEN_LOCAL.toUri().toString(), null, null);
         }
-        
+
         public static AuthenticatedMaven ofEnv() {
             return new AuthenticatedMaven(
                 System.getenv("BRACHYURA_PUBLISH_MAVEN"),
@@ -56,7 +56,7 @@ public class MavenPublishing {
             );
         }
     }
-    
+
     /**
      * Publishes to a maven with a stub pom
      * @param maven
@@ -65,7 +65,7 @@ public class MavenPublishing {
     public static void publish(AuthenticatedMaven maven, JavaJarDependency dep) {
         publish(maven, dep, stubPom(dep.mavenId));
     }
-    
+
     /**
      * Publish to a maven
      * @param maven
@@ -76,17 +76,16 @@ public class MavenPublishing {
         Objects.requireNonNull(pom);
         ArrayList<MavenPublishFile> a = new ArrayList<>(3);
         MavenId mavenId = dep.mavenId;
-        if (mavenId == null) {
-            throw new IllegalStateException("The mavenId must be supplied with the java jar dependency!");
-        }
+        Objects.requireNonNull(mavenId, "The mavenId must be supplied with the java jar dependency!");
         a.add(new MavenPublishFile(getMavenPath(mavenId, ".pom"), pom));
         a.add(new MavenPublishFile(getMavenPath(mavenId, ".jar"), () -> PathUtil.inputStream(dep.jar)));
-        if (dep.sourcesJar != null) {
-            a.add(new MavenPublishFile(getMavenPath(mavenId, "-sources.jar"), () -> PathUtil.inputStream(dep.sourcesJar)));
+        Path sourceJar = dep.sourcesJar;
+        if (sourceJar != null) {
+            a.add(new MavenPublishFile(getMavenPath(mavenId, "-sources.jar"), () -> PathUtil.inputStream(sourceJar)));
         }
         publish(maven, a);
     }
-    
+
     public static void publish(AuthenticatedMaven maven, List<MavenPublishFile> files) {
         try {
             ArrayList<MavenPublishFile> a = new ArrayList<>(files.size() * 2);
@@ -107,7 +106,7 @@ public class MavenPublishing {
             throw Util.sneak(e);
         }
     }
-    
+
     public static void rawPublish(AuthenticatedMaven maven, List<MavenPublishFile> files) {
         try {
             String trailSlashRepo;
@@ -159,7 +158,7 @@ public class MavenPublishing {
             this.in = in;
         }
     }
-    
+
     public static Supplier<InputStream> stubPom(MavenId id) {
         try {
             ByteArrayOutputStreamEx o = new ByteArrayOutputStreamEx();

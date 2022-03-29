@@ -30,6 +30,9 @@ public class ZipProcessingSource extends ProcessingSource implements Closeable {
             Files.walkFileTree(fs.getPath("/"), new SimpleFileVisitor<Path>() {
                 @Override
                 public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    if (file == null) {
+                        throw new IOException("file is null");
+                    }
                     sink.sink(() -> PathUtil.inputStream(file), new ProcessingId(file.toString().substring(1), ZipProcessingSource.this));
                     return FileVisitResult.CONTINUE;
                 }

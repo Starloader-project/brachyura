@@ -9,10 +9,15 @@ import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
+
 public class XmlUtil {
     private XmlUtil() {
     }
 
+    @NotNull
+    @Contract(pure = true, value = "!null -> new")
     public static FormattedXMLStreamWriter newStreamWriter(Writer writer) {
         try {
             return new FormattedXMLStreamWriter(writer);

@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.xml.XMLConstants;
@@ -28,6 +29,7 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import io.github.coolcrabs.brachyura.dependency.JavaJarDependency;
+import io.github.coolcrabs.brachyura.dependency.MavenDependencyScope;
 import io.github.coolcrabs.brachyura.util.IterableNodeList;
 import io.github.coolcrabs.brachyura.util.PathUtil;
 
@@ -66,6 +68,16 @@ public class MavenResolver {
     private final List<MavenRepository> repositories = new ArrayList<>();
     @NotNull
     private final Path cacheFolder;
+
+    /**
+     * The default scope to use for the constructor of {@link JavaJarDependency}.
+     * This scope as of now is used for any {@link JavaJarDependency} created by this instance
+     * of the {@link MavenResolver}.
+     * Default value is {@link MavenDependencyScope#COMPILE_ONLY} due to backwards compatibility reasons.
+     */
+    @NotNull
+    private MavenDependencyScope defaultScope = MavenDependencyScope.COMPILE_ONLY;
+
     private boolean resolveProvidedDependencies = false;
     private boolean resolveTestDependencies = false;
 
@@ -217,6 +229,28 @@ public class MavenResolver {
             throw new IllegalStateException("Unable to write to cache", e);
         }
         return null;
+    }
+
+    /**
+     * Sets the default scope to use for the constructor of {@link JavaJarDependency}.
+     * This scope as of now is used for any {@link JavaJarDependency} created by this instance
+     * of the {@link MavenResolver}.
+     *
+     * <p>Default value is {@link MavenDependencyScope#COMPILE_ONLY} due to backwards compatibility reasons.
+     *
+     * <p>Furthermore it may be beneficial to switch between the types of scope depending on the situation.
+     * For example it may not be fully required to have {@link MavenDependencyScope#COMPILE} for transitive
+     * dependencies if only {@link MavenDependencyScope#PROVIDED} suffices in that instance.
+     *
+     * @param scope The scope to use from now on
+     * @return The {@link MavenResolver} instance that was used to invoke this method. Used for chaining
+     */
+    @Contract(pure = false, mutates = "this", value = "null -> fail; !null -> this")
+    @NotNull
+    public MavenResolver setDefaultScope(@NotNull MavenDependencyScope scope) {
+        Objects.requireNonNull(scope, "scope may not be null!");
+        this.defaultScope = scope;
+        return this;
     }
 
     private void getTransitiveDependencyVersions(@NotNull MavenId artifact, @NotNull Map<VersionlessMavenId, MavenId> versions,
@@ -576,7 +610,7 @@ public class MavenResolver {
             if (ijAnnotations != null) {
                 ijAnnotPath = ijAnnotations.getCachePath();
             }
-            return new JavaJarDependency(jarPath, sourcesPath, artifact, null, ijAnnotPath);
+            return new JavaJarDependency(jarPath, sourcesPath, artifact, null, ijAnnotPath, defaultScope);
         } catch (Exception e) {
             return null;
         }

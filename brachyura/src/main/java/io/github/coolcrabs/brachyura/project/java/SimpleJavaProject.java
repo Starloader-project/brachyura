@@ -15,8 +15,11 @@ import io.github.coolcrabs.brachyura.compiler.java.JavaCompilationResult;
 import io.github.coolcrabs.brachyura.dependency.JavaJarDependency;
 import io.github.coolcrabs.brachyura.exception.CompilationFailure;
 import io.github.coolcrabs.brachyura.ide.IdeModule;
+import io.github.coolcrabs.brachyura.maven.LocalMavenRepository;
 import io.github.coolcrabs.brachyura.maven.MavenId;
 import io.github.coolcrabs.brachyura.maven.MavenPublishing;
+import io.github.coolcrabs.brachyura.maven.MavenResolver;
+import io.github.coolcrabs.brachyura.maven.publish.MavenPublisher;
 import io.github.coolcrabs.brachyura.processing.sinks.AtomicZipProcessingSink;
 import io.github.coolcrabs.brachyura.processing.sources.DirectoryProcessingSource;
 import io.github.coolcrabs.brachyura.processing.sources.ProcessingSponge;
@@ -48,11 +51,15 @@ public abstract class SimpleJavaProject extends BaseJavaProject {
 
     public void getPublishTasks(Consumer<Task> p) {
         createPublishTasks(p, this::build);
+        p.accept(Task.of("publishToMavenLocal", (ThrowingRunnable) () -> {
+            MavenPublisher publisher = new MavenPublisher().addRepository(new LocalMavenRepository(MavenResolver.MAVEN_LOCAL));
+            publisher.publishJar(build(), dependencies.get());
+        }));
     }
 
+    @Deprecated
     public static void createPublishTasks(Consumer<Task> p, BuildSupplier build) {
         p.accept(Task.of("publish", (ThrowingRunnable) () -> MavenPublishing.publish(MavenPublishing.AuthenticatedMaven.ofEnv(), build.get())));
-        p.accept(Task.of("publishToMavenLocal", (ThrowingRunnable) () -> MavenPublishing.publish(MavenPublishing.AuthenticatedMaven.ofMavenLocal(), build.get())));
     }
 
     @Override
@@ -87,12 +94,12 @@ public abstract class SimpleJavaProject extends BaseJavaProject {
         ) {
             resourcesProcessingChain().apply(jarSink, new DirectoryProcessingSource(getResourcesDir()));
             classes.getInputs(jarSink);
-            // TODO bogus allocation?
             new DirectoryProcessingSource(getSrcDir()).getInputs(jarSourcesSink);
             jarSink.commit();
             jarSourcesSink.commit();
         }
-        return new JavaJarDependency(outjar, outjar, getId());
+        MavenId mvnid = getId();
+        return new JavaJarDependency(outjar, outjar, mvnid == null ? new MavenId(getJarBaseName(), getJarBaseName(), "0.0.1-SNAPSHOT") : mvnid);
     }
 
     @NotNull

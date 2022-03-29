@@ -1,6 +1,7 @@
 package io.github.coolcrabs.brachyura.dependency;
 
 import java.nio.file.Path;
+import java.util.Objects;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -8,14 +9,14 @@ import org.jetbrains.annotations.Nullable;
 
 import io.github.coolcrabs.brachyura.maven.MavenId;
 
-public class JavaJarDependency implements Dependency {
+public class JavaJarDependency implements Dependency, MavenDependency {
     @NotNull
     public final Path jar;
 
     @Nullable
     public final Path sourcesJar;
 
-    @Nullable
+    @NotNull
     public final MavenId mavenId;
 
     /**
@@ -32,20 +33,45 @@ public class JavaJarDependency implements Dependency {
     @Nullable
     public final Path intelliJExternalAnnotations;
 
-    public JavaJarDependency(Path jar, @Nullable Path sourcesJar, @Nullable MavenId mavenId,
+    /**
+     * The scope of this dependency.
+     */
+    @NotNull
+    private final MavenDependencyScope scope;
+
+    @Deprecated
+    public JavaJarDependency(@NotNull Path jar, @Nullable Path sourcesJar, @NotNull MavenId mavenId,
             @Nullable Path eclipseExternalAnnotatiosn, @Nullable Path intelliJExternalAnnotations) {
-        if (jar == null) {
-            throw new NullPointerException("jar may not be null!");
-        }
-        this.jar = jar;
+        this(jar, sourcesJar, mavenId, null, null, MavenDependencyScope.COMPILE_ONLY);
+    }
+
+    public JavaJarDependency(@NotNull Path jar, @Nullable Path sourcesJar, @NotNull MavenId mavenId,
+            @Nullable Path eclipseExternalAnnotatiosn, @Nullable Path intelliJExternalAnnotations,
+            @NotNull MavenDependencyScope scope) {
+        this.jar = Objects.requireNonNull(jar, "jar may not be null!");;
         this.sourcesJar = sourcesJar;
         this.mavenId = mavenId;
         this.eclipseExternalAnnotations = eclipseExternalAnnotatiosn;
         this.intelliJExternalAnnotations = intelliJExternalAnnotations;
+        this.scope = scope;
     }
 
-    public JavaJarDependency(Path jar, @Nullable Path sourcesJar, @Nullable MavenId mavenId) {
+    public JavaJarDependency(@NotNull Path jar, @Nullable Path sourcesJar, @NotNull MavenId mavenId) {
         this(jar, sourcesJar, mavenId, null, null);
+    }
+
+    @Override
+    @NotNull
+    @Contract(pure = true, value = "-> !null")
+    public MavenId getMavenId() {
+        return this.mavenId;
+    }
+
+    @Override
+    @NotNull
+    @Contract(pure = true, value = "-> !null")
+    public MavenDependencyScope getScope() {
+        return this.scope;
     }
 
     /**
@@ -60,6 +86,6 @@ public class JavaJarDependency implements Dependency {
     @NotNull
     @Contract(pure = true, value = "_, _ -> new")
     public JavaJarDependency withExternalAnnotations(@Nullable Path eclipse, @Nullable Path intelliJ) {
-        return new JavaJarDependency(this.jar, this.sourcesJar, this.mavenId, eclipse, intelliJ);
+        return new JavaJarDependency(this.jar, this.sourcesJar, this.mavenId, eclipse, intelliJ, this.scope);
     }
 }

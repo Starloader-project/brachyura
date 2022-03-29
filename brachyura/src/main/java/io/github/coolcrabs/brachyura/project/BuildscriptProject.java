@@ -24,6 +24,7 @@ import io.github.coolcrabs.brachyura.dependency.JavaJarDependency;
 import io.github.coolcrabs.brachyura.exception.CompilationFailure;
 import io.github.coolcrabs.brachyura.ide.IdeModule;
 import io.github.coolcrabs.brachyura.ide.IdeModule.RunConfigBuilder;
+import io.github.coolcrabs.brachyura.maven.MavenId;
 import io.github.coolcrabs.brachyura.processing.ProcessingId;
 import io.github.coolcrabs.brachyura.processing.ProcessingSink;
 import io.github.coolcrabs.brachyura.project.java.BaseJavaProject;
@@ -136,7 +137,8 @@ class BuildscriptProject extends BaseJavaProject {
         for (Path p : compileDeps) {
             Path source = p.resolveSibling(p.getFileName().toString().replace(".jar", "-sources.jar"));
             if (!Files.exists(source)) source = null;
-            result.add(new JavaJarDependency(p, source, null));
+            // Not the most ideal solution, but it ought to do
+            result.add(new JavaJarDependency(p, source, new MavenId("unknown", p.toFile().getName().split("\\.")[0], "undefined")));
         }
         return result;
     }
