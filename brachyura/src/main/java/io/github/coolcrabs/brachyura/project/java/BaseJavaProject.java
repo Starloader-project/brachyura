@@ -4,18 +4,15 @@ import io.github.coolcrabs.brachyura.compiler.java.JavaCompilation;
 import io.github.coolcrabs.brachyura.compiler.java.JavaCompilationResult;
 import io.github.coolcrabs.brachyura.dependency.JavaJarDependency;
 import java.nio.file.Path;
-import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.function.Consumer;
 
 import org.jetbrains.annotations.NotNull;
 
 import io.github.coolcrabs.brachyura.ide.Ide;
 import io.github.coolcrabs.brachyura.ide.IdeModule;
-import io.github.coolcrabs.brachyura.processing.ProcessorChain;
 import io.github.coolcrabs.brachyura.processing.sinks.DirectoryProcessingSink;
 import io.github.coolcrabs.brachyura.project.Project;
 import io.github.coolcrabs.brachyura.project.Task;
@@ -34,10 +31,6 @@ public abstract class BaseJavaProject extends Project {
 
     @NotNull
     public abstract IdeModule[] getIdeModules();
-
-    public int getJavaVersion() {
-        return 8;
-    }
 
     @Override
     public void getTasks(@NotNull Consumer<Task> p) {
@@ -86,7 +79,7 @@ public abstract class BaseJavaProject extends Project {
             for (IdeModule m : toCompile) {
                 JavaCompilation compilation = new JavaCompilation();
                 compilation.addOption(rc.args.get().toArray(new String[0]));
-                compilation.addOption(JvmUtil.compileArgs(JvmUtil.CURRENT_JAVA_VERSION, getJavaVersion()));
+                compilation.addOption(JvmUtil.compileArgs(JvmUtil.CURRENT_JAVA_VERSION, m.javaVersion));
                 compilation.addOption("-proc:none");
                 for (JavaJarDependency dep : m.dependencies.get()) {
                     compilation.addClasspath(dep.jar);
@@ -130,17 +123,6 @@ public abstract class BaseJavaProject extends Project {
         } catch (Exception e) {
             throw Util.sneak(e);
         }
-    }
-
-    @SuppressWarnings("null")
-    @NotNull
-    public List<Path> getCompileDependencies() {
-        return Collections.emptyList();
-    }
-
-    @NotNull
-    public ProcessorChain resourcesProcessingChain() {
-        return new ProcessorChain();
     }
 
     @NotNull

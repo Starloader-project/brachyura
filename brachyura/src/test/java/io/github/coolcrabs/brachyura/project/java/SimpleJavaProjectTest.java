@@ -18,8 +18,9 @@ class SimpleJavaProjectTest {
     void compile() {
         SimpleJavaProject project = new SimpleJavaProject() {
             @Override
+            @NotNull
             public MavenId getId() {
-                return new MavenId("io.github.coolcrabs", "testmod", "0.0");
+                return new MavenId("io.github.coolcrabs", "testprogram", "0.0");
             }
 
             @Override
