@@ -274,6 +274,7 @@ public abstract class FabricContext {
     }
 
     // TODO: this doesn't need to write files to disk
+    @NotNull
     public ProcessorChain resourcesProcessingChain(List<JavaJarDependency> jij) {
         Path fmjgen = getLocalBrachyuraPath().resolve("fmjgen");
         if (Files.exists(fmjgen)) PathUtil.deleteDirectory(fmjgen);
