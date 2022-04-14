@@ -143,6 +143,12 @@ public enum Eclipse implements Ide {
                         w.writeAttribute("name", "annotationpath");
                         w.writeAttribute("value", eclipseAnnotations.toString());
                     }
+                    String javadocURL = dep.getJavadocURL();
+                    if (javadocURL != null) {
+                        w.writeEmptyElement("attribute");
+                        w.writeAttribute("name", "javadoc_location");
+                        w.writeAttribute("value", javadocURL);
+                    }
                     w.writeEndElement();
                     w.writeEndElement();
                 }

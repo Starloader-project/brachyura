@@ -610,7 +610,7 @@ public class MavenResolver {
             if (ijAnnotations != null) {
                 ijAnnotPath = ijAnnotations.getCachePath();
             }
-            return new JavaJarDependency(jarPath, sourcesPath, artifact, null, ijAnnotPath, defaultScope);
+            return new JavaJarDependency(jarPath, sourcesPath, artifact, null, ijAnnotPath, defaultScope, null);
         } catch (Exception e) {
             return null;
         }
