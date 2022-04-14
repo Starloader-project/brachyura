@@ -9,7 +9,7 @@ public class Plugins {
     private Plugins() { }
 
     static ArrayList<Plugin> plugins = new ArrayList<>();
-    
+
     static {
         plugins.add(ProfilePlugin.INSTANCE); // TODO: real plugin loading
     }

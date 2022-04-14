@@ -19,12 +19,20 @@ class BuildscriptDevEntry {
         try {
             EntryGlobals.projectDir = Paths.get(args[0]);
             EntryGlobals.buildscriptClasspath = Arrays.stream(args[1].split(File.pathSeparator)).map(Paths::get).collect(Collectors.toList());
-            Project buildscript = (Project) Class.forName("Buildscript").getDeclaredConstructor().newInstance();
+
+            Project buildscript;
+            try {
+                buildscript = (Project) Class.forName("Buildscript").getDeclaredConstructor().newInstance();
+            } catch (ClassNotFoundException cnfe) {
+                buildscript = new BuildscriptProject().createProject().get();
+            }
+            // "finalBuildscript" is just "buildscript" but local-class friendly
+            Project finalBuildscript = buildscript;
             BuildscriptProject buildscriptProject = new BuildscriptProject() {
                 @Override
-                public Optional<Project> createProject() {
-                    return Optional.of(buildscript);
-                }
+                public java.util.Optional<Project> createProject() {
+                    return Optional.of(finalBuildscript);
+                };
             };
             buildscript.setIdeProject(buildscriptProject);
             Tasks t = new Tasks();

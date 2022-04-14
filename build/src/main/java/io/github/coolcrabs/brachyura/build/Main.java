@@ -149,11 +149,15 @@ public class Main {
             for (String lib : mavenLibs) {
                 boolean isJar = !lib.endsWith("-sources.jar");
                 String filename = lib.substring(lib.lastIndexOf('/') + 1);
-                HttpURLConnection connection = (HttpURLConnection) new URL(lib + ".sha1").openConnection();
-                connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.4; en-US; rv:1.9.2.2) Gecko/20100316 Firefox/3.6.2"); // hydos moment
                 String hash;
-                try (InputStream is = connection.getInputStream()) {
-                    hash = readFullyAsString(is);
+                if (!Boolean.getBoolean("de.geolykt.starloader.brachyura.build.offline")) {
+                    HttpURLConnection connection = (HttpURLConnection) new URL(lib + ".sha1").openConnection();
+                    connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.4; en-US; rv:1.9.2.2) Gecko/20100316 Firefox/3.6.2"); // hydos moment
+                    try (InputStream is = connection.getInputStream()) {
+                        hash = readFullyAsString(is);
+                    }
+                } else {
+                    hash = "offline-build";
                 }
                 bootstrapConfigWriter.write(lib + "\t" + hash + "\t" + filename + "\t" + isJar + "\n");
             }
