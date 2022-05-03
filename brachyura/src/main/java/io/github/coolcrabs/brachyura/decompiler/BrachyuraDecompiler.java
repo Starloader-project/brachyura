@@ -47,7 +47,7 @@ public abstract class BrachyuraDecompiler {
         return new DecompileResult(resultDir.resolve(jarFile), resultDir.resolve(sourcesFile));
     }
     
-    protected abstract void decompileAndLinemap(Path jar, List<Path> classpath, Path resultDir, @Nullable MappingTree tree, int namespace);
+    protected abstract void decompileAndLinemap(@NotNull Path jar, List<Path> classpath, Path resultDir, @Nullable MappingTree tree, int namespace);
     
     public static class DecompileResult {
         // Original jar but is linemapped in some capacity if decompiler can do so

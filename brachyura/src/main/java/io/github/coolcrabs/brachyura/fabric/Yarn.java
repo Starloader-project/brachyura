@@ -52,7 +52,7 @@ public class Yarn {
     }
 
     @NotNull
-    public static Yarn ofV2Jar(Path file) {
+    public static Yarn ofV2Jar(@NotNull Path file) {
         try {
             try (FileSystem fileSystem = FileSystemUtil.newJarFileSystem(file)) {
                 return ofV2(fileSystem.getPath("mappings/mappings.tiny"));
@@ -63,7 +63,7 @@ public class Yarn {
     }
 
     @NotNull
-    public static Yarn ofObfEnigmaZip(Path file) {
+    public static Yarn ofObfEnigmaZip(@NotNull Path file) {
         try {
             try (FileSystem fileSystem = FileSystemUtil.newJarFileSystem(file)) {
                 return ofObfEnigma(fileSystem.getPath("/"));

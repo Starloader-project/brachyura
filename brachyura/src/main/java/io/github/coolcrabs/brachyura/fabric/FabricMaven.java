@@ -32,14 +32,4 @@ public class FabricMaven {
     public static MavenId loader(@NotNull String version) {
         return new MavenId(GROUP_ID, "fabric-loader", version);
     }
-
-    @NotNull
-    public static MavenId devLaunchInjector(@NotNull String version) {
-        return new MavenId(GROUP_ID, "dev-launch-injector", version);
-    }
-
-    @NotNull
-    public static MavenId mixinCompileExtensions(@NotNull String version) {
-        return new MavenId(GROUP_ID, "fabric-mixin-compile-extensions", version);
-    }
 }

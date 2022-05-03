@@ -3,7 +3,9 @@ package io.github.coolcrabs.brachyura.mixin;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Objects;
 
 import io.github.coolcrabs.brachyura.mixin.TinyTinyMappingsReader.TinyTree.TinyClass;
@@ -31,6 +33,29 @@ class TinyTinyMappingsReader {
             if (indent == 0 && parts[0].equals("c")) {
                 currentClass = new TinyClass();
                 currentClass.names = new String[r.namespaces.length];
+                // SlBrachyura: Quilt mappings are whack
+                if (parts.length - 1 < r.namespaces.length) {
+                    List<String> strictlySplit = new ArrayList<>();
+                    int start = indent;
+                    while (true) {
+                        int end = line.indexOf('\t', start + 1);
+                        if (start != indent) {
+                            start++;
+                        }
+                        if (end == -1) {
+                            strictlySplit.add(line.substring(start));
+                            break;
+                        }
+                        strictlySplit.add(line.substring(start, end));
+                        start = end;
+                    }
+                    parts = strictlySplit.toArray(new String[0]);
+                    System.out.println(Arrays.toString(parts));
+                    if (parts.length - 1 < r.namespaces.length) {
+                        throw new ArrayIndexOutOfBoundsException("Invalid line (parts length is " + parts.length
+                                + ", namespaces length is " + r.namespaces.length + "): " + line);
+                    }
+                }
                 System.arraycopy(parts, 1, currentClass.names, 0, r.namespaces.length);
                 for (int i = 0; i < r.namespaces.length; i++) {
                     String a = currentClass.names[i];

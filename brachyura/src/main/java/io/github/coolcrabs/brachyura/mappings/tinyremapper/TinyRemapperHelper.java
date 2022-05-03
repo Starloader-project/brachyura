@@ -10,11 +10,13 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import io.github.coolcrabs.brachyura.util.FileSystemUtil;
 import net.fabricmc.tinyremapper.InputTag;
 import net.fabricmc.tinyremapper.TinyRemapper;
+
+import io.github.coolcrabs.brachyura.util.FileSystemUtil;
 
 public class TinyRemapperHelper {
     private TinyRemapperHelper() { }
@@ -30,7 +32,7 @@ public class TinyRemapperHelper {
         INPUT
     }
 
-    public static void readJar(TinyRemapper tr, Path jar, JarType type) throws IOException {
+    public static void readJar(TinyRemapper tr, @NotNull Path jar, JarType type) throws IOException {
         try (FileSystem fileSystem = FileSystemUtil.newJarFileSystem(jar)) {
             readFileSystem(tr, fileSystem, type, null);
         }

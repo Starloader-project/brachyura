@@ -33,11 +33,12 @@ import org.kohsuke.github.GitHubBuilder;
 
 public class Main {
 
-    static final String ASM_VERSION = "9.2";
-    static final String TINYLOG_VERSION = "2.3.2";
-    static final String REMAPPER_VERSION = "0.8.1";
     static final String ACCESSWIDENER_VERSION = "2.1.0";
+    static final String ASM_VERSION = "9.3";
+    static final String GSON_VERSION = "2.9.0";
     static final String MAPPINGSIO_VERSION = "0.3.0";
+    static final String REMAPPER_VERSION = "0.8.2";
+    static final String TINYLOG_VERSION = "2.4.1";
 
     static String[] localLibs = new String[] {"fabricmerge", "cfr", "brachyura", "bootstrap", "brachyura-mixin-compile-extensions", "trieharder", "fernutil"};
     static String[] mavenLibs = new String[] {
@@ -51,8 +52,8 @@ public class Main {
         "https://repo.maven.apache.org/maven2/org/ow2/asm/asm-tree/" + ASM_VERSION + "/asm-tree-" + ASM_VERSION + "-sources.jar",
         "https://repo.maven.apache.org/maven2/org/ow2/asm/asm-util/" + ASM_VERSION + "/asm-util-" + ASM_VERSION + ".jar",
         "https://repo.maven.apache.org/maven2/org/ow2/asm/asm-util/" + ASM_VERSION + "/asm-util-" + ASM_VERSION + "-sources.jar",
-        "https://repo.maven.apache.org/maven2/com/google/code/gson/gson/2.8.7/gson-2.8.7.jar",
-        "https://repo.maven.apache.org/maven2/com/google/code/gson/gson/2.8.7/gson-2.8.7-sources.jar",
+        "https://repo.maven.apache.org/maven2/com/google/code/gson/gson/" + GSON_VERSION + "/gson-" + GSON_VERSION + ".jar",
+        "https://repo.maven.apache.org/maven2/com/google/code/gson/gson/" + GSON_VERSION + "/gson-" + GSON_VERSION + "-sources.jar",
         "https://repo.maven.apache.org/maven2/org/tinylog/tinylog-api/" + TINYLOG_VERSION + "/tinylog-api-" + TINYLOG_VERSION + ".jar",
         "https://repo.maven.apache.org/maven2/org/tinylog/tinylog-api/" + TINYLOG_VERSION + "/tinylog-api-" + TINYLOG_VERSION + "-sources.jar",
         "https://repo.maven.apache.org/maven2/org/tinylog/tinylog-impl/" + TINYLOG_VERSION + "/tinylog-impl-" + TINYLOG_VERSION + ".jar",

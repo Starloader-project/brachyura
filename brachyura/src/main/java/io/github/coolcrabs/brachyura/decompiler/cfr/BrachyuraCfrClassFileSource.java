@@ -23,6 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.benf.cfr.reader.api.ClassFileSource;
 import org.benf.cfr.reader.bytecode.analysis.parse.utils.Pair;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.tinylog.Logger;
 
@@ -36,15 +37,17 @@ class BrachyuraCfrClassFileSource implements ClassFileSource, Closeable {
     private final ConcurrentHashMap<String, byte[]> classmap = new ConcurrentHashMap<>();
     private final List<FileSystem> toClose = new ArrayList<>();
 
-    public BrachyuraCfrClassFileSource(Path mainJar, List<Path> classpath, List<String> mainClassesOut) throws IOException {
+    public BrachyuraCfrClassFileSource(@NotNull Path mainJar, List<Path> classpath, List<String> mainClassesOut) throws IOException {
         loadJar(mainJar, mainClassesOut);
         for (Path path : classpath) {
-            loadJar(path, null);
+            if (path != null) {
+                loadJar(path, null);
+            }
         }
         loadRt();
     }
 
-    private void loadJar(Path path, @Nullable List<String> classesOut) throws IOException {
+    private void loadJar(@NotNull Path path, @Nullable List<String> classesOut) throws IOException {
         FileSystem fileSystem = FileSystemUtil.newJarFileSystem(path);
         toClose.add(fileSystem);
         loadJar(fileSystem, classesOut);

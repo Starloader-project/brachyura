@@ -3,11 +3,13 @@ package io.github.coolcrabs.brachyura.util;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import org.jetbrains.annotations.NotNull;
 import org.tinylog.Logger;
 
 public class AtomicFile implements AutoCloseable {
     boolean commited = false;
     private final Path target;
+    @NotNull
     public final Path tempPath;
 
     public AtomicFile(Path target) {

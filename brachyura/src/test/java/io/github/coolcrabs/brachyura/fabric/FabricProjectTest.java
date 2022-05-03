@@ -107,7 +107,7 @@ class FabricProjectTest {
 
     @Test
     void compile() {
-        if (JvmUtil.CURRENT_JAVA_VERSION >= 16) {
+        if (JvmUtil.CURRENT_JAVA_VERSION >= 17) {
             try {
                 fabricProject.build();
             } catch (Exception e) {

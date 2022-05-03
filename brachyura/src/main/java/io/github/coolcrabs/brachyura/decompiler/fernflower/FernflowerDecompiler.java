@@ -3,6 +3,7 @@ package io.github.coolcrabs.brachyura.decompiler.fernflower;
 import java.nio.file.Path;
 import java.util.List;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import net.fabricmc.mappingio.tree.MappingTree;
@@ -39,7 +40,7 @@ public class FernflowerDecompiler extends BrachyuraDecompiler {
     }
 
     @Override
-    protected void decompileAndLinemap(Path jar, List<Path> classpath, Path resultDir, @Nullable MappingTree tree, int namespace) {
+    protected void decompileAndLinemap(@NotNull Path jar, List<Path> classpath, Path resultDir, @Nullable MappingTree tree, int namespace) {
         DecompileResult r = getDecompileResult(jar, resultDir);
         DecompileLineNumberTable table = new DecompileLineNumberTable();
         FernUtil.decompile(ff.jar, jar, r.sourcesJar, classpath, l -> {

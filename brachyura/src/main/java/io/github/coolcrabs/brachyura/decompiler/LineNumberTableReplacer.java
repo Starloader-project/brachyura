@@ -33,7 +33,7 @@ public class LineNumberTableReplacer {
     static final String LINE_NUMBER_TABLE_UTF8 = "LineNumberTable";
     static final boolean REMAP_DEBUG = Boolean.getBoolean("brachyura.debugLineNumberRemap");
 
-    public static void replaceLineNumbers(Path sourceJar, Path targetJar, DecompileLineNumberTable table) {
+    public static void replaceLineNumbers(@NotNull Path sourceJar, Path targetJar, DecompileLineNumberTable table) {
         try {
             try (AtomicFile af = new AtomicFile(targetJar)) {
                 Files.deleteIfExists(af.tempPath);

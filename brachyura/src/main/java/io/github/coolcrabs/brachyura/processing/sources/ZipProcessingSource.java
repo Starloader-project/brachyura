@@ -1,11 +1,5 @@
 package io.github.coolcrabs.brachyura.processing.sources;
 
-import io.github.coolcrabs.brachyura.processing.ProcessingId;
-import io.github.coolcrabs.brachyura.processing.ProcessingSink;
-import io.github.coolcrabs.brachyura.processing.ProcessingSource;
-import io.github.coolcrabs.brachyura.util.FileSystemUtil;
-import io.github.coolcrabs.brachyura.util.PathUtil;
-import io.github.coolcrabs.brachyura.util.Util;
 import java.io.Closeable;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -16,10 +10,19 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 
+import org.jetbrains.annotations.NotNull;
+
+import io.github.coolcrabs.brachyura.processing.ProcessingId;
+import io.github.coolcrabs.brachyura.processing.ProcessingSink;
+import io.github.coolcrabs.brachyura.processing.ProcessingSource;
+import io.github.coolcrabs.brachyura.util.FileSystemUtil;
+import io.github.coolcrabs.brachyura.util.PathUtil;
+import io.github.coolcrabs.brachyura.util.Util;
+
 public class ZipProcessingSource extends ProcessingSource implements Closeable {
     final FileSystem fs;
     
-    public ZipProcessingSource(Path file) {
+    public ZipProcessingSource(@NotNull Path file) {
         if (!Files.exists(file)) throw Util.sneak(new FileNotFoundException(file.toString()));
         this.fs = FileSystemUtil.newJarFileSystem(file);
     }

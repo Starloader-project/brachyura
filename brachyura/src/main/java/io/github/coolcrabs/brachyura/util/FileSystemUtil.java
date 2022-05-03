@@ -7,6 +7,8 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 
+import org.jetbrains.annotations.NotNull;
+
 public class FileSystemUtil {
     private FileSystemUtil() { }
 
@@ -24,7 +26,7 @@ public class FileSystemUtil {
         jarFileSystemProvider = jarFileSystemProvider2;
     }
 
-    public static FileSystem newJarFileSystem(Path path) {
+    public static FileSystem newJarFileSystem(@NotNull Path path) {
         try {
             return jarFileSystemProvider.newFileSystem(path, createArgs);
         } catch (Exception e) {

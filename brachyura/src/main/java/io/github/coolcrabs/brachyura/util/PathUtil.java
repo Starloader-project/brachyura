@@ -163,10 +163,15 @@ public class PathUtil {
     /**
      * Returns a temp file in the same directory as the target file
      */
+    @NotNull
     public static Path tempFile(Path target) {
         try {
             Files.createDirectories(target.getParent());
-            return Files.createTempFile(target.getParent(), target.getFileName().toString(), ".tmp");
+            Path temp = Files.createTempFile(target.getParent(), target.getFileName().toString(), ".tmp");
+            if (temp == null) {
+                throw new NullPointerException("Nullabillity violation"); // Slbrachyura: Geolykt is too dumb to figure out EEA
+            }
+            return temp;
         } catch (IOException e) {
             throw Util.sneak(e);
         }

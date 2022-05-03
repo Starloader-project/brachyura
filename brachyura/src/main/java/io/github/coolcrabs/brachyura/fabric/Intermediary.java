@@ -39,7 +39,7 @@ public class Intermediary {
     }
 
     @NotNull
-    public static Intermediary ofV1Jar(Path file) {
+    public static Intermediary ofV1Jar(@NotNull Path file) {
         try {
             try (FileSystem fileSystem = FileSystemUtil.newJarFileSystem(file)) {
                 return ofV1(fileSystem.getPath("mappings/mappings.tiny"));

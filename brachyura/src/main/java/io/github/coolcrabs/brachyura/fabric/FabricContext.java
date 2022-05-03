@@ -22,7 +22,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
@@ -46,6 +45,7 @@ import io.github.coolcrabs.brachyura.dependency.Dependency;
 import io.github.coolcrabs.brachyura.dependency.JavaJarDependency;
 import io.github.coolcrabs.brachyura.dependency.NativesJarDependency;
 import io.github.coolcrabs.brachyura.exception.UnknownJsonException;
+import io.github.coolcrabs.brachyura.fabric.AccessWidenerRemapper.FabricAwCollector;
 import io.github.coolcrabs.brachyura.mappings.MappingHasher;
 import io.github.coolcrabs.brachyura.mappings.MappingHelper;
 import io.github.coolcrabs.brachyura.mappings.Namespaces;
@@ -157,7 +157,8 @@ public abstract class FabricContext {
         try {
             mappings.get().accept(new MappingSourceNsSwitch(compmappings, Namespaces.NAMED));
             for (FabricModule fm : fmods) {
-                fm.fabricCompilationResult.get().mixinMappings.accept(compmappings);
+                MappingTree mm = fm.fabricCompilationResult.get().mixinMappings; 
+                if (mm != null) mm.accept(compmappings);
             }
         } catch (IOException e) {
             throw Util.sneak(e);
@@ -304,7 +305,7 @@ public abstract class FabricContext {
                     throw Util.sneak(e);
                 }
         }
-        return new ProcessorChain(FMJRefmapApplier.INSTANCE, new FmjJijApplier(jij2), new AccessWidenerRemapper(mappings.get(), mappings.get().getNamespaceId(Namespaces.INTERMEDIARY)));
+        return new ProcessorChain(FMJRefmapApplier.INSTANCE, new FmjJijApplier(jij2), new AccessWidenerRemapper(mappings.get(), mappings.get().getNamespaceId(Namespaces.INTERMEDIARY), FabricAwCollector.INSTANCE));
     }
 
     public static class ModDependencyCollector {
@@ -338,6 +339,24 @@ public abstract class FabricContext {
         RUNTIME
     }
 
+    public Path remappedModsRootPath() {
+        return getLocalBrachyuraPath().resolve("fabricdeps");
+    }
+
+    public byte remappedModsLogicVersion() {
+        return 1;
+    }
+
+    public ProcessorChain modRemapChainOverrideOnlyIfYouOverrideRemappedModsRootPathAndLogicVersion(TrWrapper trw, List<Path> cp, Map<ProcessingSource, MavenId> c) {
+        return new ProcessorChain(
+            new RemapperProcessor(trw, cp),
+            new MetaInfFixer(trw),
+            JijRemover.INSTANCE,
+            new AccessWidenerRemapper(mappings.get(), mappings.get().getNamespaceId(Namespaces.NAMED), FabricAwCollector.INSTANCE),
+            new FmjGenerator(c)
+        );
+    }
+
     public final Lazy<List<ModDependency>> remappedModDependencies = new Lazy<>(this::createRemappedModDependencies);
     /**
      * 🍝
@@ -353,7 +372,7 @@ public abstract class FabricContext {
             List<RemapInfo> remapinfo = new ArrayList<>(unmapped.size());
             List<ModDependency> remapped = new ArrayList<>(unmapped.size());
             MessageDigest dephasher = MessageDigestUtil.messageDigest(MessageDigestUtil.SHA256);
-            dephasher.update((byte) 0); // Bump this if the logic changes
+            dephasher.update(remappedModsLogicVersion()); // Bump this if the logic changes
             for (ModDependency dep : unmapped) {
                 hashDep(dephasher, dep);
             }
@@ -364,7 +383,7 @@ public abstract class FabricContext {
             dephasher.update(intermediaryjar.get().mappingHash.getBytes(StandardCharsets.UTF_8));
             MessageDigestUtil.update(dephasher, TinyRemapperHelper.VERSION);
             String dephash = MessageDigestUtil.toHexHash(dephasher.digest());
-            Path depdir = getLocalBrachyuraPath().resolve("fabricdeps");
+            Path depdir = remappedModsRootPath();
             Path resultdir = depdir.resolve(dephash);
             for (ModDependency u : unmapped) {
                 RemapInfo ri = new RemapInfo();
@@ -413,13 +432,7 @@ public abstract class FabricContext {
                         }
                         Logger.info("Remapping {} mods", b.size());
                         try (TrWrapper trw = new TrWrapper(tr)) {
-                            new ProcessorChain(
-                                new RemapperProcessor(trw, cp),
-                                new MetaInfFixer(trw),
-                                JijRemover.INSTANCE,
-                                new AccessWidenerRemapper(mappings.get(), mappings.get().getNamespaceId(Namespaces.NAMED)),
-                                new FmjGenerator(c)
-                            ).apply(
+                            modRemapChainOverrideOnlyIfYouOverrideRemappedModsRootPathAndLogicVersion(trw, cp, c).apply(
                                 (in, id) -> b.get(id.source).sink(in, id),
                                 b.keySet()
                             );
@@ -449,26 +462,24 @@ public abstract class FabricContext {
     }
 
     public void hashDep(MessageDigest md, JavaJarDependency dep) {
-        MavenId mavenId = dep.mavenId;
-        if (Objects.isNull(mavenId)) {
-            // Hash all the metadata if no id
-            MessageDigestUtil.update(md, dep.jar.toAbsolutePath().toString());
-            try {
-                @SuppressWarnings("null")
-                BasicFileAttributes attr = Files.readAttributes(dep.jar, BasicFileAttributes.class);
-                Instant time = attr.lastModifiedTime().toInstant();
-                MessageDigestUtil.update(md, time.getEpochSecond());
-                MessageDigestUtil.update(md, time.getNano());
-                MessageDigestUtil.update(md, attr.size());
-            } catch (IOException e) {
-                Logger.warn(e);
-            }
-        } else {
-            // Hash the id if it exists
-            MessageDigestUtil.update(md, mavenId.artifactId);
-            MessageDigestUtil.update(md, mavenId.groupId);
-            MessageDigestUtil.update(md, mavenId.version);
-            MessageDigestUtil.update(md, (byte)(dep.sourcesJar == null ? 0 : 1));
+        hashDepFile(md, dep.jar);
+        MessageDigestUtil.update(md, (byte)(dep.sourcesJar == null ? 0 : 1));
+        if (dep.sourcesJar != null) {
+            MessageDigestUtil.update(md, (byte)0);
+            hashDepFile(md, dep.sourcesJar);
+        }
+    }
+
+    public void hashDepFile(MessageDigest md, Path file) {
+        MessageDigestUtil.update(md, file.toAbsolutePath().toString());
+        try {
+            BasicFileAttributes attr = Files.readAttributes(file, BasicFileAttributes.class);
+            Instant time = attr.lastModifiedTime().toInstant();
+            MessageDigestUtil.update(md, time.getEpochSecond());
+            MessageDigestUtil.update(md, time.getNano());
+            MessageDigestUtil.update(md, attr.size());
+        } catch (IOException e) {
+            Logger.warn(e);
         }
     }
 
@@ -564,7 +575,6 @@ public abstract class FabricContext {
                 result.add((JavaJarDependency) dependency);
             }
         }
-        result.add(mavenResolver.getJarDepend(FabricMaven.devLaunchInjector("0.2.1+build.8"))); // vscode moment
         result.add(decompiledJar.get());
         for (ModDependency d : remappedModDependencies.get()) {
             if (d.flags.contains(ModDependencyFlag.COMPILE)) result.add(d.jarDependency);
@@ -580,7 +590,6 @@ public abstract class FabricContext {
                 result.add((JavaJarDependency) dependency);
             }
         }
-        result.add(mavenResolver.getJarDepend(FabricMaven.devLaunchInjector("0.2.1+build.8")));
         result.add(mavenResolver.getJarDepend(new MavenId("net.minecrell", "terminalconsoleappender", "1.2.0")));
         result.add(decompiledJar.get());
         for (ModDependency d : remappedModDependencies.get()) {
@@ -609,6 +618,7 @@ public abstract class FabricContext {
         return Intermediary.ofV1Jar(intermediary.jar).tree;
     }
 
+    @NotNull
     public Path getMergedJar() {
         try {
             Path vanillaClientJar = Minecraft.getDownload(versionMeta.get(), "client");
@@ -685,11 +695,7 @@ public abstract class FabricContext {
         RemappedJar named = namedJar.get();
         BrachyuraDecompiler decompiler = decompiler();
         if (decompiler == null) {
-            Path namedJar = named.jar;
-            if (namedJar == null) {
-                throw new IllegalStateException("Named jar not found");
-            }
-            return new JavaJarDependency(namedJar, null, new MavenId("undecompiled", "null", versionMeta.get().version));
+            return new JavaJarDependency(named.jar, null, new MavenId("undecompiled", "null", versionMeta.get().version));
         }
         // Different Java Versions have different classes
         // This will lead to missing classes if ran on an older jdk and MC uses newer jdk
@@ -699,7 +705,7 @@ public abstract class FabricContext {
                 .toJavaJarDep(new MavenId("decompiled", decompiler.getName() + "-" + decompiler.getVersion(), versionMeta.get().version));
     }
 
-    public void remapJar(MappingTree mappings, @Nullable Consumer<AccessWidenerVisitor> aw, String src, String dst, Path inputJar, Path outputJar, List<Path> classpath) {
+    public void remapJar(MappingTree mappings, @Nullable Consumer<AccessWidenerVisitor> aw, String src, String dst, @NotNull Path inputJar, Path outputJar, List<Path> classpath) {
         TinyRemapper.Builder remapperBuilder = TinyRemapper.newRemapper()
             .withMappings(new MappingTreeMappingProvider(mappings, src, dst))
             .withMappings(Jsr2JetbrainsMappingProvider.INSTANCE)
@@ -769,6 +775,7 @@ public abstract class FabricContext {
     }
 
     public static class RemappedJar {
+        @NotNull
         public final Path jar;
         public final String mappingHash;
 

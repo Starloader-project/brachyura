@@ -64,6 +64,9 @@ public class RemapperProcessor implements Processor {
     public void process(Collection<ProcessingEntry> inputs, ProcessingSink sink) throws IOException {
         BruhFileSystemProvider bruh = new BruhFileSystemProvider();
         for (Path j : classpath) {
+            if (j == null) {
+                continue;
+            }
             TinyRemapperHelper.readJar(remapper, j, JarType.CLASSPATH);
         }
         HashMap<ProcessingSource, InputTag> tags = new HashMap<>();
