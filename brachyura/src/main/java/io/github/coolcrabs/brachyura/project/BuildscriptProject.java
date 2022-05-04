@@ -2,6 +2,7 @@ package io.github.coolcrabs.brachyura.project;
 
 import java.io.File;
 import java.io.InputStream;
+import java.lang.reflect.Constructor;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -100,7 +101,9 @@ class BuildscriptProject extends BaseJavaProject {
             if (b == null) return Optional.empty();
             Class projectclass = Class.forName("Buildscript", true, b);
             if (Project.class.isAssignableFrom(projectclass)) {
-                return Optional.of((Project) projectclass.getDeclaredConstructor().newInstance());
+                Constructor c = projectclass.getDeclaredConstructor(); // Slbrachyura: Allow arbitrary visibility modifiers in buildscript file
+                c.setAccessible(true);
+                return Optional.of((Project) c.newInstance());
             } else {
                 Logger.warn("Buildscript must be instance of Project");
                 return Optional.empty();

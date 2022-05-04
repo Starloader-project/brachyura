@@ -5,7 +5,7 @@
 
     <groupId>io.github.coolcrabs</groupId>
     <artifactId>brachyura</artifactId>
-    <version>0.82.0</version>
+    <version>0.82.1</version>
 
     <properties>
         <java.version>1.8</java.version>
@@ -87,11 +87,21 @@
             <artifactId>access-widener</artifactId>
             <version>2.1.0</version>
         </dependency>
+
+        <!-- Slbrachyura: Custom maven resolver -->
         <!-- https://mvnrepository.com/artifact/org.apache.httpcomponents/httpclient -->
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
             <version>4.5.13</version>
+        </dependency>
+
+        <!-- Slbrachyura: Interactive project creation -->
+        <!-- https://mvnrepository.com/artifact/com.squareup/javapoet -->
+        <dependency>
+            <groupId>com.squareup</groupId>
+            <artifactId>javapoet</artifactId>
+            <version>1.13.0</version>
         </dependency>
 
         <!-- junit 5 -->

@@ -36,6 +36,7 @@ public class Main {
     static final String ACCESSWIDENER_VERSION = "2.1.0";
     static final String ASM_VERSION = "9.3";
     static final String GSON_VERSION = "2.9.0";
+    static final String JAVAPOET_VERSION = "1.13.0"; // Slbrachyura: Interactive project creation
     static final String MAPPINGSIO_VERSION = "0.3.0";
     static final String REMAPPER_VERSION = "0.8.2";
     static final String TINYLOG_VERSION = "2.4.1";
@@ -69,7 +70,8 @@ public class Main {
         "https://repo1.maven.org/maven2/org/apache/httpcomponents/httpclient/4.5.13/httpclient-4.5.13.jar",
         "https://repo1.maven.org/maven2/org/apache/httpcomponents/httpcore/4.4.15/httpcore-4.4.15.jar",
         "https://repo1.maven.org/maven2/commons-codec/commons-codec/1.15/commons-codec-1.15.jar",
-        "https://repo1.maven.org/maven2/commons-logging/commons-logging/1.2/commons-logging-1.2.jar"
+        "https://repo1.maven.org/maven2/commons-logging/commons-logging/1.2/commons-logging-1.2.jar",
+        "https://repo1.maven.org/maven2/com/squareup/javapoet/" + JAVAPOET_VERSION + "/javapoet-" + JAVAPOET_VERSION + ".jar" // Slbrachyura: Interactive project creation
     };
 
     static boolean github = Boolean.parseBoolean(System.getenv("CI"));

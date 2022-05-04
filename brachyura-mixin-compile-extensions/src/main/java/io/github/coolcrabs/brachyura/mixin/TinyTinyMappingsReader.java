@@ -3,7 +3,6 @@ package io.github.coolcrabs.brachyura.mixin;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
@@ -50,7 +49,6 @@ class TinyTinyMappingsReader {
                         start = end;
                     }
                     parts = strictlySplit.toArray(new String[0]);
-                    System.out.println(Arrays.toString(parts));
                     if (parts.length - 1 < r.namespaces.length) {
                         throw new ArrayIndexOutOfBoundsException("Invalid line (parts length is " + parts.length
                                 + ", namespaces length is " + r.namespaces.length + "): " + line);

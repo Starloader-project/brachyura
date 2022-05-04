@@ -1,21 +1,129 @@
 package io.github.coolcrabs.brachyura.project;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import org.jetbrains.annotations.NotNull;
 import org.tinylog.Logger;
 
+import io.github.coolcrabs.brachyura.maven.MavenId;
 import io.github.coolcrabs.brachyura.plugins.Plugin;
 import io.github.coolcrabs.brachyura.plugins.Plugins;
 
 public class BrachyuraEntry {
     private BrachyuraEntry() { }
 
+    private static final boolean isBlank(@NotNull String string) {
+        int length = string.length();
+        for (int i = 0; i < length; i++) {
+            if (!Character.isWhitespace(string.codePointAt(i))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    // Slbrachyura: Interactive project creation
+    private static void interactiveSetup(String[] args, Path projectDir, List<Path> classpath) {
+        Path relJavaSourceFolder = Paths.get("src", "main", "java");
+        Path javaSourceFolder = projectDir.resolve(relJavaSourceFolder);
+        if (Files.exists(javaSourceFolder)) {
+            System.err.println("Cannot create template: The source folder (" + javaSourceFolder.toAbsolutePath().toString() + ") already exists. Consider deleting it if you are sure of your actions.");
+            return;
+        }
+        Path buildscriptSourceFolder = projectDir.resolve("buildscript").resolve(relJavaSourceFolder);
+        if (Files.exists(buildscriptSourceFolder)) {
+            System.err.println("Cannot create template: Buildscript folder already exists. Consider deleting it if you are sure of your actions.");
+            return;
+        }
+        Path mainResourceFolder = projectDir.resolve("src").resolve("main").resolve("resources");
+        if (Files.exists(mainResourceFolder)) {
+            System.err.println("Cannot create template: The resources folder (" + mainResourceFolder.toAbsolutePath().toString() + ") already exists. Consider deleting it if you are sure of your actions.");
+            return;
+        }
+
+        try {
+            Files.createDirectories(javaSourceFolder);
+            Files.createDirectories(buildscriptSourceFolder);
+            Files.createDirectories(mainResourceFolder);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        Path buildscriptFile = buildscriptSourceFolder.resolve("Buildscript.java");
+        Path exampleApplicationFile = javaSourceFolder.resolve("ExampleApplication.java");
+
+        BuildscriptCreator bsCreator = new BuildscriptCreator();
+
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(System.in))) {
+            while (true) {
+                System.out.println("Choose java version [8]: ");
+                String javaVer = br.readLine();
+                if (javaVer == null || isBlank(javaVer)) {
+                    javaVer = "8";
+                }
+                try {
+                    bsCreator.withJavaVersion(Integer.parseInt(javaVer.trim()));
+                    break;
+                } catch (NumberFormatException nfe) {
+                    System.err.println("Unparseable java version: \"" + javaVer + "\". Note: it must be an integer");
+                }
+            }
+            System.out.println("Choose project name [ExampleBuildscript]: ");
+            String buildscriptProjectName = br.readLine();
+            if (buildscriptProjectName == null || isBlank(buildscriptProjectName)) {
+                buildscriptProjectName = "ExampleBuildscript";
+            }
+            bsCreator.withProjectName(buildscriptProjectName);
+
+            System.out.println("Choose maven group id [org.example]: ");
+            String groupId = br.readLine();
+            if (groupId == null || isBlank(groupId)) {
+                groupId = "org.example";
+            }
+            System.out.println("Choose maven artifact id [example]: ");
+            String artifactId = br.readLine();
+            if (artifactId == null || isBlank(artifactId)) {
+                artifactId = "example";
+            }
+            System.out.println("Choose maven artifact version [0.0.1-SNAPSHOT]: ");
+            String version = br.readLine();
+            if (version == null || isBlank(version)) {
+                version = "0.0.1-SNAPSHOT";
+            }
+            bsCreator.withId(new MavenId(groupId, artifactId, version));
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
+
+        try {
+            Files.write(buildscriptFile, bsCreator.getBuildscriptSource().getBytes(StandardCharsets.UTF_8));
+            Files.write(exampleApplicationFile,
+                     ("public class ExampleApplication {\n"
+                    + "\n"
+                    + "    public static void main(String[] args) {\n"
+                    + "        System.out.println(\"Hello, World!\");\n"
+                    + "    }\n"
+                    + "}\n").getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE_NEW);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     // Called via reflection by bootstrap
     public static void main(String[] args, Path projectDir, List<Path> classpath) {
         if (args.length != 0 && args[0].equalsIgnoreCase("createTemplate")) {
+            interactiveSetup(args, projectDir, classpath);
             return;
         }
         int exitcode = 0;
