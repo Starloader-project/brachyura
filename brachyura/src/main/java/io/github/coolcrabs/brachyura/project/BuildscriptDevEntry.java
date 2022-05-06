@@ -1,6 +1,7 @@
 package io.github.coolcrabs.brachyura.project;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
@@ -18,7 +19,8 @@ class BuildscriptDevEntry {
         }
         try {
             EntryGlobals.projectDir = Paths.get(args[0]);
-            EntryGlobals.buildscriptClasspath = Arrays.stream(args[1].split(File.pathSeparator)).map(Paths::get).collect(Collectors.toList());
+            // Slbrachyura: Suppress null warning by explicitly declaring generics
+            EntryGlobals.buildscriptClasspath = Arrays.stream(args[1].split(File.pathSeparator)).map(Paths::get).collect(Collectors.<Path>toList());
 
             Project buildscript;
             try {

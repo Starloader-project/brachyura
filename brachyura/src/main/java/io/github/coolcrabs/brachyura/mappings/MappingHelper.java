@@ -42,7 +42,9 @@ public class MappingHelper {
                     keepCls = true;
                 }
             }
-            if (!keepCls) clsIt.remove();
+            if (!keepCls) {
+                clsIt.remove();
+            }
         }
     }
 }

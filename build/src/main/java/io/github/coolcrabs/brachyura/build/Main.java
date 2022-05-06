@@ -33,7 +33,6 @@ import org.kohsuke.github.GitHubBuilder;
 
 public class Main {
 
-    static final String ACCESSWIDENER_VERSION = "2.1.0";
     static final String ASM_VERSION = "9.3";
     static final String GSON_VERSION = "2.9.0";
     static final String JAVAPOET_VERSION = "1.13.0"; // Slbrachyura: Interactive project creation
@@ -41,7 +40,7 @@ public class Main {
     static final String REMAPPER_VERSION = "0.8.2";
     static final String TINYLOG_VERSION = "2.4.1";
 
-    static String[] localLibs = new String[] {"fabricmerge", "cfr", "brachyura", "bootstrap", "brachyura-mixin-compile-extensions", "trieharder", "fernutil"};
+    static String[] localLibs = new String[] {"fabricmerge", "cfr", "brachyura", "bootstrap", "brachyura-mixin-compile-extensions", "trieharder", "fernutil", "access-widener"};
     static String[] mavenLibs = new String[] {
         "https://repo.maven.apache.org/maven2/org/ow2/asm/asm/" + ASM_VERSION + "/asm-" + ASM_VERSION + ".jar",
         "https://repo.maven.apache.org/maven2/org/ow2/asm/asm/" + ASM_VERSION + "/asm-" + ASM_VERSION + "-sources.jar",
@@ -63,8 +62,6 @@ public class Main {
         "https://maven.fabricmc.net/net/fabricmc/mapping-io/" + MAPPINGSIO_VERSION + "/mapping-io-" + MAPPINGSIO_VERSION + "-sources.jar",
         "https://maven.fabricmc.net/net/fabricmc/tiny-remapper/" + REMAPPER_VERSION + "/tiny-remapper-" + REMAPPER_VERSION + ".jar",
         "https://maven.fabricmc.net/net/fabricmc/tiny-remapper/" + REMAPPER_VERSION + "/tiny-remapper-" + REMAPPER_VERSION + "-sources.jar",
-        "https://maven.fabricmc.net/net/fabricmc/access-widener/" + ACCESSWIDENER_VERSION + "/access-widener-" + ACCESSWIDENER_VERSION + ".jar",
-        "https://maven.fabricmc.net/net/fabricmc/access-widener/" + ACCESSWIDENER_VERSION + "/access-widener-" + ACCESSWIDENER_VERSION + "-sources.jar",
         "https://repo.maven.apache.org/maven2/org/jetbrains/annotations/23.0.0/annotations-23.0.0.jar",
         "https://repo.maven.apache.org/maven2/org/jetbrains/annotations/23.0.0/annotations-23.0.0-sources.jar",
         "https://repo1.maven.org/maven2/org/apache/httpcomponents/httpclient/4.5.13/httpclient-4.5.13.jar",
