@@ -43,7 +43,7 @@ class BuildscriptProject extends BaseJavaProject {
     }
 
     @Override
-    public void getRunConfigTasks(Consumer<Task> p) {
+    public void getRunConfigTasks(@NotNull Consumer<@NotNull Task> p) {
         //noop
     }
 

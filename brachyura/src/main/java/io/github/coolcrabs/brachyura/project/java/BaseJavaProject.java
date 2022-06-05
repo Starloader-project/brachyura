@@ -33,13 +33,13 @@ public abstract class BaseJavaProject extends Project {
     public abstract IdeModule[] getIdeModules();
 
     @Override
-    public void getTasks(@NotNull Consumer<Task> p) {
+    public void getTasks(@NotNull Consumer<@NotNull Task> p) {
         super.getTasks(p);
         getIdeTasks(p);
         getRunConfigTasks(p);
     }
 
-    public void getIdeTasks(Consumer<Task> p) {
+    public void getIdeTasks(@NotNull Consumer<@NotNull Task> p) {
         for (Ide ide : Ide.getIdes()) {
             p.accept(Task.of(ide.ideName(), (Runnable) () -> {
                 BaseJavaProject buildscriptProject = getBuildscriptProject();
@@ -52,7 +52,7 @@ public abstract class BaseJavaProject extends Project {
         }
     }
     
-    public void getRunConfigTasks(Consumer<Task> p) {
+    public void getRunConfigTasks(@NotNull Consumer<@NotNull Task> p) {
         IdeModule[] ms = getIdeModules();
         for (IdeModule m : ms) {
             for (IdeModule.RunConfig rc : m.runConfigs) {

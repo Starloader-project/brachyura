@@ -16,18 +16,22 @@ public abstract class Task {
         this.name = name;
     }
 
+    @NotNull
     public static Task of(@NotNull String name, BooleanSupplier run) {
         return new FailableNoArgTask(name, run);
     }
 
+    @NotNull
     public static Task of(@NotNull String name, Runnable run) {
         return new NoArgTask(name, run);
     }
 
+    @NotNull
     public static Task of(@NotNull String name, ThrowingRunnable run) {
         return new NoArgTask(name, run);
     }
 
+    @NotNull
     public static Task of(@NotNull String name, Consumer<String[]> run) {
         return new TaskWithArgs(name, run);
     }

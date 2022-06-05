@@ -225,13 +225,13 @@ public abstract class SimpleFabricProject extends BaseJavaProject {
     }
 
     @Override
-    public void getTasks(@NotNull Consumer<Task> p) {
-        super.getTasks(p);
-        p.accept(Task.of("build", (ThrowingRunnable) this::build));
-        getPublishTasks(p);
+    public void getTasks(@NotNull Consumer<@NotNull Task> sink) {
+        super.getTasks(sink);
+        sink.accept(Task.of("build", (ThrowingRunnable) this::build));
+        getPublishTasks(sink);
     }
 
-    public void getPublishTasks(Consumer<Task> p) {
+    public void getPublishTasks(@NotNull Consumer<@NotNull Task> p) {
         p.accept(Task.of("publishToMavenLocal", (ThrowingRunnable) () -> {
             MavenPublisher publisher = new MavenPublisher().addRepository(new LocalMavenRepository(MavenResolver.MAVEN_LOCAL));
             List<MavenDependency> mavendeps = new ArrayList<>();

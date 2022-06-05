@@ -12,7 +12,7 @@ import io.github.coolcrabs.brachyura.util.PathUtil;
 public class Project {
     BaseJavaProject buildscriptIdeProject;
 
-    public void getTasks(@NotNull Consumer<Task> p) {
+    public void getTasks(@NotNull Consumer<@NotNull Task> p) {
         // no default tasks
     }
 

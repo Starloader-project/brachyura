@@ -104,13 +104,13 @@ public abstract class SimpleJavaProject extends BaseJavaProject {
     }
 
     @Override
-    public void getTasks(@NotNull Consumer<Task> p) {
+    public void getTasks(@NotNull Consumer<@NotNull Task> p) {
         super.getTasks(p);
         p.accept(Task.of("build", (ThrowingRunnable) this::build));
         getPublishTasks(p);
     }
 
-    public void getPublishTasks(Consumer<Task> p) {
+    public void getPublishTasks(@NotNull Consumer<@NotNull Task> p) {
         p.accept(Task.of("publishToMavenLocal", (ThrowingRunnable) () -> {
             MavenPublisher publisher = new MavenPublisher().addRepository(new LocalMavenRepository(MavenResolver.MAVEN_LOCAL));
             publisher.publishJar(build(), projectModule.get().dependencies.get());

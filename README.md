@@ -1,3 +1,10 @@
+Jetbrains runtime PSA: The jetbrains runtime is known to cause test failures while compiling slbrachyura.
+Either use a different JDK for compilation or use `build.bash` and then
+`./offline-build.bash` for compilation. However the Jetbrains runtime will NOT be able to run
+brachyura for most minecraft-related projects, will work fine with galimulator however due to
+starplane using sl-deobf for remapping and thus it does not use Tiny-Remapper where the error
+occurs.
+
 # Starloader's Brachyura
 
 Brachyura is a WIP build tool with a strong focus on minecraft mods. Buildscripts are written in java.

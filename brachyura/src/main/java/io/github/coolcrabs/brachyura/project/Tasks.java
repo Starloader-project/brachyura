@@ -9,13 +9,13 @@ import org.jetbrains.annotations.NotNull;
 
 import io.github.coolcrabs.brachyura.exception.TaskFailedException;
 
-class Tasks implements Consumer<Task> {
+class Tasks implements Consumer<@NotNull Task> {
 
     @NotNull
     private final Map<String, Task> tasks = new HashMap<>();
 
     @Override
-    public void accept(Task task) {
+    public void accept(@NotNull Task task) {
         if (tasks.putIfAbsent(task.name, task) != null) {
             throw new TaskFailedException("Duplicate task for " + task.name);
         }
