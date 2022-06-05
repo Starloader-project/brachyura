@@ -21,7 +21,6 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.tinylog.Logger;
 
-import io.github.coolcrabs.brachyura.exception.CompilationFailure;
 import io.github.coolcrabs.brachyura.processing.ProcessingSource;
 import io.github.coolcrabs.brachyura.util.Util;
 
@@ -138,7 +137,7 @@ public class JavaCompilation {
     }
 
     @NotNull
-    public JavaCompilationResult compile() throws CompilationFailure {
+    public JavaCompilationResult compile() throws CompilationFailedException {
         try {
             try (BrachyuraJavaFileManager fileManager = new BrachyuraJavaFileManager()) {
                 boolean success;
@@ -154,7 +153,7 @@ public class JavaCompilation {
                 if (success) {
                     return new JavaCompilationResult(fileManager);
                 }
-                throw new CompilationFailure();
+                throw new CompilationFailedException();
             }
         } catch (IOException e) {
             throw Util.sneak(e);

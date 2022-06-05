@@ -5,7 +5,7 @@
 
     <groupId>io.github.coolcrabs</groupId>
     <artifactId>brachyura</artifactId>
-    <version>0.83.1</version>
+    <version>0.88.0</version>
 
     <properties>
         <java.version>1.8</java.version>
@@ -70,7 +70,7 @@
         <dependency>
             <groupId>io.github.coolcrabs</groupId>
             <artifactId>access-widener</artifactId>
-            <version>0.1</version>
+            <version>0.2</version>
         </dependency>
         <!-- <dependency>
             <groupId>io.github.coolcrabs</groupId>
@@ -87,6 +87,32 @@
             <artifactId>tiny-remapper</artifactId>
             <version>0.8.2</version>
         </dependency>
+        <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm</artifactId>
+            <version>9.3</version>
+        </dependency>
+        <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm-analysis</artifactId>
+            <version>9.3</version>
+        </dependency>
+        <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm-commons</artifactId>
+            <version>9.3</version>
+        </dependency>
+        <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm-tree</artifactId>
+            <version>9.3</version>
+        </dependency>
+        <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm-util</artifactId>
+            <version>9.3</version>
+        </dependency>
+        
 
         <!-- Slbrachyura: Custom maven resolver -->
         <!-- https://mvnrepository.com/artifact/org.apache.httpcomponents/httpclient -->

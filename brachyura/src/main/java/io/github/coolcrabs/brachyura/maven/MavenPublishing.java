@@ -80,7 +80,9 @@ public class MavenPublishing {
      */
     @Deprecated
     public static void publish(AuthenticatedMaven maven, JavaJarDependency dep, Supplier<InputStream> pom) {
-        Objects.requireNonNull(pom);
+        Objects.requireNonNull(pom, "null pom");
+        Objects.requireNonNull(dep.mavenId, "null mavenId");
+        Objects.requireNonNull(dep.jar, "null jar file");
         ArrayList<MavenPublishFile> a = new ArrayList<>(3);
         MavenId mavenId = dep.mavenId;
         Objects.requireNonNull(mavenId, "The mavenId must be supplied with the java jar dependency!");

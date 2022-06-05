@@ -6,7 +6,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import org.jetbrains.annotations.NotNull;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import io.github.coolcrabs.brachyura.decompiler.BrachyuraDecompiler;
@@ -19,7 +18,6 @@ import io.github.coolcrabs.brachyura.util.JvmUtil;
 import io.github.coolcrabs.brachyura.util.PathUtil;
 import net.fabricmc.mappingio.tree.MappingTree;
 
-@Disabled("Quilt mappings merged jars are currently broken")
 public class QmQuiltProjectTest {
     SimpleQuiltProject proj = new SimpleQuiltProject() {
 
@@ -37,7 +35,7 @@ public class QmQuiltProjectTest {
         public MappingTree createMappings() {
             MavenResolver resolver = new MavenResolver(MavenResolver.MAVEN_LOCAL);
             resolver.addRepository(QuiltMaven.REPOSITORY);
-            return QuiltMappings.ofMaven(resolver, QuiltMaven.quiltMappings("1.18.2+build.22")).toIntermediary(this.context.get().intermediary.get());
+            return QuiltMappings.ofMaven(resolver, QuiltMaven.quiltMappings("1.18.2+build.24")).toIntermediary(this.context.get().intermediary.get());
         }
 
         @Override
@@ -88,4 +86,3 @@ public class QmQuiltProjectTest {
         }
     }
 }
-    

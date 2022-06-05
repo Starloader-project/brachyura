@@ -23,7 +23,7 @@ class MojmapProjectTest {
     SimpleFabricProject fabricProject = new SimpleFabricProject() {
         @Override
         public VersionMeta createMcVersion() {
-            return Minecraft.getVersion("1.18.1");
+            return Minecraft.getVersion("1.19-pre1");
         }
 
         @Override
@@ -38,7 +38,7 @@ class MojmapProjectTest {
 
         @Override
         public FabricLoader getLoader() {
-            return new FabricLoader(FabricMaven.URL, FabricMaven.loader("0.12.12"));
+            return new FabricLoader(FabricMaven.URL, FabricMaven.loader("0.14.6"));
         }
 
         @Override
@@ -54,9 +54,12 @@ class MojmapProjectTest {
             MavenResolver resolver = new MavenResolver(MavenResolver.MAVEN_LOCAL);
             resolver.addRepository(FabricMaven.REPOSITORY);
             resolver.addRepository(MavenResolver.MAVEN_CENTRAL_REPO);
-            d.add(resolver.getJarDepend(new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-resource-loader-v0", "0.4.8+a00e834b88")), ModDependencyFlag.RUNTIME, ModDependencyFlag.COMPILE);
-            d.add(resolver.getJarDepend(new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-game-rule-api-v1", "1.0.7+cbda931888")), ModDependencyFlag.RUNTIME, ModDependencyFlag.COMPILE);
-            d.add(resolver.getJarDepend(new MavenId("org.ini4j", "ini4j", "0.5.4")), ModDependencyFlag.RUNTIME, ModDependencyFlag.COMPILE);
+            jij(d.add(resolver.getJarDepend(new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-resource-loader-v0", "0.5.0+4a05de7f73")), ModDependencyFlag.RUNTIME, ModDependencyFlag.COMPILE));
+            jij(d.add(resolver.getJarDepend(new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-game-rule-api-v1", "1.0.16+ec94c6f673")), ModDependencyFlag.RUNTIME, ModDependencyFlag.COMPILE));
+            jij(d.add(resolver.getJarDepend(new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-registry-sync-v0", "0.9.12+56447d9b73")), ModDependencyFlag.RUNTIME, ModDependencyFlag.COMPILE));
+            jij(d.add(resolver.getJarDepend(new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-api-base", "0.4.7+f71b366f73")), ModDependencyFlag.RUNTIME, ModDependencyFlag.COMPILE));
+            jij(d.add(resolver.getJarDepend(new MavenId(FabricMaven.GROUP_ID + ".fabric-api", "fabric-networking-api-v1", "1.0.24+f71b366f73")), ModDependencyFlag.RUNTIME, ModDependencyFlag.COMPILE));
+            jij(d.add(resolver.getJarDepend(new MavenId("org.ini4j:ini4j:0.5.4")), ModDependencyFlag.RUNTIME, ModDependencyFlag.COMPILE));
         };
 
         @Override

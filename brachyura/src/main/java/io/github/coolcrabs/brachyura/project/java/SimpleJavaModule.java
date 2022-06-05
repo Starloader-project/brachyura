@@ -12,7 +12,6 @@ import org.jetbrains.annotations.NotNull;
 import io.github.coolcrabs.brachyura.compiler.java.JavaCompilation;
 import io.github.coolcrabs.brachyura.compiler.java.JavaCompilationResult;
 import io.github.coolcrabs.brachyura.dependency.JavaJarDependency;
-import io.github.coolcrabs.brachyura.exception.CompilationFailure;
 import io.github.coolcrabs.brachyura.ide.IdeModule;
 import io.github.coolcrabs.brachyura.processing.ProcessingSource;
 import io.github.coolcrabs.brachyura.util.JvmUtil;
@@ -46,13 +45,7 @@ public abstract class SimpleJavaModule extends BuildModule {
     }
 
     @NotNull
-    public final Lazy<@NotNull JavaCompilationResult> compilationResult = new Lazy<>(() -> {
-        try {
-            return createCompilation().compile();
-        } catch (CompilationFailure failure) {
-            throw new IllegalStateException("Cannot compile", failure);
-        }
-    });
+    public final Lazy<@NotNull JavaCompilationResult> compilationResult = new Lazy<>(() -> createCompilation().compile());
 
     @NotNull
     @Contract(pure = true, value = "-> new")

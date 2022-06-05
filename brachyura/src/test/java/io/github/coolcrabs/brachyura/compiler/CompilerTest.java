@@ -11,7 +11,6 @@ import org.junit.jupiter.api.Test;
 import io.github.coolcrabs.brachyura.compiler.java.JavaCompilation;
 import io.github.coolcrabs.brachyura.compiler.java.JavaCompilationResult;
 import io.github.coolcrabs.brachyura.dependency.JavaJarDependency;
-import io.github.coolcrabs.brachyura.exception.CompilationFailure;
 import io.github.coolcrabs.brachyura.maven.HttpMavenRepository;
 import io.github.coolcrabs.brachyura.maven.MavenId;
 import io.github.coolcrabs.brachyura.maven.MavenResolver;
@@ -22,17 +21,9 @@ class CompilerTest {
     @Test
     void e() {
         Path src = PathUtil.CWD.resolveSibling("testprogram").resolve("src").resolve("main").resolve("java");
-        JavaCompilationResult compilation;
-        try {
-            compilation = new JavaCompilation()
+        JavaCompilationResult compilation = new JavaCompilation()
                 .addSourceDir(src)
                 .compile();
-        } catch (CompilationFailure e1) {
-            assertDoesNotThrow(() -> {
-                throw e1;
-            });
-            throw new InternalError("This line of code should not execute. If it did, you should be running.");
-        }
         ProcessingSponge a = new ProcessingSponge();
         compilation.getInputs(a);
         int[] count = new int[1];
@@ -46,32 +37,16 @@ class CompilerTest {
     @Test
     void mem() {
         Path dir = PathUtil.CWD.resolveSibling("test").resolve("compiler").resolve("java").resolve("memclass");
-        JavaCompilationResult compilationA;
-        try {
-            compilationA = new JavaCompilation()
+        JavaCompilationResult compilationA = new JavaCompilation()
                 .addSourceFile(dir.resolve("ClassA.java"))
                 .addSourceFile(dir.resolve("coolpackage").resolve("CoolPackageClassA.java"))
                 .compile();
-        } catch (CompilationFailure e1) {
-            assertDoesNotThrow(() -> {
-                throw e1;
-            });
-            throw new InternalError("This line of code should not execute. If it did, you should be running.");
-        }
         ProcessingSponge a = new ProcessingSponge();
         compilationA.getInputs(a);
-        JavaCompilationResult compilationB;
-        try {
-            compilationB = new JavaCompilation()
+        JavaCompilationResult compilationB = new JavaCompilation()
                 .addSourceFile(dir.resolve("ClassB.java"))
                 .addClasspath(a)
                 .compile();
-        } catch (CompilationFailure e2) {
-            assertDoesNotThrow(() -> {
-                throw e2;
-            });
-            throw new InternalError("This line of code should not execute. If it did, you should be running.");
-        }
         ProcessingSponge b = new ProcessingSponge();
         compilationB.getInputs(b);
         int[] count = new int[1];

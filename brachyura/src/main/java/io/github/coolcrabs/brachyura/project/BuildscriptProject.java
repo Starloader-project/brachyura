@@ -19,10 +19,10 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.tinylog.Logger;
 
+import io.github.coolcrabs.brachyura.compiler.java.CompilationFailedException;
 import io.github.coolcrabs.brachyura.compiler.java.JavaCompilation;
 import io.github.coolcrabs.brachyura.compiler.java.JavaCompilationResult;
 import io.github.coolcrabs.brachyura.dependency.JavaJarDependency;
-import io.github.coolcrabs.brachyura.exception.CompilationFailure;
 import io.github.coolcrabs.brachyura.ide.IdeModule;
 import io.github.coolcrabs.brachyura.ide.IdeModule.RunConfigBuilder;
 import io.github.coolcrabs.brachyura.maven.MavenId;
@@ -116,9 +116,8 @@ class BuildscriptProject extends BaseJavaProject {
     }
 
     public ClassLoader getBuildscriptClassLoader() {
-        JavaCompilationResult compilation;
         try {
-            compilation = new JavaCompilation()
+            JavaCompilationResult compilation = new JavaCompilation()
                 .addSourceDir(getSrcDir())
                 .addClasspath(getCompileDependencies())
                 .addOption(JvmUtil.compileArgs(JvmUtil.CURRENT_JAVA_VERSION, 8))
@@ -126,9 +125,8 @@ class BuildscriptProject extends BaseJavaProject {
             BuildscriptClassloader r = new BuildscriptClassloader(BuildscriptProject.class.getClassLoader());
             compilation.getInputs(r);
             return r;
-        } catch (CompilationFailure e) {
+        } catch (CompilationFailedException e) {
             Logger.warn("Buildscript compilation failed!");
-            e.printStackTrace();
             return null;
         }
     }

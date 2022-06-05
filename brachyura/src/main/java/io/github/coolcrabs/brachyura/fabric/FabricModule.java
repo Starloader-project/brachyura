@@ -16,7 +16,6 @@ import org.jetbrains.annotations.NotNull;
 import io.github.coolcrabs.brachyura.compiler.java.JavaCompilation;
 import io.github.coolcrabs.brachyura.compiler.java.JavaCompilationResult;
 import io.github.coolcrabs.brachyura.dependency.JavaJarDependency;
-import io.github.coolcrabs.brachyura.exception.CompilationFailure;
 import io.github.coolcrabs.brachyura.ide.IdeModule;
 import io.github.coolcrabs.brachyura.mappings.MappingHasher;
 import io.github.coolcrabs.brachyura.mappings.Namespaces;
@@ -102,7 +101,7 @@ public abstract class FabricModule extends BuildModule {
                 }
             }
             return new FabricCompilationResult(compilationOutput, compilation, mixinMappingsTree);
-        } catch (IOException | CompilationFailure e) {
+        } catch (IOException e) {
             throw Util.sneak(e);
         }
     }

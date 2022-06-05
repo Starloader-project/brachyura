@@ -13,10 +13,10 @@ import javax.tools.StandardLocation;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
+import io.github.coolcrabs.brachyura.compiler.java.CompilationFailedException;
 import io.github.coolcrabs.brachyura.compiler.java.JavaCompilation;
 import io.github.coolcrabs.brachyura.compiler.java.JavaCompilationOptions;
 import io.github.coolcrabs.brachyura.dependency.JavaJarDependency;
-import io.github.coolcrabs.brachyura.exception.CompilationFailure;
 import io.github.coolcrabs.brachyura.ide.IdeModule;
 import io.github.coolcrabs.brachyura.maven.LocalMavenRepository;
 import io.github.coolcrabs.brachyura.maven.MavenId;
@@ -128,7 +128,7 @@ public abstract class SimpleJavaProject extends BaseJavaProject {
     }
 
     @NotNull
-    public JavaJarDependency build() throws CompilationFailure {
+    public JavaJarDependency build() throws CompilationFailedException {
         Path outjar = getBuildLibsDir().resolve(getJarBaseName() + ".jar");
         Path outjarsources = getBuildLibsDir().resolve(getJarBaseName() + "-sources.jar");
         try (

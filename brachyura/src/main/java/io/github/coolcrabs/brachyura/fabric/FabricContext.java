@@ -315,8 +315,8 @@ public abstract class FabricContext {
         public final List<ModDependency> dependencies = new ArrayList<>();
 
         @Deprecated
-        public void addMaven(String repo, MavenId id, ModDependencyFlag... flags) {
-            add(io.github.coolcrabs.brachyura.maven.Maven.getMavenJarDep(repo, id), flags);
+        public JavaJarDependency addMaven(String repo, MavenId id, ModDependencyFlag... flags) {
+            return add(io.github.coolcrabs.brachyura.maven.Maven.getMavenJarDep(repo, id), flags);
         }
 
         public JavaJarDependency add(JavaJarDependency jarDependency, ModDependencyFlag... flags) {
