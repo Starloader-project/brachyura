@@ -2,6 +2,7 @@ package io.github.coolcrabs.brachyura.maven;
 
 import java.util.Objects;
 
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -12,7 +13,8 @@ public final class MavenId {
     public final String artifactId;
     @NotNull
     public final String version;
-    public final @Nullable String classifier;
+    @Nullable
+    public final String classifier;
 
     public MavenId(@NotNull String maven) {
         String[] a = maven.split(":");
@@ -66,5 +68,11 @@ public final class MavenId {
             return groupId + ":" + artifactId + ":" + version + ":" + classifier;
         }
         return groupId + ":" + artifactId + ":" + version;
+    }
+
+    @NotNull
+    @Contract(value = "_ -> new", pure = true)
+    public MavenId withClassifier(@Nullable String classifier) {
+        return new MavenId(groupId, artifactId, version, classifier);
     }
 }

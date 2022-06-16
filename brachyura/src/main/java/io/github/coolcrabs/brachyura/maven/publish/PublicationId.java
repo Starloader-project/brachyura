@@ -6,7 +6,6 @@ import java.nio.file.Paths;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import io.github.coolcrabs.brachyura.maven.MavenId;
 
@@ -17,25 +16,15 @@ import io.github.coolcrabs.brachyura.maven.MavenId;
  */
 public class PublicationId {
 
-    @Nullable
-    private final String classifier;
-
     @NotNull
     private final String extension;
 
     @NotNull
     private final MavenId mavenId;
 
-    public PublicationId(@NotNull MavenId mavenId, @Nullable String classifier, @NotNull String extension) {
+    public PublicationId(@NotNull MavenId mavenId, @NotNull String extension) {
         this.mavenId = mavenId;
-        this.classifier = classifier;
         this.extension = extension;
-    }
-
-    @Nullable
-    @Contract(pure = true, value = "-> _")
-    public String getClassifier() {
-        return classifier;
     }
 
     @NotNull
@@ -63,7 +52,7 @@ public class PublicationId {
         filename.append(mavenId.artifactId.replace('.', File.separatorChar));
         filename.append('-');
         filename.append(mavenId.version);
-        String classifier = this.classifier;
+        String classifier = mavenId.classifier;
         if (classifier != null) {
             filename.append('-');
             filename.append(classifier);
@@ -77,6 +66,6 @@ public class PublicationId {
 
     @Override
     public String toString() {
-        return this.mavenId.groupId + ":" + this.mavenId.artifactId + ":" + this.mavenId.version + "-" + this.classifier + "." + this.extension;
+        return this.mavenId.groupId + ":" + this.mavenId.artifactId + ":" + this.mavenId.version + "-" + this.mavenId.classifier + "." + this.extension;
     }
 }

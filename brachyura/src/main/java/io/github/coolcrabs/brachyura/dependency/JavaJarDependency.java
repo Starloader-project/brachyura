@@ -61,6 +61,20 @@ public class JavaJarDependency implements Dependency, MavenDependency {
         this.javadocUrl = javadocURL;
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof JavaJarDependency)) {
+            return false;
+        }
+        JavaJarDependency other = (JavaJarDependency) obj;
+        return Objects.equals(this.eclipseExternalAnnotations, other.eclipseExternalAnnotations)
+                && Objects.equals(this.intelliJExternalAnnotations, other.intelliJExternalAnnotations)
+                && Objects.equals(this.jar, other.jar)
+                && Objects.equals(this.javadocUrl, other.javadocUrl)
+                && Objects.equals(this.mavenId, other.mavenId)
+                && Objects.equals(this.scope, other.scope);
+    }
+
     /**
      * Obtains the base location of the javadocs that document this dependency.
      * An example value is "https://docs.oracle.com/en/java/javase/17/docs/api/".
@@ -90,6 +104,12 @@ public class JavaJarDependency implements Dependency, MavenDependency {
     @Contract(pure = true, value = "-> !null")
     public MavenDependencyScope getScope() {
         return this.scope;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.eclipseExternalAnnotations, this.intelliJExternalAnnotations, this.jar, this.javadocUrl,
+                this.mavenId, this.scope);
     }
 
     /**

@@ -120,6 +120,12 @@ public enum Eclipse implements Ide {
             prefs.write("org.eclipse.jdt.core.compiler.compliance="); prefs.write(j); prefs.write('\n');
             prefs.write("org.eclipse.jdt.core.compiler.source="); prefs.write(j); prefs.write('\n');
         }
+        // Slbrachyura start: Set resource encoding for eclipse
+        try (BufferedWriter prefs = Files.newBufferedWriter(module.root.resolve(".settings").resolve("org.eclipse.core.resources.prefs"))) {
+            prefs.write("eclipse.preferences.version=1\n");
+            prefs.write("encoding/<project>=UTF-8");
+        }
+        // Slbrachyura end
     }
 
     void writeClasspath(IdeModule project) throws IOException, XMLStreamException {

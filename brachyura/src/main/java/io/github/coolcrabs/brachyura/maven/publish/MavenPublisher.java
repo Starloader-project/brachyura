@@ -106,7 +106,7 @@ public class MavenPublisher {
         PublicationException pubEx = null;
         for (PublishRepository repo : this.repositories) {
             try {
-                repo.publish(new PublicationId(artifact.getMavenId(), null, "pom"), pomContent);
+                repo.publish(new PublicationId(artifact.getMavenId(), "pom"), pomContent);
             } catch (IOException e) {
                 if (pubEx == null) {
                     pubEx = new PublicationException(repo, e);
@@ -115,7 +115,7 @@ public class MavenPublisher {
                 }
             }
             try {
-                repo.publish(new PublicationId(artifact.getMavenId(), null, "jar"), artifact.jar);
+                repo.publish(new PublicationId(artifact.getMavenId(), "jar"), artifact.jar);
             } catch (IOException e) {
                 if (pubEx == null) {
                     pubEx = new PublicationException(repo, e);
@@ -126,7 +126,7 @@ public class MavenPublisher {
             try {
                 Path source = artifact.sourcesJar;
                 if (source != null) {
-                    repo.publish(new PublicationId(artifact.getMavenId(), "sources", "jar"), source);
+                    repo.publish(new PublicationId(artifact.getMavenId().withClassifier("sources"), "jar"), source);
                 }
             } catch (IOException e) {
                 if (pubEx == null) {
