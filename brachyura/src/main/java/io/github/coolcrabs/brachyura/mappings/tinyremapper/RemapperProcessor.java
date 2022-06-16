@@ -22,6 +22,7 @@ import java.nio.file.WatchEvent.Kind;
 import java.nio.file.WatchEvent.Modifier;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
+import java.nio.file.attribute.BasicFileAttributeView;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.FileAttributeView;
@@ -402,10 +403,30 @@ public class RemapperProcessor implements Processor {
             
         }
 
+        @SuppressWarnings("unchecked") // Slbrachyura: Make javac shut up about the JBR patch
         @Override
         public <V extends FileAttributeView> V getFileAttributeView(Path path, Class<V> type, LinkOption... options) {
-            //  Auto-generated method stub
-            return null;
+            if (type != BasicFileAttributeView.class) return null;
+            return (V) new BasicFileAttributeView() {
+
+                @Override
+                public String name() {
+                    return "basic";
+                }
+
+                @Override
+                public BasicFileAttributes readAttributes() throws IOException {
+                    return BruhFileSystemProvider.this.readAttributes(path, BasicFileAttributes.class, options);
+                }
+
+                @Override
+                public void setTimes(FileTime lastModifiedTime, FileTime lastAccessTime, FileTime createTime)
+                        throws IOException {
+                    // TODO Auto-generated method stub
+                    
+                }
+                
+            };
         }
 
         @SuppressWarnings("unchecked")

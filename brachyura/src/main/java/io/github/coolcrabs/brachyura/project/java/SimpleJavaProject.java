@@ -64,14 +64,16 @@ public abstract class SimpleJavaProject extends BaseJavaProject {
             return SimpleJavaProject.this.getJavaVersion();
         }
 
+        @NotNull
         @Override
         public Path[] getSrcDirs() {
-            return new Path[]{getModuleRoot().resolve("src").resolve("main").resolve("java")};
+            return new @NotNull Path[]{getModuleRoot().resolve("src").resolve("main").resolve("java")};
         }
 
+        @NotNull
         @Override
         public Path[] getResourceDirs() {
-            return new Path[]{getProjectDir().resolve("src").resolve("main").resolve("resources")};
+            return new @NotNull Path[]{getProjectDir().resolve("src").resolve("main").resolve("resources")};
         }
 
         @Override

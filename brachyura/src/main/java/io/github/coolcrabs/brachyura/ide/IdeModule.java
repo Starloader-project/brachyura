@@ -23,9 +23,11 @@ public class IdeModule {
     public final List<RunConfig> runConfigs;
     public final List<@NotNull Path> sourcePaths;
     public final List<@NotNull Path> resourcePaths;
+    public final List<@NotNull Path> testSourcePaths;
+    public final List<@NotNull Path> testResourcePaths;
     public final int javaVersion;
 
-    IdeModule(@NotNull String name, @NotNull Path root, Supplier<@NotNull List<JavaJarDependency>> dependencies, List<IdeModule> dependencyModules, List<RunConfigBuilder> runConfigs, List<@NotNull Path> sourcePaths, List<@NotNull Path> resourcePaths, int javaVersion) {
+    IdeModule(@NotNull String name, @NotNull Path root, Supplier<@NotNull List<JavaJarDependency>> dependencies, List<IdeModule> dependencyModules, List<RunConfigBuilder> runConfigs, List<@NotNull Path> sourcePaths, List<@NotNull Path> resourcePaths, List<@NotNull Path> testSourcePaths, List<@NotNull Path> testResourcePaths, int javaVersion) {
         this.name = name;
         this.root = root;
         this.dependencies = new Lazy<>(dependencies);
@@ -36,6 +38,8 @@ public class IdeModule {
         }
         this.sourcePaths = sourcePaths;
         this.resourcePaths = resourcePaths;
+        this.testSourcePaths = testSourcePaths;
+        this.testResourcePaths = testResourcePaths;
         this.javaVersion = javaVersion;
     }
 
@@ -48,6 +52,8 @@ public class IdeModule {
         private List<RunConfigBuilder> runConfigs = Collections.emptyList();
         private List<@NotNull Path> sourcePaths = Collections.emptyList();
         private List<@NotNull Path> resourcePaths = Collections.emptyList();
+        private List<@NotNull Path> testSourcePaths = Collections.emptyList();
+        private List<@NotNull Path> testResourcePaths = Collections.emptyList();
         private int javaVersion = 8;
         
         public IdeModuleBuilder name(String name) {
@@ -121,6 +127,33 @@ public class IdeModule {
             this.resourcePaths = Arrays.asList(resourcePaths);
             return this;
         }
+
+        public IdeModuleBuilder testSourcePaths(@NotNull Path... testSourcePaths) {
+            this.testSourcePaths = Arrays.asList(testSourcePaths);
+            return this; 
+        }
+
+        public IdeModuleBuilder testSourcePath(@NotNull Path testSourcePath) {
+            this.testSourcePaths = new ArrayList<>();
+            testSourcePaths.add(testSourcePath);
+            return this;
+        }
+
+        public IdeModuleBuilder testResourcePaths(List<@NotNull Path> testResourcePaths) {
+            this.testResourcePaths = testResourcePaths;
+            return this;
+        }
+
+        public IdeModuleBuilder testResourcePaths(@NotNull Path... testResourcePaths) {
+            this.testResourcePaths = Arrays.asList(testResourcePaths);
+            return this;
+        }
+
+        public IdeModuleBuilder testResourcePath(@NotNull Path testResourcePath) {
+            this.testResourcePaths = new ArrayList<>();
+            testResourcePaths.add(testResourcePath);
+            return this;
+        }
         
         public IdeModuleBuilder javaVersion(int javaVersion) {
             this.javaVersion = javaVersion;
@@ -130,7 +163,9 @@ public class IdeModule {
         @SuppressWarnings("null") // Generics are strange
         @NotNull
         public IdeModule build() {
-            return new IdeModule(Objects.requireNonNull(name, "IdeModule missing name"), Objects.requireNonNull(root, "IdeModule missing root"), dependencies, dependencyModules, runConfigs, sourcePaths, resourcePaths, javaVersion);
+            Objects.requireNonNull(name, "IdeModule missing name");
+            Objects.requireNonNull(root, "IdeModule missing root");
+            return new IdeModule(name, root, dependencies, dependencyModules, runConfigs, sourcePaths, resourcePaths, testSourcePaths, testResourcePaths, javaVersion);
         }
     }
 
