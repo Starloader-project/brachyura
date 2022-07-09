@@ -21,7 +21,7 @@ import io.github.coolcrabs.brachyura.util.NetUtil;
 import io.github.coolcrabs.brachyura.util.PathUtil;
 
 /**
- * Basically a backport of the old AuthentificatedMaven feature.
+ * Basically a port of the old AuthentificatedMaven feature.
  * No guarantees are made on whether this works in the first place, since I do not make
  * use of such maven repositories myself.
  */

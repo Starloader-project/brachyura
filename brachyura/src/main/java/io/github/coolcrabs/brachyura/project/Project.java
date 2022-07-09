@@ -1,8 +1,9 @@
 package io.github.coolcrabs.brachyura.project;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 import org.jetbrains.annotations.NotNull;
@@ -14,20 +15,32 @@ import io.github.coolcrabs.brachyura.util.PathUtil;
 public class Project {
     BaseJavaProject buildscriptIdeProject;
 
-    public void getTasks(@NotNull Consumer<@NotNull Task> p) {
-        // no default tasks
+    @Deprecated // Slbrachyura: Deprecate task handling with consumers
+    public final void getTasks(@NotNull Consumer<@NotNull Task> p) {
+        getTasks().forEach(p);
+    }
+
+    // Slbrachyura start: Improved task system
+    /**
+     * Obtains a list of all tasks. Must be mutable if the class is meant to be extended or
+     * used for libraries.
+     *
+     * @return A list of all tasks registered in this project
+     */
+    @NotNull
+    public List<@NotNull Task> getTasks() {
+        return new ArrayList<>();
     }
 
     public final void runTask(String name, String... args) {
-        // Slbrachyura start: Improved task system
-        AtomicBoolean foundTask = new AtomicBoolean();
-        getTasks(task -> {
+        boolean foundTask = false;
+        for (Task task : getTasks()) {
             if (task.name.equals(args[2])) {
                 task.doTask(new String[]{});
-                foundTask.set(true);
+                foundTask = true;
             }
-        });
-        if (!foundTask.get()) {
+        }
+        if (!foundTask) {
             throw new NoSuchElementException("Unable to get task with given name: " + name);
         }
         // Slbrachyura end

@@ -1,17 +1,24 @@
 package io.github.coolcrabs.brachyura.project.java;
 
-import io.github.coolcrabs.brachyura.compiler.java.JavaCompilation;
-import io.github.coolcrabs.brachyura.compiler.java.JavaCompilationResult;
-import io.github.coolcrabs.brachyura.dependency.JavaJarDependency;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 import org.jetbrains.annotations.NotNull;
 import org.tinylog.Logger;
 
+import io.github.coolcrabs.brachyura.compiler.java.JavaCompilation;
+import io.github.coolcrabs.brachyura.compiler.java.JavaCompilationResult;
+import io.github.coolcrabs.brachyura.dependency.JavaJarDependency;
 import io.github.coolcrabs.brachyura.ide.Ide;
 import io.github.coolcrabs.brachyura.ide.IdeModule;
 import io.github.coolcrabs.brachyura.processing.sinks.DirectoryProcessingSink;
@@ -21,28 +28,17 @@ import io.github.coolcrabs.brachyura.util.ArrayUtil;
 import io.github.coolcrabs.brachyura.util.JvmUtil;
 import io.github.coolcrabs.brachyura.util.PathUtil;
 import io.github.coolcrabs.brachyura.util.Util;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Objects;
 
 public abstract class BaseJavaProject extends Project {
 
     @NotNull
     public abstract IdeModule[] getIdeModules();
 
-    @Override
-    public void getTasks(@NotNull Consumer<@NotNull Task> p) {
-        super.getTasks(p);
-        getIdeTasks(p);
-        getRunConfigTasks(p);
-    }
-
-    public void getIdeTasks(@NotNull Consumer<@NotNull Task> p) {
+    // Slbrachyura: Improved task handling
+    public List<@NotNull Task> getIdeTasks() {
+        List<@NotNull Task> tasks = new ArrayList<>();
         for (Ide ide : Ide.getIdes()) {
-            p.accept(Task.of(ide.ideName(), (Runnable) () -> {
+            tasks.add(Task.of(ide.ideName(), (Runnable) () -> {
                 BaseJavaProject buildscriptProject = getBuildscriptProject();
                 if (buildscriptProject != null) {
                     ide.updateProject(getProjectDir(), ArrayUtil.join(IdeModule.class, getIdeModules(), buildscriptProject.getIdeModules()));
@@ -51,8 +47,15 @@ public abstract class BaseJavaProject extends Project {
                 }
             }));
         }
+        return tasks;
     }
-    
+
+    @Deprecated // Slbrachyura: Deprecate task handling with consumers
+    public final void getIdeTasks(@NotNull Consumer<@NotNull Task> p) {
+        getIdeTasks().forEach(p);
+    }
+
+    @Deprecated // Slbrachyura: Deprecate task handling with consumers, prepare removal of runConfigs
     public void getRunConfigTasks(@NotNull Consumer<@NotNull Task> p) {
         IdeModule[] ms = getIdeModules();
         for (IdeModule m : ms) {
@@ -63,7 +66,7 @@ public abstract class BaseJavaProject extends Project {
             }
         }
     }
-    
+
     public void runRunConfig(IdeModule ideProject, IdeModule.RunConfig rc) {
         try {
             LinkedHashSet<IdeModule> toCompile = new LinkedHashSet<>();
@@ -140,6 +143,16 @@ public abstract class BaseJavaProject extends Project {
     @NotNull
     public Path getSrcDir() {
         return getProjectDir().resolve("src").resolve("main").resolve("java");
+    }
+
+    // Slbrachyura: Improved task handling
+    @Override
+    @NotNull
+    public List<@NotNull Task> getTasks() {
+        List<@NotNull Task> tasks = super.getTasks();
+        tasks.addAll(getIdeTasks());
+        getRunConfigTasks(tasks::add);
+        return tasks;
     }
 
     @NotNull

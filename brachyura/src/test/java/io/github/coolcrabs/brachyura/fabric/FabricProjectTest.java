@@ -80,13 +80,9 @@ class FabricProjectTest {
     
     @Test
     void ide() {
-        //Todo better api for this?
-        fabricProject.getTasks(task -> {
-            // Slbrachyura: improved style
-            if (task.name.equals("netbeans") || task.name.equals("idea") || task.name.equals("jdt")) {
-                task.doTask(new String[] {});
-            }
-        });
+        fabricProject.runTask("netbeans"); // Slbrachyura: there is a better way to do this
+        fabricProject.runTask("idea");
+        fabricProject.runTask("jdt");
     }
 
     @Test

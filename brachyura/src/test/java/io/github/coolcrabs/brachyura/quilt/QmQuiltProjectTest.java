@@ -65,11 +65,9 @@ public class QmQuiltProjectTest {
     @Test
     void ide() {
         long a = System.currentTimeMillis();
-        proj.getTasks(p -> {
-            if (p.name.equals("netbeans")) p.doTask(new String[]{});
-            if (p.name.equals("idea")) p.doTask(new String[]{});
-            if (p.name.equals("jdt")) p.doTask(new String[]{});
-        });
+        proj.runTask("netbeans"); // Slbrachyura: there is a better way to do this
+        proj.runTask("idea");
+        proj.runTask("jdt");
         long b = System.currentTimeMillis();
         System.out.println(b - a);
     }

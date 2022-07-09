@@ -80,12 +80,9 @@ class MojmapProjectTest {
     @Test
     void ide() {
         long a = System.currentTimeMillis();
-        //Todo better api for this?
-        fabricProject.getTasks(p -> {
-            if (p.name.equals("netbeans")) p.doTask(new String[]{});
-            if (p.name.equals("idea")) p.doTask(new String[]{});
-            if (p.name.equals("jdt")) p.doTask(new String[]{});
-        });
+        fabricProject.runTask("netbeans"); // Slbrachyura: there is already a better way to do this
+        fabricProject.runTask("idea");
+        fabricProject.runTask("jdt");
         long b = System.currentTimeMillis();
         System.out.println(b - a);
     }

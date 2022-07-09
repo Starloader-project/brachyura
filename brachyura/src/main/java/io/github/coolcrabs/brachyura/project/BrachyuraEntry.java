@@ -11,7 +11,6 @@ import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.jetbrains.annotations.NotNull;
 import org.tinylog.Logger;
@@ -138,24 +137,27 @@ public class BrachyuraEntry {
             BuildscriptProject buildscriptProject = new BuildscriptProject();
             // Slbrachyura start: Improved task system
             if (args.length >= 1 && "buildscript".equalsIgnoreCase(args[0])) {
-                AtomicBoolean searchingTasks = new AtomicBoolean(true);
+                boolean searchingTasks = true;
                 if (args.length >= 2) {
-                    buildscriptProject.getTasks(task -> {
+                    for (Task task : buildscriptProject.getTasks()) {
                         if (task.name.equals(args[1])) {
+                            if (!searchingTasks) {
+                                throw new IllegalStateException("There are multiple tasks with the name \"" + task.name + "\".");
+                            }
                             task.doTask(Arrays.copyOfRange(args, 2, args.length));
-                            searchingTasks.set(false);
+                            searchingTasks = false;
                         }
-                    });
-                    if (searchingTasks.get()) {
+                    }
+                    if (searchingTasks) {
                         Logger.error("Unable to find task with name: " + args[1]);
                     }
                 }
-                if (searchingTasks.get()) {
+                if (searchingTasks) {
                     StringBuilder availableTasks = new StringBuilder();
-                    buildscriptProject.getTasks(task -> {
+                    for (Task task : buildscriptProject.getTasks()) {
                         availableTasks.append(' ');
                         availableTasks.append(task.name);
-                    });
+                    }
                     Logger.info("Available buildscript tasks: " + availableTasks.toString());
                 }
             } else {
@@ -163,25 +165,27 @@ public class BrachyuraEntry {
                 if (o.isPresent()) {
                     Project project = o.get();
                     project.setIdeProject(buildscriptProject);
-
-                    AtomicBoolean searchingTasks = new AtomicBoolean(true);
+                    boolean searchingTasks = true;
                     if (args.length >= 1) {
-                        project.getTasks(task -> {
+                        for (Task task : project.getTasks()) {
                             if (task.name.equals(args[0])) {
+                                if (!searchingTasks) {
+                                    throw new IllegalStateException("There are multiple tasks with the name \"" + task.name + "\".");
+                                }
                                 task.doTask(Arrays.copyOfRange(args, 1, args.length));
-                                searchingTasks.set(false);
+                                searchingTasks = false;
                             }
-                        });
-                        if (searchingTasks.get()) {
+                        }
+                        if (searchingTasks) {
                             Logger.error("Unable to find task with name: " + args[0]);
                         }
                     }
-                    if (searchingTasks.get()) {
+                    if (searchingTasks) {
                         StringBuilder availableTasks = new StringBuilder();
-                        project.getTasks(task -> {
+                        for (Task task : project.getTasks()) {
                             availableTasks.append(' ');
                             availableTasks.append(task.name);
-                        });
+                        }
                         Logger.info("Available buildscript tasks: " + availableTasks.toString());
                     }
                     // Slbrachyura end

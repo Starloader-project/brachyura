@@ -78,17 +78,12 @@ class SimpleJavaProjectTest {
                 };
             }
         };
-        //Todo better api for this?
-        project.getTasks(p -> {
-            if (p.name.equals("jdt")) p.doTask(new String[]{});
-            if (p.name.equals("netbeans")) p.doTask(new String[]{});
-            if (p.name.equals("idea")) p.doTask(new String[]{});
-        });
+        project.runTask("netbeans");
+        project.runTask("idea");
+        project.runTask("jdt");
         assertDoesNotThrow(() -> {
             Assertions.assertNotNull(project.build());
         });
-        project.getTasks(p -> {
-            if (p.name.equals("publishToMavenLocal")) p.doTask(new String[]{});
-        });
+        project.runTask("publishToMavenLocal");
     }
 }

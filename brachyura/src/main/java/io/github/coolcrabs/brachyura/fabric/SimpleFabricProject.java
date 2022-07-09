@@ -224,15 +224,19 @@ public abstract class SimpleFabricProject extends BaseJavaProject {
         }
     }
 
+    @NotNull
     @Override
-    public void getTasks(@NotNull Consumer<@NotNull Task> sink) {
-        super.getTasks(sink);
-        sink.accept(Task.of("build", (ThrowingRunnable) this::build));
-        getPublishTasks(sink);
+    public List<@NotNull Task> getTasks() {
+        List<@NotNull Task> tasks = super.getTasks();
+        tasks.add(Task.of("build", (ThrowingRunnable) this::build));
+        tasks.addAll(getPublishTasks());
+        return tasks;
     }
 
-    public void getPublishTasks(@NotNull Consumer<@NotNull Task> p) {
-        p.accept(Task.of("publishToMavenLocal", (ThrowingRunnable) () -> {
+    @NotNull
+    public List<@NotNull Task> getPublishTasks() { // Slbrachyura: Improved task system
+        List<@NotNull Task> tasks = new ArrayList<>();
+        tasks.add(Task.of("publishToMavenLocal", (ThrowingRunnable) () -> {
             MavenPublisher publisher = new MavenPublisher().addRepository(new LocalMavenRepository(MavenResolver.MAVEN_LOCAL));
             List<MavenDependency> mavendeps = new ArrayList<>();
             ModDependencyCollector dependencies = new ModDependencyCollector();
@@ -244,7 +248,7 @@ public abstract class SimpleFabricProject extends BaseJavaProject {
             });
             publisher.publishJar(build(), mavendeps);
         }));
-        p.accept(Task.of("publish", (ThrowingRunnable) () -> {
+        tasks.add(Task.of("publish", (ThrowingRunnable) () -> {
             MavenPublisher publisher = new MavenPublisher().addRepository(AuthentificatedMavenPublishRepository.fromEnvironmentVariables());
             List<MavenDependency> mavendeps = new ArrayList<>();
             ModDependencyCollector dependencies = new ModDependencyCollector();
@@ -256,6 +260,12 @@ public abstract class SimpleFabricProject extends BaseJavaProject {
             });
             publisher.publishJar(build(), mavendeps);
         }));
+        return tasks;
+    }
+
+    @Deprecated // Slbrachyura: Deprecate task handling with consumers
+    public final void getPublishTasks(@NotNull Consumer<@NotNull Task> p) {
+        getPublishTasks().forEach(p);
     }
 
     @Override

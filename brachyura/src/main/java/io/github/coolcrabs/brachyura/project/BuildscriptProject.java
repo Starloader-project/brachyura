@@ -67,7 +67,7 @@ class BuildscriptProject extends BaseJavaProject {
         PathUtil.createDirectories(runDirectory);
         Optional<Project> buildscriptInstance = project.get();
         if (buildscriptInstance.isPresent()) {
-            buildscriptInstance.get().getTasks(task -> {
+            for (Task task : buildscriptInstance.get().getTasks()) {
                 runConfigs.add(new RunConfigBuilder()
                         .name(task.name)
                         .cwd(runDirectory)
@@ -76,7 +76,7 @@ class BuildscriptProject extends BaseJavaProject {
                         .args(() -> {
                             return Arrays.asList(super.getProjectDir().toString(), getCompileDependencies().stream().map(Path::toString).collect(Collectors.joining(File.pathSeparator)), task.name);
                         }));
-            });
+            }
         }
         // Slbrachyura end
 

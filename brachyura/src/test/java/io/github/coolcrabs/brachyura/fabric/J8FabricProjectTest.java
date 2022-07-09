@@ -83,31 +83,14 @@ class J8FabricProjectTest {
 
     @Test
     void ide() {
-        //Todo better api for this?
-        fabricProject.getTasks(p -> {
-            try {
-                if (p.name.equals("netbeans")) p.doTask(new String[]{});
-                if (p.name.equals("idea")) p.doTask(new String[]{});
-                if (p.name.equals("jdt")) p.doTask(new String[]{});
-            } catch (Exception e) {
-                e.printStackTrace();
-                throw e;
-            }
-        });
+        fabricProject.runTask("netbeans");
+        fabricProject.runTask("idea");
+        fabricProject.runTask("jdt");
     }
 
     @Disabled
     @Test
     void bruh() {
-        fabricProject.getTasks(p -> {
-            if (p.name.equals("runMinecraftClient"))
-                try {
-                    p.doTask(new String[]{}); 
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    throw e;
-                }
-
-        });
+        fabricProject.runTask("runMinecraftClient");
     }
 }

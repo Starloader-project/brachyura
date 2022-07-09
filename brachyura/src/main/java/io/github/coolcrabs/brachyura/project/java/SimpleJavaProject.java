@@ -1,6 +1,7 @@
 package io.github.coolcrabs.brachyura.project.java;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -105,22 +106,31 @@ public abstract class SimpleJavaProject extends BaseJavaProject {
         return getId().artifactId + "-" + getId().version;
     }
 
+    @NotNull
     @Override
-    public void getTasks(@NotNull Consumer<@NotNull Task> p) {
-        super.getTasks(p);
-        p.accept(Task.of("build", (ThrowingRunnable) this::build));
-        getPublishTasks(p);
+    public List<@NotNull Task> getTasks() {
+        List<@NotNull Task> tasks = super.getTasks();
+        tasks.add(Task.of("build", (ThrowingRunnable) this::build));
+        tasks.addAll(getPublishTasks());
+        return tasks;
     }
 
-    public void getPublishTasks(@NotNull Consumer<@NotNull Task> p) {
-        p.accept(Task.of("publishToMavenLocal", (ThrowingRunnable) () -> {
+    public List<@NotNull Task> getPublishTasks() { // Slbrachyura: Improved task handling
+        List<@NotNull Task> tasks = new ArrayList<>();
+        tasks.add(Task.of("publishToMavenLocal", (ThrowingRunnable) () -> {
             MavenPublisher publisher = new MavenPublisher().addRepository(new LocalMavenRepository(MavenResolver.MAVEN_LOCAL));
             publisher.publishJar(build(), projectModule.get().dependencies.get());
         }));
-        p.accept(Task.of("publish", (ThrowingRunnable) () -> {
+        tasks.add(Task.of("publish", (ThrowingRunnable) () -> {
             MavenPublisher publisher = new MavenPublisher().addRepository(AuthentificatedMavenPublishRepository.fromEnvironmentVariables());
             publisher.publishJar(build(), projectModule.get().dependencies.get());
         }));
+        return tasks;
+    }
+
+    @Deprecated // Slbrachyura: Deprecate task handling with consumers
+    public final void getPublishTasks(@NotNull Consumer<@NotNull Task> p) {
+        getPublishTasks().forEach(p);
     }
 
     @Override
