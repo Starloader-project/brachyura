@@ -37,10 +37,7 @@ class BuildscriptDevEntry {
                 };
             };
             buildscript.setIdeProject(buildscriptProject);
-            Tasks t = new Tasks();
-            buildscript.getTasks(t);
-            Task task = t.get(args[2]);
-            task.doTask(new String[]{});
+            buildscript.runTask(args[2]); // Slbrachyura: Cleaner task calling
         } finally {
             for (Plugin plugin : plugins) {
                 plugin.onExit();

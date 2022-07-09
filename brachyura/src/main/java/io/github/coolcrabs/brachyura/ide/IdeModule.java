@@ -20,7 +20,10 @@ public class IdeModule {
     public final Path root;
     public final Lazy<@NotNull List<JavaJarDependency>> dependencies;
     public final List<IdeModule> dependencyModules;
+
+    @Deprecated // Slbrachyura: Improved task system
     public final List<RunConfig> runConfigs;
+
     public final List<@NotNull Path> sourcePaths;
     public final List<@NotNull Path> resourcePaths;
     public final List<@NotNull Path> testSourcePaths;
@@ -49,6 +52,7 @@ public class IdeModule {
         @SuppressWarnings("null")
         private Supplier<@NotNull List<JavaJarDependency>> dependencies = Collections::emptyList;
         private List<IdeModule> dependencyModules = Collections.emptyList();
+        @Deprecated // Slbrachyura: Improved tasks system
         private List<RunConfigBuilder> runConfigs = Collections.emptyList();
         private List<@NotNull Path> sourcePaths = Collections.emptyList();
         private List<@NotNull Path> resourcePaths = Collections.emptyList();
@@ -92,11 +96,13 @@ public class IdeModule {
             return this;
         }
 
+        @Deprecated // Slbrachyura: Improved tasks system
         public IdeModuleBuilder runConfigs(List<RunConfigBuilder> runConfigs) {
             this.runConfigs = runConfigs;
             return this;
         }
 
+        @Deprecated // Slbrachyura: Improved tasks system
         public IdeModuleBuilder runConfigs(RunConfigBuilder... runConfigs) {
             this.runConfigs = Arrays.asList(runConfigs);
             return this;
@@ -169,6 +175,7 @@ public class IdeModule {
         }
     }
 
+    @Deprecated // Slbrachyura: Improved tasks system
     public class RunConfig {
         public final String name;
         public final String mainClass;
@@ -191,6 +198,7 @@ public class IdeModule {
         }
     }
 
+    @Deprecated // Slbrachyura: Improved tasks system
     public static class RunConfigBuilder {
         private String name;
         private String mainClass;

@@ -11,6 +11,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.jetbrains.annotations.NotNull;
 import org.tinylog.Logger;
@@ -135,28 +136,55 @@ public class BrachyuraEntry {
             EntryGlobals.projectDir = projectDir;
             EntryGlobals.buildscriptClasspath = classpath;
             BuildscriptProject buildscriptProject = new BuildscriptProject();
+            // Slbrachyura start: Improved task system
             if (args.length >= 1 && "buildscript".equalsIgnoreCase(args[0])) {
-                Tasks t = new Tasks();
-                buildscriptProject.getTasks(t);
+                AtomicBoolean searchingTasks = new AtomicBoolean(true);
                 if (args.length >= 2) {
-                    Task task = t.get(args[1]);
-                    task.doTask(args.length > 3 ? Arrays.copyOfRange(args, 2, args.length) : new String[]{});
-                } else {
-                    Logger.info("Avalible buildscript tasks: " + t.toString());
+                    buildscriptProject.getTasks(task -> {
+                        if (task.name.equals(args[1])) {
+                            task.doTask(Arrays.copyOfRange(args, 2, args.length));
+                            searchingTasks.set(false);
+                        }
+                    });
+                    if (searchingTasks.get()) {
+                        Logger.error("Unable to find task with name: " + args[1]);
+                    }
+                }
+                if (searchingTasks.get()) {
+                    StringBuilder availableTasks = new StringBuilder();
+                    buildscriptProject.getTasks(task -> {
+                        availableTasks.append(' ');
+                        availableTasks.append(task.name);
+                    });
+                    Logger.info("Available buildscript tasks: " + availableTasks.toString());
                 }
             } else {
                 Optional<Project> o = buildscriptProject.project.get();
                 if (o.isPresent()) {
                     Project project = o.get();
                     project.setIdeProject(buildscriptProject);
-                    Tasks t = new Tasks();
-                    project.getTasks(t);
+
+                    AtomicBoolean searchingTasks = new AtomicBoolean(true);
                     if (args.length >= 1) {
-                        Task task = t.get(args[0]);
-                        task.doTask(args.length > 2 ? Arrays.copyOfRange(args, 1, args.length) : new String[]{});
-                    } else {
-                        Logger.info("Avalible tasks: " + t.toString());
+                        project.getTasks(task -> {
+                            if (task.name.equals(args[0])) {
+                                task.doTask(Arrays.copyOfRange(args, 1, args.length));
+                                searchingTasks.set(false);
+                            }
+                        });
+                        if (searchingTasks.get()) {
+                            Logger.error("Unable to find task with name: " + args[0]);
+                        }
                     }
+                    if (searchingTasks.get()) {
+                        StringBuilder availableTasks = new StringBuilder();
+                        project.getTasks(task -> {
+                            availableTasks.append(' ');
+                            availableTasks.append(task.name);
+                        });
+                        Logger.info("Available buildscript tasks: " + availableTasks.toString());
+                    }
+                    // Slbrachyura end
                 } else {
                     Logger.warn("Invalid build script :(");
                     Logger.info("Tip: If you invoke the bootstrap with \"createTemplate\" a template project will be created.");

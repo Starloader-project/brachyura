@@ -10,6 +10,7 @@ import java.util.LinkedHashSet;
 import java.util.function.Consumer;
 
 import org.jetbrains.annotations.NotNull;
+import org.tinylog.Logger;
 
 import io.github.coolcrabs.brachyura.ide.Ide;
 import io.github.coolcrabs.brachyura.ide.IdeModule;
@@ -55,7 +56,8 @@ public abstract class BaseJavaProject extends Project {
     public void getRunConfigTasks(@NotNull Consumer<@NotNull Task> p) {
         IdeModule[] ms = getIdeModules();
         for (IdeModule m : ms) {
-            for (IdeModule.RunConfig rc : m.runConfigs) {
+            for (IdeModule.RunConfig rc : m.runConfigs) { // Slbrachyura: TODO Document what the hell this does
+                Logger.info("Debug run config name: " + rc.name);
                 String tname = ms.length == 1 ? "run" + rc.name.replace(" ", "") : m.name.replace(" ", "") + ":run" + rc.name.replace(" ", "");
                 p.accept(Task.of(tname, (Runnable) () -> runRunConfig(m, rc)));
             }

@@ -1,6 +1,8 @@
 package io.github.coolcrabs.brachyura.project;
 
 import java.nio.file.Path;
+import java.util.NoSuchElementException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 import org.jetbrains.annotations.NotNull;
@@ -17,9 +19,18 @@ public class Project {
     }
 
     public final void runTask(String name, String... args) {
-        Tasks t = new Tasks();
-        getTasks(t);
-        t.get(name).doTask(args);
+        // Slbrachyura start: Improved task system
+        AtomicBoolean foundTask = new AtomicBoolean();
+        getTasks(task -> {
+            if (task.name.equals(args[2])) {
+                task.doTask(new String[]{});
+                foundTask.set(true);
+            }
+        });
+        if (!foundTask.get()) {
+            throw new NoSuchElementException("Unable to get task with given name: " + name);
+        }
+        // Slbrachyura end
     }
 
     @SuppressWarnings("null") // There are circumstances that this is null, but we are going to ignore these
