@@ -219,6 +219,7 @@ public abstract class SimpleFabricProject extends BaseJavaProject {
         }
 
         @Override
+        @NotNull
         public Path getModuleRoot() {
             return getProjectDir();
         }

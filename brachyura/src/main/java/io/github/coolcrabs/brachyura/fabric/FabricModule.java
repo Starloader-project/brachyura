@@ -7,6 +7,7 @@ import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -23,6 +24,7 @@ import io.github.coolcrabs.brachyura.minecraft.Minecraft;
 import io.github.coolcrabs.brachyura.processing.ProcessingEntry;
 import io.github.coolcrabs.brachyura.processing.ProcessingSource;
 import io.github.coolcrabs.brachyura.processing.sources.ProcessingSponge;
+import io.github.coolcrabs.brachyura.project.TaskBuilder;
 import io.github.coolcrabs.brachyura.project.java.BuildModule;
 import io.github.coolcrabs.brachyura.util.AtomicFile;
 import io.github.coolcrabs.brachyura.util.JvmUtil;
@@ -132,25 +134,23 @@ public abstract class FabricModule extends BuildModule {
             .sourcePaths(getSrcDirs())
             .resourcePaths(getResourceDirs())
             .dependencyModules(getModuleDependencies().stream().map(BuildModule::ideModule).collect(Collectors.toList()))
-            .runConfigs(
-                new IdeModule.RunConfigBuilder()
-                    .name("Minecraft Client")
-                    .cwd(cwd)
-                    .mainClass("net.fabricmc.loader.launch.knot.KnotClient")
-                    .classpath(classpath)
-                    .resourcePaths(getResourceDirs())
-                    .vmArgs(() -> this.ideVmArgs(true))
-                    .args(() -> this.ideArgs(true)),
-                new IdeModule.RunConfigBuilder()
-                    .name("Minecraft Server")
-                    .cwd(cwd)
-                    .mainClass("net.fabricmc.loader.launch.knot.KnotServer")
-                    .classpath(classpath)
-                    .resourcePaths(getResourceDirs())
-                    .vmArgs(() -> this.ideVmArgs(false))
-                    .args(() -> this.ideArgs(false))
-            )
-        .build();
+            .addTask(new TaskBuilder("Minecraft Client")
+                    .withWorkingDirectory(cwd)
+                    .withMainClass("net.fabricmc.loader.launch.knot.KnotClient")
+                    .withClasspath(classpath.get())
+                    .withResourcePath(Arrays.asList(getResourceDirs()))
+                    .withVMArgs(this.ideArgs(true))
+                    .withVMArgs(this.ideArgs(true))
+                    .buildUnconditionallyThrowing())
+            .addTask(new TaskBuilder("Minecraft Server")
+                    .withWorkingDirectory(cwd)
+                    .withMainClass("net.fabricmc.loader.launch.knot.KnotServer")
+                    .withClasspath(classpath.get())
+                    .withResourcePath(Arrays.asList(getResourceDirs()))
+                    .withVMArgs(this.ideArgs(false))
+                    .withVMArgs(this.ideArgs(false))
+                    .buildUnconditionallyThrowing())
+            .build();
     }
 
     public Path writeMappings4FabricStuff() {

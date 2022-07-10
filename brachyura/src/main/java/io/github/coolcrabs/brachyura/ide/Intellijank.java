@@ -17,7 +17,7 @@ import javax.xml.stream.XMLStreamException;
 import org.jetbrains.annotations.NotNull;
 
 import io.github.coolcrabs.brachyura.dependency.JavaJarDependency;
-import io.github.coolcrabs.brachyura.ide.IdeModule.RunConfig;
+import io.github.coolcrabs.brachyura.project.Task;
 import io.github.coolcrabs.brachyura.util.JvmUtil;
 import io.github.coolcrabs.brachyura.util.PathUtil;
 import io.github.coolcrabs.brachyura.util.Util;
@@ -208,8 +208,8 @@ public enum Intellijank implements Ide {
     void writeRunConfigurations(Path projectDir, IdeModule ideProject) throws IOException, XMLStreamException {
         Path ideaPath = projectDir.resolve(".idea");
         Path runConfigPath = PathUtil.resolveAndCreateDir(ideaPath, "runConfigurations");
-        for (RunConfig run : ideProject.runConfigs) {
-            String rcname = ideProject.name + " - " + run.name;
+        for (Task task : ideProject.tasks) {
+            String rcname = ideProject.name + " - " + task.getName();
             try (FormattedXMLStreamWriter w = XmlUtil.newStreamWriter(Files.newBufferedWriter(runConfigPath.resolve(rcname + ".xml")))) {
                 w.writeStartDocument("UTF-8", "1.0");
                 w.newline();
@@ -223,23 +223,23 @@ public enum Intellijank implements Ide {
                     w.writeAttribute("type", "Application");
                     w.writeAttribute("nameIsGenerated", "false"); // Yeet
                     w.indent();
-                    option(w, "MAIN_CLASS_NAME", run.mainClass);
+                    option(w, "MAIN_CLASS_NAME", task.getIdeRunConfigMainClass());
                     w.newline();
                     w.writeEmptyElement("module");
                     w.writeAttribute("name", ideProject.name);
                     option(w, "name", "main");
-                    option(w, "WORKING_DIRECTORY", run.cwd.toString());
+                    option(w, "WORKING_DIRECTORY", task.getIdeRunConfigWorkingDir().toString());
                     StringBuilder vmParam = new StringBuilder();
-                    for (String arg : run.vmArgs.get()) {
+                    for (String arg : task.getIdeRunConfigVMArgs()) {
                         vmParam.append(quote(arg));
                         vmParam.append(' ');
                     }
                     vmParam.append(" -cp ");
-                    ArrayList<Path> cp = new ArrayList<>(run.classpath.get());
-                    cp.addAll(run.resourcePaths);
+                    ArrayList<Path> cp = new ArrayList<>(task.getIdeRunConfigClasspath());
+                    cp.addAll(task.getIdeRunConfigResourcepath());
                     ArrayList<IdeModule> modules = new ArrayList<>();
                     modules.add(ideProject);
-                    modules.addAll(run.additionalModulesClasspath);
+                    // modules.addAll(run.additionalModulesClasspath); TODO Slbrachyura: Replace if needed
                     for (IdeModule m : modules) {
                         cp.add(projectDir.resolve(".brachyura").resolve("ideaout").resolve("production").resolve(m.name)); // ???
                     }
@@ -252,7 +252,7 @@ public enum Intellijank implements Ide {
                     vmParam.append(quote(cpbuilder.toString()));
                     option(w, "VM_PARAMETERS", vmParam.toString());
                     StringBuilder runArg = new StringBuilder();
-                    for (String arg : run.args.get()) {
+                    for (String arg : task.getIdeRunConfigArgs()) {
                         runArg.append(quote(arg));
                         runArg.append(' ');
                     }

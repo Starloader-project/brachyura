@@ -168,6 +168,7 @@ public abstract class SimpleQuiltProject extends SimpleFabricProject {
         }
 
         @Override
+        @NotNull
         public Path getModuleRoot() {
             return getProjectDir();
         }

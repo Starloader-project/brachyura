@@ -7,6 +7,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Properties;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -15,12 +16,12 @@ import org.jetbrains.annotations.NotNull;
 import org.tinylog.Logger;
 
 import io.github.coolcrabs.brachyura.dependency.JavaJarDependency;
+import io.github.coolcrabs.brachyura.project.Task;
 import io.github.coolcrabs.brachyura.util.AtomicDirectory;
 import io.github.coolcrabs.brachyura.util.JvmUtil;
 import io.github.coolcrabs.brachyura.util.PathUtil;
 import io.github.coolcrabs.brachyura.util.Util;
 import io.github.coolcrabs.brachyura.util.XmlUtil;
-import java.util.ArrayList;
 
 public enum Netbeans implements Ide {
     INSTANCE;
@@ -95,8 +96,8 @@ public enum Netbeans implements Ide {
                         projectProperties.store(o, null);
                     }
                     Path configs = PathUtil.resolveAndCreateDir(d.tempPath.resolve("nbproject"), "configs");
-                    for (IdeModule.RunConfig rc : ideProject.runConfigs) {
-                        writeRunConfig(configs.resolve(rc.name.replace(' ', '_') + ".properties"), rc);
+                    for (Task task : ideProject.tasks) {
+                        writeRunConfig(configs.resolve(task.getName().replace(' ', '_') + ".properties"), task);
                     }
                     d.commit();
                 } 
@@ -154,28 +155,28 @@ public enum Netbeans implements Ide {
                 throw Util.sneak(ex);
             }
         }
-        
-        void writeRunConfig(Path file, IdeModule.RunConfig rc) throws IOException {
+
+        void writeRunConfig(Path file, Task task) throws IOException {
             Properties config = new Properties();
-            config.setProperty("$label", rc.name);
-            config.setProperty("main.class", rc.mainClass);
+            config.setProperty("$label", task.getName());
+            config.setProperty("main.class", task.getIdeRunConfigMainClass());
             StringBuilder vmargs = new StringBuilder();
-            for (String arg : rc.vmArgs.get()) {
+            for (String arg : task.getIdeRunConfigVMArgs()) {
                 vmargs.append(quote(arg));
                 vmargs.append(' ');
             }
             config.setProperty("run.jvmargs", vmargs.toString());
             StringBuilder args = new StringBuilder();
-            for (String arg : rc.args.get()) {
+            for (String arg : task.getIdeRunConfigArgs()) {
                 args.append(quote(arg));
                 args.append(' ');
             }
             config.setProperty("application.args", args.toString());
-            config.setProperty("work.dir", rc.cwd.toString());
+            config.setProperty("work.dir", task.getIdeRunConfigWorkingDir().toString());
             StringBuilder runCpStr = new StringBuilder();
             runCpStr.append("${build.classes.dir}");
-            ArrayList<Path> cp = new ArrayList<>(rc.classpath.get());
-            cp.addAll(rc.resourcePaths);
+            ArrayList<Path> cp = new ArrayList<>(task.getIdeRunConfigClasspath());
+            cp.addAll(task.getIdeRunConfigResourcepath());
             for (Path p : cp) {
                 runCpStr.append(File.pathSeparator);
                 runCpStr.append(p.toString());

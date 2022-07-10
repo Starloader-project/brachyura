@@ -19,7 +19,7 @@ import org.jetbrains.annotations.NotNull;
 import com.google.gson.stream.JsonWriter;
 
 import io.github.coolcrabs.brachyura.dependency.JavaJarDependency;
-import io.github.coolcrabs.brachyura.ide.IdeModule.RunConfig;
+import io.github.coolcrabs.brachyura.project.Task;
 import io.github.coolcrabs.brachyura.util.AtomicFile;
 import io.github.coolcrabs.brachyura.util.JvmUtil;
 import io.github.coolcrabs.brachyura.util.PathUtil;
@@ -183,14 +183,17 @@ public enum Eclipse implements Ide {
 
     void writeLaunchConfigs(Path projectDir, IdeModule ideProject) throws IOException, XMLStreamException {
         try {
-            for (RunConfig rc : ideProject.runConfigs) {
-                if (rc.name.equals("idea")
-                        || rc.name.equals("netbeans")
-                        || rc.name.equals("publish")
-                        || rc.name.equals("publishToMavenLocal")) {
+            for (Task task : ideProject.tasks) {
+
+                // TODO use a proper system for that
+                if (task.name.equals("idea")
+                        || task.name.equals("netbeans")
+                        || task.name.equals("publish")
+                        || task.name.equals("publishToMavenLocal")) {
                     continue;
                 }
-                String rcname = ideProject.name + " - " + rc.name;
+
+                String rcname = ideProject.name + " - " + task.getName();
                 try (FormattedXMLStreamWriter w = XmlUtil.newStreamWriter(Files.newBufferedWriter(projectDir.resolve(rcname + ".launch")))) {
                     w.writeStartDocument("UTF-8", "1.0");
                     w.writeStartElement("launchConfiguration");
@@ -228,8 +231,8 @@ public enum Eclipse implements Ide {
                         w.writeStartElement("listAttribute");
                         w.writeAttribute("key", "org.eclipse.jdt.launching.CLASSPATH");
                         w.indent();
-                            List<Path> cp = new ArrayList<>(rc.classpath.get());
-                            cp.addAll(rc.resourcePaths);
+                            List<Path> cp = new ArrayList<>(task.getIdeRunConfigClasspath());
+                            cp.addAll(task.getIdeRunConfigResourcepath());
                             for (Path p : cp) {
                                 w.newline();
                                 w.writeEmptyElement("listEntry");
@@ -237,7 +240,8 @@ public enum Eclipse implements Ide {
                             }
                             List<IdeModule> modules = new ArrayList<>();
                             modules.add(ideProject);
-                            modules.addAll(rc.additionalModulesClasspath);
+                            // TODO Replace - if needed
+                            // modules.addAll(rc.additionalModulesClasspath);
                             for (IdeModule mod : modules) {
                                 w.newline();
                                 w.writeEmptyElement("listEntry");
@@ -249,10 +253,10 @@ public enum Eclipse implements Ide {
                         w.newline();
                         booleanAttribute(w, "org.eclipse.jdt.launching.DEFAULT_CLASSPATH", false);
                         w.newline();
-                        stringAttribute(w, "org.eclipse.jdt.launching.MAIN_TYPE", rc.mainClass);
+                        stringAttribute(w, "org.eclipse.jdt.launching.MAIN_TYPE", task.getIdeRunConfigMainClass());
                         w.newline();
                         StringBuilder args = new StringBuilder();
-                        for (String arg : rc.args.get()) {
+                        for (String arg : task.getIdeRunConfigArgs()) {
                             args.append(quote(arg));
                             args.append(' ');
                         }
@@ -261,13 +265,13 @@ public enum Eclipse implements Ide {
                         stringAttribute(w, "org.eclipse.jdt.launching.PROJECT_ATTR", ideProject.name);
                         w.newline();
                         StringBuilder vmargs = new StringBuilder();
-                        for (String vmarg : rc.vmArgs.get()) {
+                        for (String vmarg : task.getIdeRunConfigVMArgs()) {
                             vmargs.append(quote(vmarg));
                             vmargs.append(' ');
                         }
                         stringAttribute(w, "org.eclipse.jdt.launching.VM_ARGUMENTS", vmargs.toString());
                         w.newline();
-                        stringAttribute(w, "org.eclipse.jdt.launching.WORKING_DIRECTORY", rc.cwd.toString());
+                        stringAttribute(w, "org.eclipse.jdt.launching.WORKING_DIRECTORY", task.getIdeRunConfigWorkingDir().toString());
                         w.unindent();
                         w.newline();
                     w.writeEndElement();
@@ -375,23 +379,23 @@ public enum Eclipse implements Ide {
                 jsonWriter.name("configurations");
                 jsonWriter.beginArray();
                 for (IdeModule mod : basemodules) {
-                    for (RunConfig runConfig : mod.runConfigs) {
+                    for (Task task : mod.tasks) {
                         jsonWriter.beginObject();
                         jsonWriter.name("type").value("java");
-                        jsonWriter.name("name").value(mod.name + " - " + runConfig.name);
+                        jsonWriter.name("name").value(mod.name + " - " + task.getName());
                         jsonWriter.name("request").value("launch");
-                        jsonWriter.name("cwd").value(runConfig.cwd.toString());
+                        jsonWriter.name("cwd").value(task.getIdeRunConfigWorkingDir().toString());
                         jsonWriter.name("console").value("internalConsole");
-                        jsonWriter.name("mainClass").value(runConfig.mainClass);
+                        jsonWriter.name("mainClass").value(task.getIdeRunConfigMainClass());
                         jsonWriter.name("vmArgs");
                         jsonWriter.beginArray();
-                        for (String vmArg : runConfig.vmArgs.get()) {
+                        for (String vmArg : task.getIdeRunConfigVMArgs()) {
                             jsonWriter.value(vmArg);
                         }
                         jsonWriter.endArray();
                         jsonWriter.name("args");
                         jsonWriter.beginArray();
-                        for (String arg : runConfig.args.get()) {
+                        for (String arg : task.getIdeRunConfigArgs()) {
                             jsonWriter.value(arg);
                         }
                         jsonWriter.endArray();
@@ -403,10 +407,10 @@ public enum Eclipse implements Ide {
                         for (IdeModule m : mod.dependencyModules) {
                             jsonWriter.value(m.root.resolve(".brachyura").resolve("eclipseout").toString());
                         }
-                        for (Path path : runConfig.resourcePaths) {
+                        for (Path path : task.getIdeRunConfigResourcepath()) {
                             jsonWriter.value(path.toString());
                         }
-                        for (Path path : runConfig.classpath.get()) {
+                        for (Path path : task.getIdeRunConfigClasspath()) {
                             jsonWriter.value(path.toString());
                         }
                         jsonWriter.endArray();

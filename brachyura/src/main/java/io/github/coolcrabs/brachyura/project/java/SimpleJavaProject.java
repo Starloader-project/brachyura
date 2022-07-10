@@ -89,6 +89,7 @@ public abstract class SimpleJavaProject extends BaseJavaProject {
         }
 
         @Override
+        @NotNull
         public Path getModuleRoot() {
             return getProjectDir();
         }

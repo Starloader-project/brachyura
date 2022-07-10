@@ -2,6 +2,8 @@ package io.github.coolcrabs.brachyura.project.java;
 
 import java.nio.file.Path;
 
+import org.jetbrains.annotations.NotNull;
+
 import io.github.coolcrabs.brachyura.ide.IdeModule;
 import io.github.coolcrabs.brachyura.processing.ProcessingSource;
 import io.github.coolcrabs.brachyura.util.Lazy;
@@ -15,6 +17,8 @@ public abstract class BuildModule {
     }
 
     public abstract String getModuleName();
+
+    @NotNull
     public abstract Path getModuleRoot();
 
     public final Lazy<ProcessingSource> compilationOutput = new Lazy<>(this::createCompilationOutput);

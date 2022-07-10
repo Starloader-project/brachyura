@@ -13,9 +13,9 @@ import org.junit.jupiter.api.Test;
 
 import io.github.coolcrabs.brachyura.dependency.JavaJarDependency;
 import io.github.coolcrabs.brachyura.ide.IdeModule;
-import io.github.coolcrabs.brachyura.ide.IdeModule.RunConfigBuilder;
 import io.github.coolcrabs.brachyura.maven.MavenId;
 import io.github.coolcrabs.brachyura.maven.MavenResolver;
+import io.github.coolcrabs.brachyura.project.TaskBuilder;
 import io.github.coolcrabs.brachyura.util.PathUtil;
 
 class SimpleJavaProjectTest {
@@ -67,12 +67,10 @@ class SimpleJavaProjectTest {
                             .testResourcePath(getModuleRoot().resolve("src").resolve("test").resolve("resources"))
                             .dependencies(dependencies.get())
                             .dependencyModules(getModuleDependencies().stream().map(BuildModule::ideModule).collect(Collectors.toList()))
-                            .runConfigs(
-                                new RunConfigBuilder()
-                                    .name("bruh")
-                                    .cwd(getModuleRoot())
-                                    .mainClass("io.github.coolcrabs.testprogram.TestProgram")
-                            )
+                            .addTask(new TaskBuilder("bruh")
+                                    .withWorkingDirectory(getModuleRoot())
+                                    .withMainClass("io.github.coolcrabs.testprogram.TestProgram")
+                                    .buildUnconditionallyThrowing())
                             .build();
                     }
                 };

@@ -8,9 +8,12 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Supplier;
 
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import io.github.coolcrabs.brachyura.dependency.JavaJarDependency;
+import io.github.coolcrabs.brachyura.project.Task;
+import io.github.coolcrabs.brachyura.project.TaskBuilder;
 import io.github.coolcrabs.brachyura.util.Lazy;
 
 public class IdeModule {
@@ -20,30 +23,24 @@ public class IdeModule {
     public final Path root;
     public final Lazy<@NotNull List<JavaJarDependency>> dependencies;
     public final List<IdeModule> dependencyModules;
-
-    @Deprecated // Slbrachyura: Improved task system
-    public final List<RunConfig> runConfigs;
-
+    public final List<@NotNull Task> tasks; // Slbrachyura: Improved task system
     public final List<@NotNull Path> sourcePaths;
     public final List<@NotNull Path> resourcePaths;
     public final List<@NotNull Path> testSourcePaths;
     public final List<@NotNull Path> testResourcePaths;
     public final int javaVersion;
 
-    IdeModule(@NotNull String name, @NotNull Path root, Supplier<@NotNull List<JavaJarDependency>> dependencies, List<IdeModule> dependencyModules, List<RunConfigBuilder> runConfigs, List<@NotNull Path> sourcePaths, List<@NotNull Path> resourcePaths, List<@NotNull Path> testSourcePaths, List<@NotNull Path> testResourcePaths, int javaVersion) {
+    IdeModule(@NotNull String name, @NotNull Path root, Supplier<@NotNull List<JavaJarDependency>> dependencies, List<IdeModule> dependencyModules, List<@NotNull Path> sourcePaths, List<@NotNull Path> resourcePaths, List<@NotNull Path> testSourcePaths, List<@NotNull Path> testResourcePaths, int javaVersion, List<@NotNull Task> tasks) {
         this.name = name;
         this.root = root;
         this.dependencies = new Lazy<>(dependencies);
         this.dependencyModules = dependencyModules;
-        this.runConfigs = new ArrayList<>(runConfigs.size());
-        for (RunConfigBuilder b : runConfigs) {
-            this.runConfigs.add(b.build(this));
-        }
         this.sourcePaths = sourcePaths;
         this.resourcePaths = resourcePaths;
         this.testSourcePaths = testSourcePaths;
         this.testResourcePaths = testResourcePaths;
         this.javaVersion = javaVersion;
+        this.tasks = tasks;
     }
 
     public static class IdeModuleBuilder {
@@ -54,12 +51,23 @@ public class IdeModule {
         private List<IdeModule> dependencyModules = Collections.emptyList();
         @Deprecated // Slbrachyura: Improved tasks system
         private List<RunConfigBuilder> runConfigs = Collections.emptyList();
+        private List<@NotNull Task> tasks = Collections.emptyList();
         private List<@NotNull Path> sourcePaths = Collections.emptyList();
         private List<@NotNull Path> resourcePaths = Collections.emptyList();
         private List<@NotNull Path> testSourcePaths = Collections.emptyList();
         private List<@NotNull Path> testResourcePaths = Collections.emptyList();
         private int javaVersion = 8;
-        
+
+        @Contract(pure = false, mutates = "this", value = "_ -> this")
+        @NotNull
+        public IdeModuleBuilder addTask(@NotNull Task task) {
+            if (tasks.getClass() != ArrayList.class) {
+                tasks = new ArrayList<>(tasks); // Ensure that it is mutable
+            }
+            tasks.add(task);
+            return this;
+        }
+
         public IdeModuleBuilder name(String name) {
             this.name = name;
             return this;
@@ -105,6 +113,13 @@ public class IdeModule {
         @Deprecated // Slbrachyura: Improved tasks system
         public IdeModuleBuilder runConfigs(RunConfigBuilder... runConfigs) {
             this.runConfigs = Arrays.asList(runConfigs);
+            return this;
+        }
+
+        @Contract(pure = false, mutates = "this", value = "_ -> this")
+        @NotNull
+        public IdeModuleBuilder withTasks(List<@NotNull Task> tasks) {
+            this.tasks = tasks;
             return this;
         }
 
@@ -171,30 +186,11 @@ public class IdeModule {
         public IdeModule build() {
             Objects.requireNonNull(name, "IdeModule missing name");
             Objects.requireNonNull(root, "IdeModule missing root");
-            return new IdeModule(name, root, dependencies, dependencyModules, runConfigs, sourcePaths, resourcePaths, testSourcePaths, testResourcePaths, javaVersion);
-        }
-    }
-
-    @Deprecated // Slbrachyura: Improved tasks system
-    public class RunConfig {
-        public final String name;
-        public final String mainClass;
-        public final Path cwd; // Make sure this exists
-        public final Lazy<List<String>> vmArgs;
-        public final Lazy<List<String>> args;
-        public final Lazy<List<Path>> classpath;
-        public final List<IdeModule> additionalModulesClasspath;
-        public final List<Path> resourcePaths;
-
-        RunConfig(String name, String mainClass, Path cwd, Supplier<List<String>> vmArgs, Supplier<List<String>> args, Supplier<List<Path>> classpath, List<IdeModule> additionalModulesClasspath, List<Path> resourcePaths) {
-            this.name = name;
-            this.mainClass = mainClass;
-            this.cwd = cwd;
-            this.vmArgs = new Lazy<>(vmArgs);
-            this.args = new Lazy<>(args);
-            this.classpath = new Lazy<>(classpath);
-            this.additionalModulesClasspath = additionalModulesClasspath;
-            this.resourcePaths = resourcePaths;
+            List<@NotNull Task> tasks = new ArrayList<>(this.tasks);
+            this.runConfigs.forEach(rcBuilder -> {
+                tasks.add(rcBuilder.build());
+            });
+            return new IdeModule(name, root, dependencies, dependencyModules, sourcePaths, resourcePaths, testSourcePaths, testResourcePaths, javaVersion, tasks);
         }
     }
 
@@ -206,6 +202,7 @@ public class IdeModule {
         private Supplier<List<String>> vmArgs = Collections::emptyList;
         private Supplier<List<String>> args = Collections::emptyList;
         private Supplier<List<Path>> classpath = Collections::emptyList;
+        @Deprecated @SuppressWarnings("unused") // Slbrachyura: Does anyone know what this does? I do not
         private List<IdeModule> additionalModulesClasspath = Collections.emptyList();
         private List<Path> resourcePaths = Collections.emptyList();
 
@@ -289,11 +286,19 @@ public class IdeModule {
             return this;
         }
 
-        RunConfig build(IdeModule project) {
+        @SuppressWarnings("null")
+        Task build() {
             Objects.requireNonNull(name, "Null name");
             Objects.requireNonNull(mainClass, "Null mainClass");
             Objects.requireNonNull(cwd, "Null cwd");
-            return project.new RunConfig(name, mainClass, cwd, vmArgs, args, classpath, additionalModulesClasspath, resourcePaths);
+            return new TaskBuilder(name)
+                    .withMainClass(mainClass)
+                    .withWorkingDirectory(cwd)
+                    .withVMArgs(vmArgs.get())
+                    .withArgs(args.get())
+                    .withClasspath(classpath.get())
+                    .withResourcePath(resourcePaths)
+                    .buildUnconditionallyThrowing();
         }
     }
 }

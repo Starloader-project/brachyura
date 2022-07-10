@@ -6,8 +6,6 @@ import java.util.HashSet;
 
 import org.jetbrains.annotations.NotNull;
 
-import io.github.coolcrabs.brachyura.ide.IdeModule.RunConfig;
-
 public interface Ide {
     public static Ide[] getIdes() {
         return new Ide[] {
@@ -25,18 +23,15 @@ public interface Ide {
             for (IdeModule m1 : m0.dependencyModules) {
                 if (!modules.contains(m1)) throw new IllegalArgumentException("Module " + m0.name + " references module " + m1.name + " not in ide project as a dependency");
             }
+            /* TODO Slbrachyura: Replace if needed
             for (RunConfig rc : m0.runConfigs) {
                 for (IdeModule m1 : rc.additionalModulesClasspath) {
                     if (!modules.contains(m1)) throw new IllegalArgumentException("Module " + m0.name + " references module " + m1.name + " not in ide project in a run config");
                 }
             }
-            // Fail early for lazies
+            */
+            // Fail early for lazy
             m0.dependencies.get();
-            for (RunConfig rc : m0.runConfigs) {
-                rc.vmArgs.get();
-                rc.args.get();
-                rc.classpath.get();
-            }
         }
     } 
 
