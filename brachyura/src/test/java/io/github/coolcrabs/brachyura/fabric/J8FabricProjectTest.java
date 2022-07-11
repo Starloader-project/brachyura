@@ -83,9 +83,14 @@ class J8FabricProjectTest {
 
     @Test
     void ide() {
-        fabricProject.runTask("netbeans");
-        fabricProject.runTask("idea");
-        fabricProject.runTask("jdt");
+        try {
+            fabricProject.runTask("netbeans");
+            fabricProject.runTask("idea");
+            fabricProject.runTask("jdt");
+        } catch (Exception e) {
+            e.printStackTrace(); // Slbrachyura: print stacktraces, properly
+            throw e;
+        }
     }
 
     @Disabled

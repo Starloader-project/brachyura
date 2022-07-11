@@ -35,8 +35,8 @@ public class Project {
     public final void runTask(String name, String... args) {
         boolean foundTask = false;
         for (Task task : getTasks()) {
-            if (task.name.equals(args[2])) {
-                task.doTask(new String[]{});
+            if (task.name.equals(name)) {
+                task.doTask(args);
                 foundTask = true;
             }
         }
@@ -46,10 +46,9 @@ public class Project {
         // Slbrachyura end
     }
 
-    @SuppressWarnings("null") // There are circumstances that this is null, but we are going to ignore these
     @NotNull
     public Path getProjectDir() {
-        return EntryGlobals.projectDir;
+        return EntryGlobals.getProjectDir();
     }
 
     @NotNull

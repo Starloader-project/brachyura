@@ -29,7 +29,6 @@ import io.github.coolcrabs.brachyura.processing.sinks.AtomicZipProcessingSink;
 import io.github.coolcrabs.brachyura.processing.sources.DirectoryProcessingSource;
 import io.github.coolcrabs.brachyura.project.Task;
 import io.github.coolcrabs.brachyura.util.Lazy;
-import io.github.coolcrabs.brachyura.util.ThrowingRunnable;
 
 public abstract class SimpleJavaProject extends BaseJavaProject {
 
@@ -111,18 +110,18 @@ public abstract class SimpleJavaProject extends BaseJavaProject {
     @Override
     public List<@NotNull Task> getTasks() {
         List<@NotNull Task> tasks = super.getTasks();
-        tasks.add(Task.of("build", (ThrowingRunnable) this::build));
+        tasks.add(Task.builder("build", this).build(this::build));
         tasks.addAll(getPublishTasks());
         return tasks;
     }
 
     public List<@NotNull Task> getPublishTasks() { // Slbrachyura: Improved task handling
         List<@NotNull Task> tasks = new ArrayList<>();
-        tasks.add(Task.of("publishToMavenLocal", (ThrowingRunnable) () -> {
+        tasks.add(Task.builder("publishToMavenLocal", this).build(() -> {
             MavenPublisher publisher = new MavenPublisher().addRepository(new LocalMavenRepository(MavenResolver.MAVEN_LOCAL));
             publisher.publishJar(build(), projectModule.get().dependencies.get());
         }));
-        tasks.add(Task.of("publish", (ThrowingRunnable) () -> {
+        tasks.add(Task.builder("publish", this).build(() -> {
             MavenPublisher publisher = new MavenPublisher().addRepository(AuthentificatedMavenPublishRepository.fromEnvironmentVariables());
             publisher.publishJar(build(), projectModule.get().dependencies.get());
         }));

@@ -65,9 +65,14 @@ public class QmQuiltProjectTest {
     @Test
     void ide() {
         long a = System.currentTimeMillis();
-        proj.runTask("netbeans"); // Slbrachyura: there is a better way to do this
-        proj.runTask("idea");
-        proj.runTask("jdt");
+        try {
+            proj.runTask("netbeans");
+            proj.runTask("idea");
+            proj.runTask("jdt");
+        } catch (Exception e) {
+            e.printStackTrace(); // Slbrachyura: print stacktraces, properly
+            throw e;
+        }
         long b = System.currentTimeMillis();
         System.out.println(b - a);
     }

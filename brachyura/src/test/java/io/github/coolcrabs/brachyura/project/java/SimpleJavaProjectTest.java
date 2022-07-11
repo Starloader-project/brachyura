@@ -67,8 +67,7 @@ class SimpleJavaProjectTest {
                             .testResourcePath(getModuleRoot().resolve("src").resolve("test").resolve("resources"))
                             .dependencies(dependencies.get())
                             .dependencyModules(getModuleDependencies().stream().map(BuildModule::ideModule).collect(Collectors.toList()))
-                            .addTask(new TaskBuilder("bruh")
-                                    .withWorkingDirectory(getModuleRoot())
+                            .addTask(new TaskBuilder("bruh", getModuleRoot())
                                     .withMainClass("io.github.coolcrabs.testprogram.TestProgram")
                                     .buildUnconditionallyThrowing())
                             .build();

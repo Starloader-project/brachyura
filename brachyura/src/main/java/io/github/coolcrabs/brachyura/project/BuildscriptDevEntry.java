@@ -18,9 +18,9 @@ class BuildscriptDevEntry {
             plugin.onEntry();
         }
         try {
-            EntryGlobals.projectDir = Paths.get(args[0]);
+            EntryGlobals.setProjectDir(Paths.get(args[0]));
             // Slbrachyura: Suppress null warning by explicitly declaring generics
-            EntryGlobals.buildscriptClasspath = Arrays.stream(args[1].split(File.pathSeparator)).map(Paths::get).collect(Collectors.<Path>toList());
+            EntryGlobals.setCompileDependencies(Arrays.stream(args[1].split(File.pathSeparator)).map(Paths::get).collect(Collectors.<Path>toList()));
 
             Project buildscript;
             try {

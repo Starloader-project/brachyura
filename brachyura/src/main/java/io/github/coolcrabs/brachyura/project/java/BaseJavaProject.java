@@ -13,6 +13,7 @@ import io.github.coolcrabs.brachyura.ide.Ide;
 import io.github.coolcrabs.brachyura.ide.IdeModule;
 import io.github.coolcrabs.brachyura.project.Project;
 import io.github.coolcrabs.brachyura.project.Task;
+import io.github.coolcrabs.brachyura.project.TaskBuilder;
 import io.github.coolcrabs.brachyura.util.ArrayUtil;
 import io.github.coolcrabs.brachyura.util.PathUtil;
 
@@ -25,14 +26,15 @@ public abstract class BaseJavaProject extends Project {
     public List<@NotNull Task> getIdeTasks() {
         List<@NotNull Task> tasks = new ArrayList<>();
         for (Ide ide : Ide.getIdes()) {
-            tasks.add(Task.of(ide.ideName(), (Runnable) () -> {
-                BaseJavaProject buildscriptProject = getBuildscriptProject();
-                if (buildscriptProject != null) {
-                    ide.updateProject(getProjectDir(), ArrayUtil.join(IdeModule.class, getIdeModules(), buildscriptProject.getIdeModules()));
-                } else {
-                    ide.updateProject(getProjectDir(), getIdeModules());
-                }
-            }));
+            tasks.add(new TaskBuilder(ide.ideName(), this)
+                    .build((args) -> {
+                        BaseJavaProject buildscriptProject = getBuildscriptProject();
+                        if (buildscriptProject != null) {
+                            ide.updateProject(getProjectDir(), ArrayUtil.join(IdeModule.class, getIdeModules(), buildscriptProject.getIdeModules()));
+                        } else {
+                            ide.updateProject(getProjectDir(), getIdeModules());
+                        }
+                    }));
         }
         return tasks;
     }

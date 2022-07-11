@@ -9,6 +9,8 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
+import net.fabricmc.mappingio.tree.MappingTree;
+
 import io.github.coolcrabs.brachyura.decompiler.BrachyuraDecompiler;
 import io.github.coolcrabs.brachyura.fabric.FabricContext.ModDependencyCollector;
 import io.github.coolcrabs.brachyura.fabric.FabricLoader;
@@ -16,7 +18,6 @@ import io.github.coolcrabs.brachyura.minecraft.Minecraft;
 import io.github.coolcrabs.brachyura.minecraft.VersionMeta;
 import io.github.coolcrabs.brachyura.util.JvmUtil;
 import io.github.coolcrabs.brachyura.util.PathUtil;
-import net.fabricmc.mappingio.tree.MappingTree;
 
 public class QuiltProjectTest {
     SimpleQuiltProject proj = new SimpleQuiltProject() {
@@ -63,9 +64,14 @@ public class QuiltProjectTest {
     @Test
     void ide() {
         long a = System.currentTimeMillis();
-        proj.runTask("netbeans"); // Slbrachyura: there is a better way to do this
-        proj.runTask("idea");
-        proj.runTask("jdt");
+        try {
+            proj.runTask("netbeans");
+            proj.runTask("idea");
+            proj.runTask("jdt");
+        } catch (Exception e) {
+            e.printStackTrace(); // Slbrachyura: print stacktraces, properly
+            throw e;
+        }
         long b = System.currentTimeMillis();
         System.out.println(b - a);
     }

@@ -9,6 +9,9 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import io.github.coolcrabs.brachyura.exception.TaskFailedException;
+import io.github.coolcrabs.brachyura.util.ThrowingRunnable;
+
 /**
  * A builder for creating instances of the {@link Task} class easily while maintaining absolute control.
  *
@@ -35,27 +38,29 @@ public class TaskBuilder {
     @Nullable
     private List<String> vmArgs = null;
 
-    @Nullable
-    private Path workingDir = null;
+    @NotNull
+    private Path workingDir;
 
-    public TaskBuilder(@NotNull String name) {
+    public TaskBuilder(@NotNull String name, @NotNull Path workingDir) {
         this.name = name;
+        this.workingDir = workingDir;
+    }
+
+    public TaskBuilder(@NotNull String name, @NotNull Project project) {
+        this.name = name;
+        this.workingDir = project.getProjectDir().resolve("buildscript").resolve("run");
     }
 
     @NotNull
     @Contract(value = "!null -> fail; null -> new", pure = true)
     public Task build(@NotNull Consumer<String[]> action) {
         Objects.requireNonNull(action, "action cannot be null");
-        Task defaults = new Task(name) {
+
+        final Task defaults = new Task(name, workingDir) {
             @Override
             public void doTask(String[] args) {
             }
         };
-
-        Path workingDir = this.workingDir;
-        if (workingDir == null) {
-            workingDir = defaults.getIdeRunConfigWorkingDir();
-        }
 
         String mainClass = this.mainClass;
         if (mainClass == null) {
@@ -88,6 +93,18 @@ public class TaskBuilder {
                 action.accept(args);
             }
         };
+    }
+
+    @NotNull
+    @Contract(value = "!null -> fail; null -> new", pure = true)
+    public Task build(@NotNull ThrowingRunnable action) {
+        return this.build((args) -> {
+            try {
+                action.run();
+            } catch (Exception e) {
+                throw new TaskFailedException("Task failed to execute!", e);
+            }
+        });
     }
 
     /**

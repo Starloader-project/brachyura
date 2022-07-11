@@ -126,7 +126,7 @@ class BuildscriptProject extends BaseJavaProject {
 
     @NotNull
     public List<Path> getCompileDependencies() {
-        return EntryGlobals.getCompileDependencies();
+        return EntryGlobals.getCompileDependencies(false);
     }
 
     static class BuildscriptClassloader extends ClassLoader implements ProcessingSink {

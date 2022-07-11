@@ -132,8 +132,8 @@ public class BrachyuraEntry {
             plugin.onEntry();
         }
         try {
-            EntryGlobals.projectDir = projectDir;
-            EntryGlobals.buildscriptClasspath = classpath;
+            EntryGlobals.setProjectDir(projectDir);
+            EntryGlobals.setCompileDependencies(classpath);
             BuildscriptProject buildscriptProject = new BuildscriptProject();
             // Slbrachyura start: Improved task system
             if (args.length >= 1 && "buildscript".equalsIgnoreCase(args[0])) {

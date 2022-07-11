@@ -1,11 +1,4 @@
-Jetbrains runtime PSA: The jetbrains runtime is known to cause test failures while compiling slbrachyura.
-Either use a different JDK for compilation or use `build.bash` and then
-`./offline-build.bash` for compilation. However the Jetbrains runtime will NOT be able to run
-brachyura for most minecraft-related projects, will work fine with galimulator however due to
-starplane using sl-deobf for remapping and thus it does not use Tiny-Remapper where the error
-occurs.
-
-# Starloader's Brachyura
+# Starloader's Brachyura (Slbrachyura)
 
 Brachyura is a WIP build tool with a strong focus on minecraft mods. Buildscripts are written in java.
 This particular fork attempts to clean up the mess of upstream, making it more pleasant to use.
@@ -39,6 +32,7 @@ nonetheless.
  - API for passing arguments more or less directly to the compiler (however not honored in the fabric project right now)
  - XDG_DATA_HOME is now honored by default (Resolves upstream's https://github.com/CoolCrabs/brachyura/issues/8)
  - Snapshot repository support
+ - Improved task system
 
 ## Community
 

@@ -41,7 +41,6 @@ import io.github.coolcrabs.brachyura.project.Task;
 import io.github.coolcrabs.brachyura.project.java.BaseJavaProject;
 import io.github.coolcrabs.brachyura.util.Lazy;
 import io.github.coolcrabs.brachyura.util.PathUtil;
-import io.github.coolcrabs.brachyura.util.ThrowingRunnable;
 import io.github.coolcrabs.brachyura.util.Util;
 import net.fabricmc.mappingio.tree.MappingTree;
 
@@ -229,7 +228,7 @@ public abstract class SimpleFabricProject extends BaseJavaProject {
     @Override
     public List<@NotNull Task> getTasks() {
         List<@NotNull Task> tasks = super.getTasks();
-        tasks.add(Task.of("build", (ThrowingRunnable) this::build));
+        tasks.add(Task.builder("build", this).build(this::build));
         tasks.addAll(getPublishTasks());
         return tasks;
     }
@@ -237,7 +236,7 @@ public abstract class SimpleFabricProject extends BaseJavaProject {
     @NotNull
     public List<@NotNull Task> getPublishTasks() { // Slbrachyura: Improved task system
         List<@NotNull Task> tasks = new ArrayList<>();
-        tasks.add(Task.of("publishToMavenLocal", (ThrowingRunnable) () -> {
+        tasks.add(Task.builder("publishToMavenLocal", this).build(() -> {
             MavenPublisher publisher = new MavenPublisher().addRepository(new LocalMavenRepository(MavenResolver.MAVEN_LOCAL));
             List<MavenDependency> mavendeps = new ArrayList<>();
             ModDependencyCollector dependencies = new ModDependencyCollector();
@@ -249,7 +248,7 @@ public abstract class SimpleFabricProject extends BaseJavaProject {
             });
             publisher.publishJar(build(), mavendeps);
         }));
-        tasks.add(Task.of("publish", (ThrowingRunnable) () -> {
+        tasks.add(Task.builder("publish", this).build(() -> {
             MavenPublisher publisher = new MavenPublisher().addRepository(AuthentificatedMavenPublishRepository.fromEnvironmentVariables());
             List<MavenDependency> mavendeps = new ArrayList<>();
             ModDependencyCollector dependencies = new ModDependencyCollector();

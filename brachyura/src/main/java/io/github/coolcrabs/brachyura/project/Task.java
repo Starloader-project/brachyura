@@ -4,6 +4,7 @@ import java.io.File;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 
@@ -158,22 +159,45 @@ public abstract class Task {
     }
 
     @NotNull
-    private static final Path getDefaultWorkingDirectory() {
-        return EntryGlobals.projectDir.resolve("buildscript").resolve("run"); // put in a method to prevent accidentally eagerly caching it too early
+    public static TaskBuilder builder(@NotNull String name, @NotNull Project project) {
+        return new TaskBuilder(name, project);
+    }
+
+    @NotNull
+    private static final Path getDefaultWorkingDirectory(Project project) {
+        return project.getProjectDir().resolve("buildscript").resolve("run"); // put in a method to prevent accidentally eagerly caching it too early
+    }
+
+    @NotNull
+    private static final Path inferProjectPath(Path workingDir) {
+        ifCond:
+        if (workingDir.endsWith("buildscript/run")) {
+            Path p = Objects.requireNonNull(workingDir.getParent()).getParent();
+            if (p == null) {
+                break ifCond;
+            }
+            return p;
+        }
+        try {
+            return EntryGlobals.getProjectDir();
+        } catch (Exception e) {
+            // Not set - who would have thought? So we need to use an arbitrary directory
+            return workingDir;
+        }
     }
 
     @NotNull
     private static final List<Path> getDefaultClasspath() {
-        return EntryGlobals.getCompileDependencies();
+        return EntryGlobals.getCompileDependencies(true);
     }
 
     @NotNull
-    private static final List<String> getDefaultArgs(@NotNull String taskName) {
+    private static final List<String> getDefaultArgs(@NotNull String taskName, @NotNull Path projectPath) {
         List<String> args = new ArrayList<>();
-        args.add(EntryGlobals.projectDir.toString());
+        args.add(projectPath.toString());
 
         StringBuilder builder = new StringBuilder();
-        for (Path path : EntryGlobals.getCompileDependencies()) {
+        for (Path path : EntryGlobals.getCompileDependencies(true)) {
             builder.append(path.toString());
             builder.append(File.pathSeparatorChar);
         }
@@ -190,9 +214,33 @@ public abstract class Task {
      * Java 8 compliance is used, but by overriding methods such as {@link #getIdeRunConfigJavaVersion()} this can be changed.
      *
      * @param name The name of the task
+     * @param project The project, which is used to infer the default working directory (i.e. {@link #getIdeRunConfigWorkingDir()}) from
      */
-    protected Task(@NotNull String name) {
-        this(name, DEFAULT_JAVA_VERSION, DEFAULT_MAIN_CLASS, getDefaultWorkingDirectory(), new ArrayList<>(), getDefaultArgs(name), new ArrayList<>(), getDefaultClasspath());
+    protected Task(@NotNull String name, @NotNull Project project) {
+        this(name, getDefaultWorkingDirectory(project), project.getProjectDir());
+    }
+
+    /**
+     * Constructor. Uses default values for stuff needed for IDE run configuration generation.
+     * Java 8 compliance is used, but by overriding methods such as {@link #getIdeRunConfigJavaVersion()} this can be changed.
+     *
+     * @param name The name of the task
+     * @param workingDirectory The default working directory (i.e. {@link #getIdeRunConfigWorkingDir()}), also used to infer the project directory if possible (otherwise falls back to {@link EntryGlobals#getProjectDir()})
+     */
+    protected Task(@NotNull String name, @NotNull Path workingDirectory) {
+        this(name, workingDirectory, inferProjectPath(workingDirectory));
+    }
+
+    /**
+     * Constructor. Uses default values for stuff needed for IDE run configuration generation.
+     * Java 8 compliance is used, but by overriding methods such as {@link #getIdeRunConfigJavaVersion()} this can be changed.
+     *
+     * @param name The name of the task
+     * @param workingDirectory The default working directory (i.e. {@link #getIdeRunConfigWorkingDir()})
+     * @param projectPath The path to the project directory
+     */
+    Task(@NotNull String name, @NotNull Path workingDirectory, @NotNull Path projectPath) {
+        this(name, DEFAULT_JAVA_VERSION, DEFAULT_MAIN_CLASS, workingDirectory, new ArrayList<>(), getDefaultArgs(name, projectPath), new ArrayList<>(), getDefaultClasspath());
     }
 
     Task(@NotNull String name, int javaVer, @NotNull String mainClass, @NotNull Path workingDir, @NotNull List<String> vmArgs, @NotNull List<String> args, @NotNull List<Path> resourcePath, @NotNull List<Path> classPath) {
@@ -207,23 +255,27 @@ public abstract class Task {
     }
 
     @NotNull
+    @Deprecated // Slbrachyura: Improved task system
     public static Task of(@NotNull String name, BooleanSupplier run) {
-        return new FailableNoArgTask(name, run);
+        return new FailableNoArgTask(name, EntryGlobals.getProjectDir().resolve("buildscript").resolve("run"), run);
     }
 
     @NotNull
+    @Deprecated // Slbrachyura: Improved task system
     public static Task of(@NotNull String name, Runnable run) {
-        return new NoArgTask(name, run);
+        return new NoArgTask(name, EntryGlobals.getProjectDir().resolve("buildscript").resolve("run"), run);
     }
 
     @NotNull
+    @Deprecated // Slbrachyura: Improved task system
     public static Task of(@NotNull String name, ThrowingRunnable run) {
-        return new NoArgTask(name, run);
+        return new NoArgTask(name, EntryGlobals.getProjectDir().resolve("buildscript").resolve("run"), run);
     }
 
     @NotNull
+    @Deprecated // Slbrachyura: Improved task system
     public static Task of(@NotNull String name, Consumer<String[]> run) {
-        return new TaskWithArgs(name, run);
+        return new TaskWithArgs(name, EntryGlobals.getProjectDir().resolve("buildscript").resolve("run"), run);
     }
 
     /**
@@ -234,11 +286,12 @@ public abstract class Task {
      */
     public abstract void doTask(String[] args);
 
+    @Deprecated // Slbrachyura: Replaced with TaskBuilder
     static class FailableNoArgTask extends Task {
         final BooleanSupplier runnable;
 
-        FailableNoArgTask(@NotNull String name, BooleanSupplier runnable) {
-            super(name);
+        FailableNoArgTask(@NotNull String name, @NotNull Path workingDir, BooleanSupplier runnable) {
+            super(name, workingDir);
             this.runnable = runnable;
         }
 
@@ -248,16 +301,17 @@ public abstract class Task {
         }
     }
 
+    @Deprecated // Slbrachyura: Replaced with TaskBuilder
     static class NoArgTask extends Task {
         final ThrowingRunnable runnable;
 
-        NoArgTask(@NotNull String name, Runnable runnable) {
-            super(name);
+        NoArgTask(@NotNull String name, @NotNull Path workingDir, Runnable runnable) {
+            super(name, workingDir);
             this.runnable = () -> runnable.run();
         }
 
-        NoArgTask(@NotNull String name, ThrowingRunnable runnable) {
-            super(name);
+        NoArgTask(@NotNull String name, @NotNull Path workingDir, ThrowingRunnable runnable) {
+            super(name, workingDir);
             this.runnable = runnable;
         }
 
@@ -271,11 +325,12 @@ public abstract class Task {
         }
     }
 
+    @Deprecated // Slbrachyura: Replaced with TaskBuilder
     static class TaskWithArgs extends Task {
         final Consumer<String[]> task;
 
-        TaskWithArgs(@NotNull String name, Consumer<String[]> task) {
-            super(name);
+        TaskWithArgs(@NotNull String name, @NotNull Path workingDir, Consumer<String[]> task) {
+            super(name, workingDir);
             this.task = task;
         }
 

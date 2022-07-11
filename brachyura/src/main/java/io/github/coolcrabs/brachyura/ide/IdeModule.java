@@ -291,9 +291,8 @@ public class IdeModule {
             Objects.requireNonNull(name, "Null name");
             Objects.requireNonNull(mainClass, "Null mainClass");
             Objects.requireNonNull(cwd, "Null cwd");
-            return new TaskBuilder(name)
+            return new TaskBuilder(name, cwd)
                     .withMainClass(mainClass)
-                    .withWorkingDirectory(cwd)
                     .withVMArgs(vmArgs.get())
                     .withArgs(args.get())
                     .withClasspath(classpath.get())
