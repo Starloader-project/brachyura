@@ -30,6 +30,9 @@ import io.github.coolcrabs.brachyura.util.XmlUtil.FormattedXMLStreamWriter;
 public enum Eclipse implements Ide {
     INSTANCE;
 
+    private static final String JDT_JRE_CONTAINER_KEY = "org.eclipse.jdt.launching.JRE_CONTAINER";
+    private static final String JDT_JRE_CONTAINER_JVM = JDT_JRE_CONTAINER_KEY + "/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-";
+
     @Override
     @NotNull
     public String ideName() {
@@ -138,7 +141,7 @@ public enum Eclipse implements Ide {
             w.newline();
                 w.writeEmptyElement("classpathentry");
                 w.writeAttribute("kind", "con");
-                w.writeAttribute("path", "org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-" + JvmUtil.javaVersionString(project.javaVersion));
+                w.writeAttribute("path", JDT_JRE_CONTAINER_JVM + JvmUtil.javaVersionString(project.javaVersion));
                 sourceClasspathEntryAttributes(w, project.root, project.sourcePaths, false);
                 sourceClasspathEntryAttributes(w, project.root, project.resourcePaths, false);
                 sourceClasspathEntryAttributes(w, project.root, project.testSourcePaths, true);
@@ -254,6 +257,9 @@ public enum Eclipse implements Ide {
                         booleanAttribute(w, "org.eclipse.jdt.launching.DEFAULT_CLASSPATH", false);
                         w.newline();
                         stringAttribute(w, "org.eclipse.jdt.launching.MAIN_TYPE", task.getIdeRunConfigMainClass());
+                        w.newline();
+                        String javaVersionString = JDT_JRE_CONTAINER_JVM + JvmUtil.javaVersionString(task.getIdeRunConfigJavaVersion()) + "/";
+                        stringAttribute(w, JDT_JRE_CONTAINER_KEY, javaVersionString);
                         w.newline();
                         StringBuilder args = new StringBuilder();
                         for (String arg : task.getIdeRunConfigArgs()) {

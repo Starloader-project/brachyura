@@ -197,13 +197,18 @@ public abstract class Task {
         args.add(projectPath.toString());
 
         StringBuilder builder = new StringBuilder();
+
         for (Path path : EntryGlobals.getCompileDependencies(true)) {
             builder.append(path.toString());
             builder.append(File.pathSeparatorChar);
         }
+
         if (builder.length() > 0) {
             builder.setLength(builder.length() - 1);
         }
+
+        args.add(builder.toString());
+
         args.add(taskName);
 
         return args;
@@ -255,27 +260,39 @@ public abstract class Task {
     }
 
     @NotNull
-    @Deprecated // Slbrachyura: Improved task system
+    @Deprecated // Slbrachyura: Improved task system - Furthermore, the idea behind this system is a bit strange
     public static Task of(@NotNull String name, BooleanSupplier run) {
-        return new FailableNoArgTask(name, EntryGlobals.getProjectDir().resolve("buildscript").resolve("run"), run);
+        return of(name, (args) -> {
+            if (!run.getAsBoolean()) {
+                throw new TaskFailedException("Task returned null");
+            }
+        });
     }
 
     @NotNull
     @Deprecated // Slbrachyura: Improved task system
     public static Task of(@NotNull String name, Runnable run) {
-        return new NoArgTask(name, EntryGlobals.getProjectDir().resolve("buildscript").resolve("run"), run);
+        return of(name, (args) -> run.run());
     }
 
     @NotNull
     @Deprecated // Slbrachyura: Improved task system
     public static Task of(@NotNull String name, ThrowingRunnable run) {
-        return new NoArgTask(name, EntryGlobals.getProjectDir().resolve("buildscript").resolve("run"), run);
+        if (run == null) {
+            throw new NullPointerException("run may not be null");
+        }
+        return new TaskBuilder(name, EntryGlobals.getProjectDir().resolve("buildscript").resolve("run"))
+                .build(run);
     }
 
     @NotNull
     @Deprecated // Slbrachyura: Improved task system
     public static Task of(@NotNull String name, Consumer<String[]> run) {
-        return new TaskWithArgs(name, EntryGlobals.getProjectDir().resolve("buildscript").resolve("run"), run);
+        if (run == null) {
+            throw new NullPointerException("run may not be null");
+        }
+        return new TaskBuilder(name, EntryGlobals.getProjectDir().resolve("buildscript").resolve("run"))
+                .build(run);
     }
 
     /**
@@ -285,58 +302,4 @@ public abstract class Task {
      * @param args The arguments to pass to the task
      */
     public abstract void doTask(String[] args);
-
-    @Deprecated // Slbrachyura: Replaced with TaskBuilder
-    static class FailableNoArgTask extends Task {
-        final BooleanSupplier runnable;
-
-        FailableNoArgTask(@NotNull String name, @NotNull Path workingDir, BooleanSupplier runnable) {
-            super(name, workingDir);
-            this.runnable = runnable;
-        }
-
-        @Override
-        public void doTask(String[] args) {
-            if (!runnable.getAsBoolean()) throw new TaskFailedException("Task returned false");
-        }
-    }
-
-    @Deprecated // Slbrachyura: Replaced with TaskBuilder
-    static class NoArgTask extends Task {
-        final ThrowingRunnable runnable;
-
-        NoArgTask(@NotNull String name, @NotNull Path workingDir, Runnable runnable) {
-            super(name, workingDir);
-            this.runnable = () -> runnable.run();
-        }
-
-        NoArgTask(@NotNull String name, @NotNull Path workingDir, ThrowingRunnable runnable) {
-            super(name, workingDir);
-            this.runnable = runnable;
-        }
-
-        @Override
-        public void doTask(String[] args) {
-            try {
-                runnable.run();
-            } catch (Exception e) {
-                throw new TaskFailedException("Task failed to execute!", e);
-            }
-        }
-    }
-
-    @Deprecated // Slbrachyura: Replaced with TaskBuilder
-    static class TaskWithArgs extends Task {
-        final Consumer<String[]> task;
-
-        TaskWithArgs(@NotNull String name, @NotNull Path workingDir, Consumer<String[]> task) {
-            super(name, workingDir);
-            this.task = task;
-        }
-
-        @Override
-        public void doTask(String[] args) {
-            task.accept(args);
-        }
-    }
 }

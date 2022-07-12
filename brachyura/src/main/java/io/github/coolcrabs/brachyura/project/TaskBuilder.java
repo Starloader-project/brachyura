@@ -38,6 +38,9 @@ public class TaskBuilder {
     @Nullable
     private List<String> vmArgs = null;
 
+    @Nullable
+    private Integer javaVersion = null;
+
     @NotNull
     private Path workingDir;
 
@@ -87,7 +90,12 @@ public class TaskBuilder {
             vmArgs = defaults.getIdeRunConfigVMArgs();
         }
 
-        return new Task(name, defaults.getIdeRunConfigJavaVersion(), mainClass, workingDir, vmArgs, args, resourcePath, classpath) {
+        Integer javaVersion = this.javaVersion;
+        if (javaVersion == null) {
+            javaVersion = defaults.getIdeRunConfigJavaVersion();
+        }
+
+        return new Task(name, javaVersion, mainClass, workingDir, vmArgs, args, resourcePath, classpath) {
             @Override
             public void doTask(String[] args) {
                 action.accept(args);
@@ -124,39 +132,52 @@ public class TaskBuilder {
         });
     }
 
+    @NotNull
     @Contract(mutates = "this", pure = false, value = "_ -> this")
     public TaskBuilder withArgs(@NotNull List<String> args) {
         this.args = args;
         return this;
     }
 
+    @NotNull
     @Contract(mutates = "this", pure = false, value = "_ -> this")
     public TaskBuilder withClasspath(@NotNull List<Path> classpath) {
         this.classpath = classpath;
         return this;
     }
 
+    @NotNull
     @Contract(mutates = "this", pure = false, value = "_ -> this")
     public TaskBuilder withMainClass(@NotNull String main) {
         this.mainClass = main;
         return this;
     }
 
+    @NotNull
     @Contract(mutates = "this", pure = false, value = "_ -> this")
     public TaskBuilder withResourcePath(@NotNull List<Path> resourcePath) {
         this.resourcePath = resourcePath;
         return this;
     }
 
+    @NotNull
     @Contract(mutates = "this", pure = false, value = "_ -> this")
     public TaskBuilder withVMArgs(@NotNull List<String> vmArgs) {
         this.vmArgs = vmArgs;
         return this;
     }
 
+    @NotNull
     @Contract(mutates = "this", pure = false, value = "_ -> this")
     public TaskBuilder withWorkingDirectory(@NotNull Path workingDir) {
         this.workingDir = workingDir;
+        return this;
+    }
+
+    @NotNull
+    @Contract(mutates = "this", pure = false, value = "_ -> this")
+    public TaskBuilder withJavaVersion(int version) {
+        this.javaVersion = version;
         return this;
     }
 }

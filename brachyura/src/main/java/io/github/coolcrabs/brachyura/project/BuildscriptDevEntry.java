@@ -13,6 +13,9 @@ import io.github.coolcrabs.brachyura.plugins.Plugins;
 
 class BuildscriptDevEntry {
     public static void main(String[] args) throws Throwable {
+        if (args.length < 3) {
+            throw new IllegalStateException("Need at least 3 arguments. Arguments: " + Arrays.toString(args));
+        }
         List<Plugin> plugins = Plugins.getPlugins();
         for (Plugin plugin : plugins) {
             plugin.onEntry();
