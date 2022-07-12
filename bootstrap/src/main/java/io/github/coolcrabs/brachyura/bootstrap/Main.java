@@ -117,6 +117,10 @@ public class Main {
         }
         URL url = new URL(path);
         if ("file".equals(url.getProtocol())) {
+            if (!Boolean.getBoolean("de.geolykt.starloader.brachyura.bootstrap.supressFileComplaints")) {
+                System.setProperty("de.geolykt.starloader.brachyura.bootstrap.supressFileComplaints", "true");
+                System.out.println("Warning: Buildscript dependencies are being linked to through using an absolute path. As such this install may not work on other systems!");
+            }
             return Paths.get(url.toURI()); // For debug usage
         }
         Path target = BOOTSTRAP_DIR.resolve(fileName);
