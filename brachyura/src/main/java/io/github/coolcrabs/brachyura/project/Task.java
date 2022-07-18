@@ -11,6 +11,7 @@ import java.util.function.Consumer;
 import org.jetbrains.annotations.NotNull;
 
 import io.github.coolcrabs.brachyura.exception.TaskFailedException;
+import io.github.coolcrabs.brachyura.ide.source.SourceLookupEntry;
 import io.github.coolcrabs.brachyura.util.ThrowingRunnable;
 
 /**
@@ -20,6 +21,16 @@ import io.github.coolcrabs.brachyura.util.ThrowingRunnable;
  * <p>With Slbrachyura, finer control is given with latter functionality while not being very convoluted to use.
  */
 public abstract class Task {
+
+    /**
+     * The list of source lookup entries that are used in debug runs.
+     * As of now, this feature is only supported for the eclipse IDE.
+     * Contributions to make it work on other IDEs are welcome.
+     *
+     * @since 0.90.5
+     */
+    @NotNull
+    private final List<SourceLookupEntry> ideDebugConfigSourceLookupEntries;
 
     @NotNull
     public final String name;
@@ -48,6 +59,18 @@ public abstract class Task {
 
     @NotNull
     private static final String DEFAULT_MAIN_CLASS = "io.github.coolcrabs.brachyura.project.BuildscriptDevEntry";
+
+    /**
+     * Obtains the list of source lookup entries that are used in debug runs.
+     * As of now, this feature is only supported for the eclipse IDE.
+     * Contributions to make it work on other IDEs are welcome.
+     *
+     * @since 0.90.5
+     */
+    @NotNull
+    public List<SourceLookupEntry> getIdeDebugConfigSourceLookupEntries() {
+        return ideDebugConfigSourceLookupEntries;
+    }
 
     /**
      * Obtains the name of the task. Used in the CLI as the task name and used in IDE run configuration files for
@@ -245,10 +268,10 @@ public abstract class Task {
      * @param projectPath The path to the project directory
      */
     Task(@NotNull String name, @NotNull Path workingDirectory, @NotNull Path projectPath) {
-        this(name, DEFAULT_JAVA_VERSION, DEFAULT_MAIN_CLASS, workingDirectory, new ArrayList<>(), getDefaultArgs(name, projectPath), new ArrayList<>(), getDefaultClasspath());
+        this(name, DEFAULT_JAVA_VERSION, DEFAULT_MAIN_CLASS, workingDirectory, new ArrayList<>(), getDefaultArgs(name, projectPath), new ArrayList<>(), getDefaultClasspath(), new ArrayList<>());
     }
 
-    Task(@NotNull String name, int javaVer, @NotNull String mainClass, @NotNull Path workingDir, @NotNull List<String> vmArgs, @NotNull List<String> args, @NotNull List<Path> resourcePath, @NotNull List<Path> classPath) {
+    Task(@NotNull String name, int javaVer, @NotNull String mainClass, @NotNull Path workingDir, @NotNull List<String> vmArgs, @NotNull List<String> args, @NotNull List<Path> resourcePath, @NotNull List<Path> classPath, @NotNull List<SourceLookupEntry> ideDebugConfigSourceLookupEntries) {
         this.name = name;
         this.ideRunConfigJavaVersion = javaVer;
         this.ideRunConfigMainClass = mainClass;
@@ -257,6 +280,7 @@ public abstract class Task {
         this.ideRunConfigClasspath = classPath;
         this.ideRunConfigResourcepath = resourcePath;
         this.ideRunConfigWorkingDir = workingDir;
+        this.ideDebugConfigSourceLookupEntries = ideDebugConfigSourceLookupEntries;
     }
 
     @NotNull

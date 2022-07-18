@@ -19,6 +19,7 @@ import org.jetbrains.annotations.NotNull;
 import com.google.gson.stream.JsonWriter;
 
 import io.github.coolcrabs.brachyura.dependency.JavaJarDependency;
+import io.github.coolcrabs.brachyura.ide.source.SourceLookupEntry;
 import io.github.coolcrabs.brachyura.project.Task;
 import io.github.coolcrabs.brachyura.util.AtomicFile;
 import io.github.coolcrabs.brachyura.util.JvmUtil;
@@ -30,8 +31,8 @@ import io.github.coolcrabs.brachyura.util.XmlUtil.FormattedXMLStreamWriter;
 public enum Eclipse implements Ide {
     INSTANCE;
 
-    private static final String JDT_JRE_CONTAINER_KEY = "org.eclipse.jdt.launching.JRE_CONTAINER";
-    private static final String JDT_JRE_CONTAINER_JVM = JDT_JRE_CONTAINER_KEY + "/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-";
+    public static final String JDT_JRE_CONTAINER_KEY = "org.eclipse.jdt.launching.JRE_CONTAINER";
+    public static final String JDT_JRE_CONTAINER_JVM = JDT_JRE_CONTAINER_KEY + "/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-";
 
     @Override
     @NotNull
@@ -223,6 +224,10 @@ public enum Eclipse implements Ide {
                             w.newline();
                         w.writeEndElement();
                         w.newline();
+                        stringAttribute(w, "org.eclipse.debug.core.source_locator_id", "org.eclipse.jdt.launching.sourceLocator.JavaSourceLookupDirector");
+                        w.newline();
+                        stringAttribute(w, "org.eclipse.debug.core.source_locator_memento", sourceLookupValue(task.getIdeDebugConfigSourceLookupEntries()));
+                        w.newline();
                         booleanAttribute(w, "org.eclipse.jdt.launching.ATTR_ATTR_USE_ARGFILE", false);
                         w.newline();
                         booleanAttribute(w, "org.eclipse.jdt.launching.ATTR_SHOW_CODEDETAILS_IN_EXCEPTION_MESSAGES", false);
@@ -315,6 +320,29 @@ public enum Eclipse implements Ide {
             w.writeAttribute("path", "5"); // ???
             w.writeAttribute("type", "1"); // ???
             w.newline();
+            w.writeEndDocument();
+        }
+        return writer.toString();
+    }
+
+    String sourceLookupValue(@NotNull List<SourceLookupEntry> sources) throws XMLStreamException {
+        StringWriter writer = new StringWriter();
+        try (FormattedXMLStreamWriter w = XmlUtil.newStreamWriter(writer)) {
+            w.writeStartDocument("UTF-8", "1.0");
+            w.writeStartElement("sourceLookupDirector");
+                w.writeStartElement("sourceContainers");
+                w.writeAttribute("duplicates", "false");
+                    for (SourceLookupEntry sourceEntry : sources) {
+                        w.writeEmptyElement("container");
+                        w.writeAttribute("memento", sourceEntry.getEclipseJDTValue());
+                        w.writeAttribute("typeId", sourceEntry.getEclipseJDTType());
+                    }
+                    w.writeEmptyElement("container");
+                    w.writeAttribute("memento", "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?><default/>");
+                    w.writeAttribute("typeId", "org.eclipse.debug.core.containerType.default");
+                    w.unindent();
+                w.writeEndElement();
+            w.writeEndElement();
             w.writeEndDocument();
         }
         return writer.toString();

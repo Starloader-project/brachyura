@@ -16,6 +16,7 @@ public abstract class BuildModule {
         return 8;
     }
 
+    @NotNull
     public abstract String getModuleName();
 
     @NotNull

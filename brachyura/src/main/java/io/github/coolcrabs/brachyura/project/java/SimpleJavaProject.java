@@ -83,6 +83,7 @@ public abstract class SimpleJavaProject extends BaseJavaProject {
         }
 
         @Override
+        @NotNull
         public String getModuleName() {
             return getId().artifactId;
         }

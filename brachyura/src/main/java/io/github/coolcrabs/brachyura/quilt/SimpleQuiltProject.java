@@ -163,6 +163,7 @@ public abstract class SimpleQuiltProject extends SimpleFabricProject {
         }
 
         @Override
+        @NotNull
         public String getModuleName() {
             return getModId();
         }

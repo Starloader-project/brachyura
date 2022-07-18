@@ -213,6 +213,7 @@ public abstract class SimpleFabricProject extends BaseJavaProject {
         }
 
         @Override
+        @NotNull
         public String getModuleName() {
             return getModId();
         }
