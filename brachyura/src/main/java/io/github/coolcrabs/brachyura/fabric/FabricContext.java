@@ -22,6 +22,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -371,7 +372,7 @@ public abstract class FabricContext {
         }
         try {
             List<ModDependency> unmapped = modDependencies.get();
-            if (unmapped == null || unmapped.isEmpty()) return Collections.emptyList();
+            if (Objects.isNull(unmapped) || unmapped.isEmpty()) return Collections.emptyList();
             List<RemapInfo> remapinfo = new ArrayList<>(unmapped.size());
             List<ModDependency> remapped = new ArrayList<>(unmapped.size());
             MessageDigest dephasher = MessageDigestUtil.messageDigest(MessageDigestUtil.SHA256);

@@ -93,6 +93,9 @@ public abstract class SimpleQuiltProject extends SimpleFabricProject {
                     break;
                 }
             }
+            if (qmj == null) {
+                throw new IllegalStateException("Unable to find the quilt.mod.json file in the resource directory.");
+            }
             try (BufferedReader reader = PathUtil.newBufferedReader(qmj)) {
                 quiltModJson = gson.fromJson(reader, JsonObject.class);
             }
