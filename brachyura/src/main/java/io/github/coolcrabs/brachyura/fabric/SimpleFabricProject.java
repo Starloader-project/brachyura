@@ -76,6 +76,15 @@ public abstract class SimpleFabricProject extends BaseJavaProject {
         return new Path[]{getProjectDir().resolve("src").resolve("main").resolve("resources")};
     }
 
+    /**
+     * The list of dependencies that should be JIJ'd into the jar.
+     *
+     * <p>Note that adding dependencies to this list alone may not impact the build classpath
+     * as well as the runtime classpath if launched via the "runServer"/"runClient" tasks.
+     *
+     * <p>Therefore these dependencies (whether they are mods or not) should also be added through the
+     * conventional route of {@link #getModDependencies(ModDependencyCollector)}.
+     */
     protected ArrayList<JavaJarDependency> jijList = new ArrayList<>();
 
     @Nullable

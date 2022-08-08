@@ -5,13 +5,15 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import net.fabricmc.mappingio.tree.MappingTree;
 
 import io.github.coolcrabs.accesswidener.AccessWidener;
 import io.github.coolcrabs.accesswidener.AccessWidenerReader;
@@ -26,7 +28,6 @@ import io.github.coolcrabs.brachyura.minecraft.VersionMeta;
 import io.github.coolcrabs.brachyura.util.Lazy;
 import io.github.coolcrabs.brachyura.util.PathUtil;
 import io.github.coolcrabs.brachyura.util.Util;
-import net.fabricmc.mappingio.tree.MappingTree;
 
 public abstract class SimpleQuiltProject extends SimpleFabricProject {
     @Override
