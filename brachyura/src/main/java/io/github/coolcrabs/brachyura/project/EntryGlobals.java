@@ -8,14 +8,14 @@ import java.util.List;
 
 import org.jetbrains.annotations.NotNull;
 
-class EntryGlobals {
+public class EntryGlobals { // Slbrachyura: Make EntryGlobals freely accessible in a read-only manner
     private EntryGlobals() { }
 
     private static Path projectDir;
     private static List<Path> buildscriptClasspath;
 
     @NotNull
-    static List<Path> getCompileDependencies(boolean performFallback) {
+    public static List<Path> getCompileDependencies(boolean performFallback) {
         List<Path> buildscriptClasspath = EntryGlobals.buildscriptClasspath;
         if (buildscriptClasspath == null) {
             if (performFallback) {
@@ -41,7 +41,7 @@ class EntryGlobals {
     }
 
     @NotNull
-    static Path getProjectDir() {
+    public static Path getProjectDir() {
         Path projectDir = EntryGlobals.projectDir;
         if (projectDir == null) {
             throw new IllegalStateException("The project directory was not set. Did you call BuildscriptDevEntry#main or BrachyuraEntry#main?");

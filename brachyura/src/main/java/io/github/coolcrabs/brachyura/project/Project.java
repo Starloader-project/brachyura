@@ -12,7 +12,7 @@ import org.jetbrains.annotations.Nullable;
 import io.github.coolcrabs.brachyura.project.java.BaseJavaProject;
 import io.github.coolcrabs.brachyura.util.PathUtil;
 
-public class Project {
+public abstract class Project { // Slbrachyura: Make the Project class abstract
     BaseJavaProject buildscriptIdeProject;
 
     @Deprecated // Slbrachyura: Deprecate task handling with consumers

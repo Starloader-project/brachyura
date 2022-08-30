@@ -126,14 +126,14 @@ public class BrachyuraEntry {
             interactiveSetup(args, projectDir, classpath);
             return;
         }
+        EntryGlobals.setProjectDir(projectDir);
+        EntryGlobals.setCompileDependencies(classpath);
         int exitcode = 0;
         List<Plugin> plugins = Plugins.getPlugins();
         for (Plugin plugin : plugins) {
             plugin.onEntry();
         }
         try {
-            EntryGlobals.setProjectDir(projectDir);
-            EntryGlobals.setCompileDependencies(classpath);
             BuildscriptProject buildscriptProject = new BuildscriptProject();
             // Slbrachyura start: Improved task system
             if (args.length >= 1 && "buildscript".equalsIgnoreCase(args[0])) {

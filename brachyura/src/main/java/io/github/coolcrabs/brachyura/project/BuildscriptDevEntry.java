@@ -16,15 +16,15 @@ class BuildscriptDevEntry {
         if (args.length < 3) {
             throw new IllegalStateException("Need at least 3 arguments. Arguments: " + Arrays.toString(args));
         }
+        EntryGlobals.setProjectDir(Paths.get(args[0]));
+        // Slbrachyura: Suppress null warning by explicitly declaring generics
+        EntryGlobals.setCompileDependencies(Arrays.stream(args[1].split(File.pathSeparator)).map(Paths::get).collect(Collectors.<Path>toList()));
+
         List<Plugin> plugins = Plugins.getPlugins();
         for (Plugin plugin : plugins) {
             plugin.onEntry();
         }
         try {
-            EntryGlobals.setProjectDir(Paths.get(args[0]));
-            // Slbrachyura: Suppress null warning by explicitly declaring generics
-            EntryGlobals.setCompileDependencies(Arrays.stream(args[1].split(File.pathSeparator)).map(Paths::get).collect(Collectors.<Path>toList()));
-
             Project buildscript;
             try {
                 buildscript = (Project) Class.forName("Buildscript").getDeclaredConstructor().newInstance();
