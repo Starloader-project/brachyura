@@ -2,12 +2,17 @@ package io.github.coolcrabs.brachyura.project;
 
 import java.io.InputStream;
 import java.lang.reflect.Constructor;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.function.Supplier;
 
 import org.jetbrains.annotations.NotNull;
@@ -45,8 +50,41 @@ class BuildscriptProject extends BaseJavaProject {
             if (concreteBuildscriptInstance instanceof DescriptiveBuildscriptName) {
                 ideBuildscriptName = ((DescriptiveBuildscriptName) concreteBuildscriptInstance).getBuildscriptName();
             }
+        } else if (properties.get().containsKey("name")) {
+            ideBuildscriptName = "BScript-" + properties.get().getProperty("name");
         }
         return ideBuildscriptName;
+    }
+    // Slbrachyura end
+
+    public final Lazy<Properties> properties = new Lazy<>(this::createProperties);
+
+    Properties createProperties() {
+        try {
+            Path file = getProjectDir().resolve("buildscript.properties");
+            Properties properties0 = new Properties();
+            if (Files.exists(file)) {
+                try (BufferedReader r = Files.newBufferedReader(file)) {
+                    properties0.load(r);
+                }
+            } else {
+                Logger.info("Didn't find buildscript.properties; autogenerating it.");
+                // properties0.setProperty("name", super.getProjectDir().getFileName().toString()); // Slbrachyura: We use our own buildscript name system
+                properties0.setProperty("javaVersion", "8");
+                try (BufferedWriter w = Files.newBufferedWriter(file)) {
+                    properties0.store(w, "Brachyura Buildscript Properties");
+                }
+            }
+            return properties0;
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    String getPropOrThrow(String property) {
+        String r = properties.get().getProperty(property);
+        if (r == null) throw new RuntimeException("Missing property " + property + " in buildscript.properties");
+        return r;
     }
 
     @Override
@@ -59,7 +97,7 @@ class BuildscriptProject extends BaseJavaProject {
         if (buildscriptInstance.isPresent()) {
             tasks.addAll(buildscriptInstance.get().getTasks());
         }
-        // Slbrachyura end
+        int javaVersion = Integer.parseInt(getPropOrThrow("javaVersion"));
 
         return new @NotNull IdeModule[] {
             new IdeModule.IdeModuleBuilder()
@@ -68,8 +106,10 @@ class BuildscriptProject extends BaseJavaProject {
                 .sourcePath(getSrcDir())
                 .dependencies(this::getIdeDependencies)
                 .withTasks(tasks)
+                .javaVersion(javaVersion)
             .build()
         };
+        // Slbrachyura end
     }
 
     public final Lazy<Optional<Project>> project = new Lazy<>(this::createProject);
@@ -96,11 +136,12 @@ class BuildscriptProject extends BaseJavaProject {
     }
 
     public ClassLoader getBuildscriptClassLoader() {
+        int javaVersion = Integer.parseInt(getPropOrThrow("javaVersion"));
         try {
             JavaCompilationResult compilation = new JavaCompilation()
                 .addSourceDir(getSrcDir())
                 .addClasspath(getCompileDependencies())
-                .addOption(JvmUtil.compileArgs(JvmUtil.CURRENT_JAVA_VERSION, 8)) // TODO: Make configurable - somehow
+                .addOption(JvmUtil.compileArgs(JvmUtil.CURRENT_JAVA_VERSION, javaVersion))
                 .compile();
             BuildscriptClassloader r = new BuildscriptClassloader(BuildscriptProject.class.getClassLoader());
             compilation.getInputs(r);
