@@ -10,6 +10,7 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import io.github.coolcrabs.brachyura.compiler.java.JavaCompilation;
+import io.github.coolcrabs.brachyura.compiler.java.JavaCompilationOptions;
 import io.github.coolcrabs.brachyura.compiler.java.JavaCompilationResult;
 import io.github.coolcrabs.brachyura.dependency.JavaJarDependency;
 import io.github.coolcrabs.brachyura.ide.IdeModule;

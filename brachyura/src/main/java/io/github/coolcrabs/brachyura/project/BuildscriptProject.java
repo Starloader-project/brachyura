@@ -15,12 +15,14 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.function.Supplier;
 
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.tinylog.Logger;
 
 import io.github.coolcrabs.brachyura.compiler.java.CompilationFailedException;
 import io.github.coolcrabs.brachyura.compiler.java.JavaCompilation;
+import io.github.coolcrabs.brachyura.compiler.java.JavaCompilationOptions;
 import io.github.coolcrabs.brachyura.compiler.java.JavaCompilationResult;
 import io.github.coolcrabs.brachyura.dependency.JavaJarDependency;
 import io.github.coolcrabs.brachyura.ide.IdeModule;
@@ -35,6 +37,10 @@ import io.github.coolcrabs.brachyura.util.StreamUtil;
 import io.github.coolcrabs.brachyura.util.Util;
 
 class BuildscriptProject extends BaseJavaProject {
+
+    @NotNull
+    private final JavaCompilationOptions compileOptions = new JavaCompilationOptions();
+
     @Override
     @NotNull
     public Path getProjectDir() {
@@ -138,10 +144,10 @@ class BuildscriptProject extends BaseJavaProject {
     public ClassLoader getBuildscriptClassLoader() {
         int javaVersion = Integer.parseInt(getPropOrThrow("javaVersion"));
         try {
-            JavaCompilationResult compilation = new JavaCompilation()
+            JavaCompilationResult compilation = getCompileOptions().commit(new JavaCompilation()
                 .addSourceDir(getSrcDir())
                 .addClasspath(getCompileDependencies())
-                .addOption(JvmUtil.compileArgs(JvmUtil.CURRENT_JAVA_VERSION, javaVersion))
+                .addOption(JvmUtil.compileArgs(JvmUtil.CURRENT_JAVA_VERSION, javaVersion)))
                 .compile();
             BuildscriptClassloader r = new BuildscriptClassloader(BuildscriptProject.class.getClassLoader());
             compilation.getInputs(r);
@@ -168,6 +174,21 @@ class BuildscriptProject extends BaseJavaProject {
     @NotNull
     public List<Path> getCompileDependencies() {
         return EntryGlobals.getCompileDependencies(false);
+    }
+
+    /**
+     * Obtains the options that are passed to the compiler when invoked via {@link #build()}.
+     * The returned object can be mutated and will share the state used in {@link #build()}.
+     * {@link #build()} uses this method and not the underlying field to obtain the compilation
+     * options so overriding this method is valid, albeit potentially not viable.
+     *
+     * @return The compilation options
+     */
+    @NotNull
+    @Contract(pure = true)
+    @Override
+    public JavaCompilationOptions getCompileOptions() {
+        return this.compileOptions;
     }
 
     static class BuildscriptClassloader extends ClassLoader implements ProcessingSink {

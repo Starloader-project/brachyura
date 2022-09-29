@@ -129,7 +129,7 @@ public class BrachyuraEntry {
         EntryGlobals.setProjectDir(projectDir);
         EntryGlobals.setCompileDependencies(classpath);
         int exitcode = 0;
-        List<Plugin> plugins = Plugins.getPlugins();
+        List<@NotNull Plugin> plugins = Plugins.getPlugins();
         for (Plugin plugin : plugins) {
             plugin.onEntry();
         }

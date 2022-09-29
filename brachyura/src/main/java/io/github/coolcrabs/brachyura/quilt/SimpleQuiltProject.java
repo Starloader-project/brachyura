@@ -17,6 +17,7 @@ import net.fabricmc.mappingio.tree.MappingTree;
 
 import io.github.coolcrabs.accesswidener.AccessWidener;
 import io.github.coolcrabs.accesswidener.AccessWidenerReader;
+import io.github.coolcrabs.brachyura.compiler.java.JavaCompilationOptions;
 import io.github.coolcrabs.brachyura.decompiler.BrachyuraDecompiler;
 import io.github.coolcrabs.brachyura.exception.UnknownJsonException;
 import io.github.coolcrabs.brachyura.fabric.FabricContext;
@@ -176,6 +177,12 @@ public abstract class SimpleQuiltProject extends SimpleFabricProject {
         @NotNull
         public Path getModuleRoot() {
             return getProjectDir();
+        }
+
+        @Override
+        @NotNull
+        protected JavaCompilationOptions getExtraCompileOptions() {
+            return SimpleQuiltProject.this.getCompileOptions();
         }
     }
 }

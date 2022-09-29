@@ -171,6 +171,7 @@ public abstract class SimpleJavaProject extends BaseJavaProject {
      */
     @NotNull
     @Contract(pure = true)
+    @Override
     public JavaCompilationOptions getCompileOptions() {
         return this.compileOptions;
     }

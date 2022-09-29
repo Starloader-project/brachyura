@@ -7,8 +7,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
+import io.github.coolcrabs.brachyura.compiler.java.JavaCompilationOptions;
 import io.github.coolcrabs.brachyura.ide.Ide;
 import io.github.coolcrabs.brachyura.ide.IdeModule;
 import io.github.coolcrabs.brachyura.project.Project;
@@ -81,4 +83,16 @@ public abstract class BaseJavaProject extends Project {
         }
         return resourceDir;
     }
+
+    /**
+     * Obtains the options that are passed to the compiler when invoked via {@link #build()}.
+     * The returned object can be mutated and will share the state used in {@link #build()}.
+     * {@link #build()} uses this method and not the underlying field to obtain the compilation
+     * options so overriding this method is valid, albeit potentially not viable.
+     *
+     * @return The compilation options
+     */
+    @NotNull
+    @Contract(pure = true)
+    public abstract JavaCompilationOptions getCompileOptions();
 }

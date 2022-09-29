@@ -12,9 +12,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import io.github.coolcrabs.brachyura.compiler.java.JavaCompilation;
+import io.github.coolcrabs.brachyura.compiler.java.JavaCompilationOptions;
 import io.github.coolcrabs.brachyura.compiler.java.JavaCompilationResult;
 import io.github.coolcrabs.brachyura.dependency.JavaJarDependency;
 import io.github.coolcrabs.brachyura.ide.IdeModule;
@@ -73,6 +75,10 @@ public abstract class FabricModule extends BuildModule {
 
     public final Lazy<FabricCompilationResult> fabricCompilationResult = new Lazy<>(this::createFabricCompilationResult);
 
+    @NotNull
+    @Contract(pure = true, value = "-> this")
+    protected abstract JavaCompilationOptions getExtraCompileOptions();
+
     protected FabricCompilationResult createFabricCompilationResult() {
         try {
             String mixinOut = "mixinmapout.tiny";
@@ -87,7 +93,8 @@ public abstract class FabricModule extends BuildModule {
                     "-AdefaultObfuscationEnv=brachyura"
                 )
                 .addClasspath(context.getCompileDependencies())
-                .addSourceDir(getSrcDirs());
+                .addSourceDir(getSrcDirs())
+                .addOptions(getExtraCompileOptions());
             for (BuildModule m : getModuleDependencies()) {
                 compilation0.addClasspath(m.compilationOutput.get());
             }

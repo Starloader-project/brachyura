@@ -15,11 +15,13 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import io.github.coolcrabs.accesswidener.AccessWidener;
 import io.github.coolcrabs.accesswidener.AccessWidenerReader;
+import io.github.coolcrabs.brachyura.compiler.java.JavaCompilationOptions;
 import io.github.coolcrabs.brachyura.decompiler.BrachyuraDecompiler;
 import io.github.coolcrabs.brachyura.decompiler.cfr.CfrDecompiler;
 import io.github.coolcrabs.brachyura.dependency.JavaJarDependency;
@@ -45,6 +47,10 @@ import io.github.coolcrabs.brachyura.util.Util;
 import net.fabricmc.mappingio.tree.MappingTree;
 
 public abstract class SimpleFabricProject extends BaseJavaProject {
+
+    @NotNull
+    private final JavaCompilationOptions compileOptions = new JavaCompilationOptions();
+
     public final Lazy<FabricContext> context = new Lazy<>(this::createContext);
     protected FabricContext createContext() {
         return new SimpleFabricContext();
@@ -232,6 +238,12 @@ public abstract class SimpleFabricProject extends BaseJavaProject {
         public Path getModuleRoot() {
             return getProjectDir();
         }
+
+        @Override
+        @NotNull
+        protected JavaCompilationOptions getExtraCompileOptions() {
+            return getCompileOptions();
+        }
     }
 
     @NotNull
@@ -307,5 +319,20 @@ public abstract class SimpleFabricProject extends BaseJavaProject {
     @NotNull
     public Path getBuildJarPath() {
         return getBuildLibsDir().resolve(getModId() + "-" + getVersion() + ".jar");
+    }
+
+    /**
+     * Obtains the options that are passed to the compiler when invoked via {@link #build()}.
+     * The returned object can be mutated and will share the state used in {@link #build()}.
+     * {@link #build()} uses this method and not the underlying field to obtain the compilation
+     * options so overriding this method is valid, albeit potentially not viable.
+     *
+     * @return The compilation options
+     */
+    @NotNull
+    @Contract(pure = true)
+    @Override
+    public JavaCompilationOptions getCompileOptions() {
+        return this.compileOptions;
     }
 }
