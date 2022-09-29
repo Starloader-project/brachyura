@@ -11,12 +11,11 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.security.DigestInputStream;
 
-import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.tinylog.Logger;
 
+import io.github.coolcrabs.brachyura.util.MessageDigestUtil;
 import io.github.coolcrabs.brachyura.util.NetUtil;
 import io.github.coolcrabs.brachyura.util.PathUtil;
 
@@ -77,21 +76,21 @@ public class AuthentificatedMavenPublishRepository implements PublishRepository 
             throw new IOException("Invalid URI: " + trailSlashRepo + ".", ex);
         }
 
-        try (DigestInputStream digestInSha256 = new DigestInputStream(source, DigestUtils.getSha256Digest())) {
-            try (DigestInputStream digestInMd5 = new DigestInputStream(digestInSha256, DigestUtils.getMd5Digest())) {
-                try (DigestInputStream digestInSha1 = new DigestInputStream(digestInMd5, DigestUtils.getSha1Digest())) {
+        try (DigestInputStream digestInSha256 = new DigestInputStream(source, MessageDigestUtil.messageDigest("SHA-256"))) {
+            try (DigestInputStream digestInMd5 = new DigestInputStream(digestInSha256,  MessageDigestUtil.messageDigest("MD5"))) {
+                try (DigestInputStream digestInSha1 = new DigestInputStream(digestInMd5,  MessageDigestUtil.messageDigest("SHA-1"))) {
                     URL url = basePath.resolve(baseFileName).toURL();
                     Logger.info("Publishing " + url.toString());
                     NetUtil.put(url, digestInSha1, username, password);
-                    byte[] checksum = Hex.encodeHexString(digestInMd5.getMessageDigest().digest()).getBytes(StandardCharsets.UTF_8);
+                    byte[] checksum = MessageDigestUtil.toHexHash(digestInMd5.getMessageDigest().digest()).getBytes(StandardCharsets.UTF_8);
                     url = basePath.resolve(baseFileName + ".sha1").toURL();
                     NetUtil.put(url, new ByteArrayInputStream(checksum), username, password);
                 }
-                byte[] checksum = Hex.encodeHexString(digestInMd5.getMessageDigest().digest()).getBytes(StandardCharsets.UTF_8);
+                byte[] checksum = MessageDigestUtil.toHexHash(digestInMd5.getMessageDigest().digest()).getBytes(StandardCharsets.UTF_8);
                 URL checksumURL = basePath.resolve(baseFileName + ".md5").toURL();
                 NetUtil.put(checksumURL, new ByteArrayInputStream(checksum), username, password);
             }
-            byte[] checksum = Hex.encodeHexString(digestInSha256.getMessageDigest().digest()).getBytes(StandardCharsets.UTF_8);
+            byte[] checksum = MessageDigestUtil.toHexHash(digestInSha256.getMessageDigest().digest()).getBytes(StandardCharsets.UTF_8);
             URL checksumURL = basePath.resolve(baseFileName + ".sha256").toURL();
             NetUtil.put(checksumURL, new ByteArrayInputStream(checksum), username, password);
         }

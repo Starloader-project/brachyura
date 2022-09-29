@@ -27,6 +27,7 @@ public class PathUtil {
     private PathUtil() { }
 
     public static final Path HOME = Paths.get(System.getProperty("user.home"));
+    @NotNull
     public static final Path CWD = Paths.get("").toAbsolutePath();
     private static Path brachyuraPath;
 

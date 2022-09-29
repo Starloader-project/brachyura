@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -163,9 +164,16 @@ class BuildscriptProject extends BaseJavaProject {
         List<Path> compileDeps = getCompileDependencies();
         ArrayList<JavaJarDependency> result = new ArrayList<>(compileDeps.size());
         for (Path p : compileDeps) {
-            Path source = p.resolveSibling(p.getFileName().toString().replace(".jar", "-sources.jar"));
-            if (!Files.exists(source)) source = null;
-            // Not the most ideal solution, but it ought to do
+            String pName = p.getFileName().toString();
+            Path source = p.resolveSibling(p.getFileName().toString().replace(".jar", "-sources.jar")); // Slbrachyura: use #resolveSibling to prevent NPE
+            if (!Files.exists(source) || !pName.endsWith(".jar")) {
+                String bsrc = System.getProperty("brachyurasrcdir");
+                if (bsrc != null) {
+                    source = Paths.get(bsrc);
+                } else {
+                    source = null;
+                }
+            }
             result.add(new JavaJarDependency(p, source, new MavenId("unknown", p.toFile().getName().split("\\.")[0], "undefined")));
         }
         return result;

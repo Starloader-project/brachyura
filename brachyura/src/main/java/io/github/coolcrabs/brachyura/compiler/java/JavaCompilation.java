@@ -19,9 +19,11 @@ import javax.tools.ToolProvider;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+
 import org.tinylog.Logger;
 
 import io.github.coolcrabs.brachyura.processing.ProcessingSource;
+import io.github.coolcrabs.brachyura.util.LoggerWriter;
 import io.github.coolcrabs.brachyura.util.Util;
 
 public class JavaCompilation {

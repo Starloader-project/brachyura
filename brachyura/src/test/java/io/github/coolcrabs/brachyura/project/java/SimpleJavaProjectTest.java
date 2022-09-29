@@ -4,6 +4,11 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
+import io.github.coolcrabs.brachyura.TestUtil;
+import io.github.coolcrabs.brachyura.dependency.JavaJarDependency;
+import io.github.coolcrabs.brachyura.ide.IdeModule;
+import io.github.coolcrabs.brachyura.maven.MavenId;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -11,12 +16,8 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import io.github.coolcrabs.brachyura.dependency.JavaJarDependency;
-import io.github.coolcrabs.brachyura.ide.IdeModule;
-import io.github.coolcrabs.brachyura.maven.MavenId;
 import io.github.coolcrabs.brachyura.maven.MavenResolver;
 import io.github.coolcrabs.brachyura.project.TaskBuilder;
-import io.github.coolcrabs.brachyura.util.PathUtil;
 
 class SimpleJavaProjectTest {
     @Test
@@ -36,7 +37,7 @@ class SimpleJavaProjectTest {
             @Override
             @NotNull
             public Path getProjectDir() {
-                return PathUtil.CWD.resolveSibling("testprogram");
+                return TestUtil.ROOT.resolve("testprogram");
             }
 
             @Override
@@ -54,6 +55,7 @@ class SimpleJavaProjectTest {
             @Override
             public SimpleJavaModule createProjectModule() {
                 return new SimpleJavaProjectModule() {
+                    @SuppressWarnings("null")
                     @Override
                     @NotNull
                     public IdeModule ideModule() {

@@ -134,6 +134,9 @@ public abstract class SimpleJavaProject extends BaseJavaProject {
         getPublishTasks().forEach(p);
     }
 
+    @Deprecated
+    public Lazy<@NotNull JavaJarDependency> buildResult = new io.github.coolcrabs.brachyura.util.DementiaLazy<>(this::build);
+
     @Override
     @NotNull
     public IdeModule @NotNull[] getIdeModules() {

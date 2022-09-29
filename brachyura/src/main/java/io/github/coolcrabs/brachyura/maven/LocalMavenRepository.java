@@ -9,14 +9,13 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.security.DigestInputStream;
 
-import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.tinylog.Logger;
 
 import io.github.coolcrabs.brachyura.maven.publish.PublicationId;
 import io.github.coolcrabs.brachyura.maven.publish.PublishRepository;
+import io.github.coolcrabs.brachyura.util.MessageDigestUtil;
 import io.github.coolcrabs.brachyura.util.PathUtil;
 
 /**
@@ -53,17 +52,18 @@ public class LocalMavenRepository extends MavenRepository implements PublishRepo
         Path target = root.resolve(id.toPath());
         Files.createDirectories(target.getParent());
         Logger.info("Publishing " + id.toString() + " to " + target.toAbsolutePath().toString());
-        try (DigestInputStream digestInSha256 = new DigestInputStream(source, DigestUtils.getSha256Digest())) {
-            try (DigestInputStream digestInMd5 = new DigestInputStream(digestInSha256, DigestUtils.getMd5Digest())) {
-                try (DigestInputStream digestInSha1 = new DigestInputStream(digestInMd5, DigestUtils.getSha1Digest())) {
+        try (DigestInputStream digestInSha256 = new DigestInputStream(source, MessageDigestUtil.messageDigest("SHA-256"))) {
+            try (DigestInputStream digestInMd5 = new DigestInputStream(digestInSha256,  MessageDigestUtil.messageDigest("MD5"))) {
+                try (DigestInputStream digestInSha1 = new DigestInputStream(digestInMd5,  MessageDigestUtil.messageDigest("SHA-1"))) {
                     Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
-                    byte[] checksum = Hex.encodeHexString(digestInMd5.getMessageDigest().digest()).getBytes(StandardCharsets.UTF_8);
+                    
+                    byte[] checksum = MessageDigestUtil.toHexHash(digestInMd5.getMessageDigest().digest()).getBytes(StandardCharsets.UTF_8);
                     Files.write(target.resolveSibling(target.getFileName() + ".sha1"), checksum);
                 }
-                byte[] checksum = Hex.encodeHexString(digestInMd5.getMessageDigest().digest()).getBytes(StandardCharsets.UTF_8);
+                byte[] checksum = MessageDigestUtil.toHexHash(digestInMd5.getMessageDigest().digest()).getBytes(StandardCharsets.UTF_8);
                 Files.write(target.resolveSibling(target.getFileName() + ".md5"), checksum);
             }
-            byte[] checksum = Hex.encodeHexString(digestInSha256.getMessageDigest().digest()).getBytes(StandardCharsets.UTF_8);
+            byte[] checksum = MessageDigestUtil.toHexHash(digestInSha256.getMessageDigest().digest()).getBytes(StandardCharsets.UTF_8);
             Files.write(target.resolveSibling(target.getFileName() + ".sha256"), checksum);
         }
     }

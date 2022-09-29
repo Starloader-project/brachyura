@@ -144,7 +144,7 @@ public class BrachyuraEntry {
                             if (!searchingTasks) {
                                 throw new IllegalStateException("There are multiple tasks with the name \"" + task.name + "\".");
                             }
-                            task.doTask(Arrays.copyOfRange(args, 2, args.length));
+                            task.doTask(Arrays.copyOfRange(args, 2, args.length)); // FIXME potential IOOBE there. Debug.
                             searchingTasks = false;
                         }
                     }
@@ -172,7 +172,7 @@ public class BrachyuraEntry {
                                 if (!searchingTasks) {
                                     throw new IllegalStateException("There are multiple tasks with the name \"" + task.name + "\".");
                                 }
-                                task.doTask(Arrays.copyOfRange(args, 1, args.length));
+                                task.doTask(Arrays.copyOfRange(args, 1, args.length)); // FIXME potential IOOBE there. Debug.
                                 searchingTasks = false;
                             }
                         }

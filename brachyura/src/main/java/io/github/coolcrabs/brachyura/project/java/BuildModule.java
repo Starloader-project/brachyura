@@ -25,5 +25,14 @@ public abstract class BuildModule {
     public final Lazy<ProcessingSource> compilationOutput = new Lazy<>(this::createCompilationOutput);
     protected abstract ProcessingSource createCompilationOutput();
 
+    @Deprecated // use #ideModule instead
+    public final Lazy<IdeModule> ideModule = new Lazy<>(this::createIdeModule);
+
+    @Deprecated // use #ideModule instead
+    protected final IdeModule createIdeModule() {
+        return this.ideModule();
+    }
+
+    @NotNull
     public abstract IdeModule ideModule();
 }

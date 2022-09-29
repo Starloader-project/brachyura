@@ -11,7 +11,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.security.DigestInputStream;
@@ -32,45 +31,6 @@ import org.kohsuke.github.GitHub;
 import org.kohsuke.github.GitHubBuilder;
 
 public class Main {
-
-    static final String ASM_VERSION = "9.3";
-    static final String GSON_VERSION = "2.9.0";
-    static final String JAVAPOET_VERSION = "1.13.0"; // Slbrachyura: Interactive project creation
-    static final String MAPPINGSIO_VERSION = "0.3.0";
-    static final String REMAPPER_VERSION = "0.8.2";
-    static final String TINYLOG_VERSION = "2.4.1";
-
-    static String[] localLibs = new String[] {"fabricmerge", "cfr", "brachyura", "bootstrap", "brachyura-mixin-compile-extensions", "trieharder", "fernutil", "access-widener"};
-    static String[] mavenLibs = new String[] {
-        "https://repo.maven.apache.org/maven2/org/ow2/asm/asm/" + ASM_VERSION + "/asm-" + ASM_VERSION + ".jar",
-        "https://repo.maven.apache.org/maven2/org/ow2/asm/asm/" + ASM_VERSION + "/asm-" + ASM_VERSION + "-sources.jar",
-        "https://repo.maven.apache.org/maven2/org/ow2/asm/asm-analysis/" + ASM_VERSION + "/asm-analysis-" + ASM_VERSION + ".jar",
-        "https://repo.maven.apache.org/maven2/org/ow2/asm/asm-analysis/" + ASM_VERSION + "/asm-analysis-" + ASM_VERSION + "-sources.jar",
-        "https://repo.maven.apache.org/maven2/org/ow2/asm/asm-commons/" + ASM_VERSION + "/asm-commons-" + ASM_VERSION + ".jar",
-        "https://repo.maven.apache.org/maven2/org/ow2/asm/asm-commons/" + ASM_VERSION + "/asm-commons-" + ASM_VERSION + "-sources.jar",
-        "https://repo.maven.apache.org/maven2/org/ow2/asm/asm-tree/" + ASM_VERSION + "/asm-tree-" + ASM_VERSION + ".jar",
-        "https://repo.maven.apache.org/maven2/org/ow2/asm/asm-tree/" + ASM_VERSION + "/asm-tree-" + ASM_VERSION + "-sources.jar",
-        "https://repo.maven.apache.org/maven2/org/ow2/asm/asm-util/" + ASM_VERSION + "/asm-util-" + ASM_VERSION + ".jar",
-        "https://repo.maven.apache.org/maven2/org/ow2/asm/asm-util/" + ASM_VERSION + "/asm-util-" + ASM_VERSION + "-sources.jar",
-        "https://repo.maven.apache.org/maven2/com/google/code/gson/gson/" + GSON_VERSION + "/gson-" + GSON_VERSION + ".jar",
-        "https://repo.maven.apache.org/maven2/com/google/code/gson/gson/" + GSON_VERSION + "/gson-" + GSON_VERSION + "-sources.jar",
-        "https://repo.maven.apache.org/maven2/org/tinylog/tinylog-api/" + TINYLOG_VERSION + "/tinylog-api-" + TINYLOG_VERSION + ".jar",
-        "https://repo.maven.apache.org/maven2/org/tinylog/tinylog-api/" + TINYLOG_VERSION + "/tinylog-api-" + TINYLOG_VERSION + "-sources.jar",
-        "https://repo.maven.apache.org/maven2/org/tinylog/tinylog-impl/" + TINYLOG_VERSION + "/tinylog-impl-" + TINYLOG_VERSION + ".jar",
-        "https://repo.maven.apache.org/maven2/org/tinylog/tinylog-impl/" + TINYLOG_VERSION + "/tinylog-impl-" + TINYLOG_VERSION + "-sources.jar",
-        "https://maven.fabricmc.net/net/fabricmc/mapping-io/" + MAPPINGSIO_VERSION + "/mapping-io-" + MAPPINGSIO_VERSION + ".jar",
-        "https://maven.fabricmc.net/net/fabricmc/mapping-io/" + MAPPINGSIO_VERSION + "/mapping-io-" + MAPPINGSIO_VERSION + "-sources.jar",
-        "https://maven.fabricmc.net/net/fabricmc/tiny-remapper/" + REMAPPER_VERSION + "/tiny-remapper-" + REMAPPER_VERSION + ".jar",
-        "https://maven.fabricmc.net/net/fabricmc/tiny-remapper/" + REMAPPER_VERSION + "/tiny-remapper-" + REMAPPER_VERSION + "-sources.jar",
-        "https://repo.maven.apache.org/maven2/org/jetbrains/annotations/23.0.0/annotations-23.0.0.jar",
-        "https://repo.maven.apache.org/maven2/org/jetbrains/annotations/23.0.0/annotations-23.0.0-sources.jar",
-        "https://repo1.maven.org/maven2/org/apache/httpcomponents/httpclient/4.5.13/httpclient-4.5.13.jar",
-        "https://repo1.maven.org/maven2/org/apache/httpcomponents/httpcore/4.4.15/httpcore-4.4.15.jar",
-        "https://repo1.maven.org/maven2/commons-codec/commons-codec/1.15/commons-codec-1.15.jar",
-        "https://repo1.maven.org/maven2/commons-logging/commons-logging/1.2/commons-logging-1.2.jar",
-        "https://repo1.maven.org/maven2/com/squareup/javapoet/" + JAVAPOET_VERSION + "/javapoet-" + JAVAPOET_VERSION + ".jar" // Slbrachyura: Interactive project creation
-    };
-
     static boolean github = Boolean.parseBoolean(System.getenv("CI"));
     static String commit = github ? getCommitHash() : null;
     static final String GITHUB_TOKEN = System.getenv("GITHUB_TOKEN");
@@ -99,15 +59,13 @@ public class Main {
         }
     }
 
-    public static void main(String[] args) throws Exception {
+    public static void main(Path root, String[] localLibs, String[] mavenLibs) throws Exception {
         if (github) {
             gitHub2 = new GitHubBuilder().withOAuthToken(GITHUB_TOKEN).build();
         }
-        Path workDirectory = Paths.get("").toAbsolutePath();
-        Path outDir = workDirectory.resolve("out");
-        if (Files.isDirectory(outDir)) {
-            deleteDirectory(outDir);
-        }
+        Path workDir = root.toAbsolutePath();
+        Path outDir = workDir.resolve("out");
+        if (Files.isDirectory(outDir)) deleteDirectory(outDir);
         Files.createDirectories(outDir);
 
         Path bootstrapJar = null;
@@ -116,10 +74,10 @@ public class Main {
         try (BufferedWriter bootstrapConfigWriter = Files.newBufferedWriter(boostrapConfig)) {
             bootstrapConfigWriter.write(String.valueOf(0) + "\n");
             for (String lib : localLibs) {
-                Path a = workDirectory.resolveSibling(lib).resolve("target");
+                Path a = workDir.resolveSibling(lib).resolve("build").resolve("libs");
                 Stream<Path> b = Files.walk(a, 1);
                 Path jar = 
-                    b.filter(p -> p.toString().endsWith(".jar") && !p.toString().endsWith("-sources.jar") && !p.toString().endsWith("-javadoc.jar"))
+                    b.filter(p -> p.toString().endsWith(".jar") && !p.toString().endsWith("-sources.jar") && !p.toString().endsWith("-test.jar"))
                     .sorted(Comparator.comparingLong(p -> {
                         try {
                             return Files.getLastModifiedTime(p).toMillis();
