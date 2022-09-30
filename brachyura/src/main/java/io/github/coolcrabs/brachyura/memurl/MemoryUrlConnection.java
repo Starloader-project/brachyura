@@ -13,6 +13,7 @@ class MemoryUrlConnection extends URLConnection {
         super(url);
     }
 
+    @SuppressWarnings("resource")
     @Override
     public void connect() throws IOException {
         if (!connected) {

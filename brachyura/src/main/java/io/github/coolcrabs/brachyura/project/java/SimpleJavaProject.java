@@ -66,13 +66,13 @@ public abstract class SimpleJavaProject extends BaseJavaProject {
 
         @NotNull
         @Override
-        public Path[] getSrcDirs() {
+        public Path @NotNull[] getSrcDirs() {
             return new @NotNull Path[]{getModuleRoot().resolve("src").resolve("main").resolve("java")};
         }
 
         @NotNull
         @Override
-        public Path[] getResourceDirs() {
+        public Path @NotNull[] getResourceDirs() {
             return new @NotNull Path[]{getProjectDir().resolve("src").resolve("main").resolve("resources")};
         }
 

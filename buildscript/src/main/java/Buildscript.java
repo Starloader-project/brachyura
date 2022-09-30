@@ -10,23 +10,23 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import javax.tools.StandardLocation;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
-
 import org.tinylog.Logger;
 
-import io.github.coolcrabs.brachyura.compiler.java.JavaCompilationOptions;
 import io.github.coolcrabs.brachyura.compiler.java.JavaCompilation;
+import io.github.coolcrabs.brachyura.compiler.java.JavaCompilationOptions;
 import io.github.coolcrabs.brachyura.compiler.java.JavaCompilationResult;
 import io.github.coolcrabs.brachyura.dependency.JavaJarDependency;
 import io.github.coolcrabs.brachyura.ide.IdeModule;
+import io.github.coolcrabs.brachyura.maven.HttpMavenRepository;
 import io.github.coolcrabs.brachyura.maven.Maven;
 import io.github.coolcrabs.brachyura.maven.MavenId;
+import io.github.coolcrabs.brachyura.maven.MavenResolver;
 import io.github.coolcrabs.brachyura.processing.ProcessorChain;
 import io.github.coolcrabs.brachyura.processing.sinks.AtomicZipProcessingSink;
 import io.github.coolcrabs.brachyura.processing.sources.DirectoryProcessingSource;
@@ -40,9 +40,17 @@ import io.github.coolcrabs.brachyura.util.PathUtil;
 import io.github.coolcrabs.brachyura.util.Util;
 
 public class Buildscript extends BaseJavaProject {
-    static final String GROUP = "io.github.coolcrabs";
+    static final String GROUP = "de.geolykt.starloader.brachyura";
+    private static final String BRACHY_VERSION = "0.94.1";
 
+    @NotNull
     private final JavaCompilationOptions compileOptions = new JavaCompilationOptions();
+    private static final MavenResolver CENTRAL_RESOLVER = new MavenResolver(PathUtil.brachyuraPath().resolve("mvncache/central"))
+            .addRepository(MavenResolver.MAVEN_CENTRAL_REPO);
+    private static final MavenResolver SPONGE_RESOLVER = new MavenResolver(PathUtil.brachyuraPath().resolve("mvncache/sponge"))
+            .addRepository(new HttpMavenRepository("https://repo.spongepowered.org/repository/maven-public/"));
+    private static final MavenResolver FABRIC_RESOLVER = new MavenResolver(PathUtil.brachyuraPath().resolve("mvncache/fabric"))
+            .addRepository(new HttpMavenRepository("https://maven.fabricmc.net/"));
 
     // https://junit.org/junit5/docs/current/user-guide/#running-tests-console-launcher
     static final Lazy<List<JavaJarDependency>> junit = new Lazy<>(Buildscript::createJunit);
@@ -50,13 +58,13 @@ public class Buildscript extends BaseJavaProject {
         String jupiterVersion = "5.9.0";
         String platformVersion = "1.9.0";
         ArrayList<JavaJarDependency> r = new ArrayList<>();
-        r.add(Maven.getMavenJarDep(Maven.MAVEN_CENTRAL, new MavenId("org.apiguardian:apiguardian-api:1.1.2")));
-        r.add(Maven.getMavenJarDep(Maven.MAVEN_CENTRAL, new MavenId("org.opentest4j:opentest4j:1.2.0")));
+        r.add(CENTRAL_RESOLVER.getJarDepend(new MavenId("org.apiguardian:apiguardian-api:1.1.2")));
+        r.add(CENTRAL_RESOLVER.getJarDepend(new MavenId("org.opentest4j:opentest4j:1.2.0")));
         for (String jup : new String[]{"api", "engine", "params"}) {
-            r.add(Maven.getMavenJarDep(Maven.MAVEN_CENTRAL, new MavenId("org.junit.jupiter", "junit-jupiter-" + jup, jupiterVersion)));
+            r.add(CENTRAL_RESOLVER.getJarDepend(new MavenId("org.junit.jupiter", "junit-jupiter-" + jup, jupiterVersion)));
         }
         for (String plat : new String[]{"commons", "console", "engine", "launcher"}) {
-            r.add(Maven.getMavenJarDep(Maven.MAVEN_CENTRAL, new MavenId("org.junit.platform", "junit-platform-" + plat, platformVersion)));
+            r.add(CENTRAL_RESOLVER.getJarDepend(new MavenId("org.junit.platform", "junit-platform-" + plat, platformVersion)));
         }
         return r;
     }
@@ -75,7 +83,11 @@ public class Buildscript extends BaseJavaProject {
                 while ((line = w.readLine()) != null) {
                     String[] a = line.split(" ");
                     String mavenUrl = a[0];
-                    MavenId mavenId = new MavenId(a[1]);
+                    String mavenStringId = a[1];
+                    if (mavenStringId == null) {
+                        throw new IllegalStateException("Nonsensical line: " + line);
+                    }
+                    MavenId mavenId = new MavenId(mavenStringId);
                     r.add(Maven.getMavenJarDep(mavenUrl, mavenId));
                 }
             }
@@ -90,18 +102,19 @@ public class Buildscript extends BaseJavaProject {
             return true;
         }
 
+        @NotNull
         abstract MavenId getId();
 
         @Override
-        public Path[] getSrcDirs() {
-            return new Path[]{getModuleRoot().resolve("src").resolve("main").resolve("java")};
+        public @NotNull Path @NotNull[] getSrcDirs() {
+            return new @NotNull Path[]{getModuleRoot().resolve("src").resolve("main").resolve("java")};
         }
 
         @Override
-        public Path[] getResourceDirs() {
+        public @NotNull Path @NotNull[] getResourceDirs() {
             Path res = getModuleRoot().resolve("src").resolve("main").resolve("resources");
             if (Files.exists(res)) {
-                return new Path[]{res};
+                return new @NotNull Path[]{res};
             } else {
                 return new Path[0];
             }
@@ -126,7 +139,7 @@ public class Buildscript extends BaseJavaProject {
                 .sourcePaths(getSrcDirs())
                 .resourcePaths(getResourceDirs())
                 .dependencies(dependencies.get())
-                .dependencyModules(getModuleDependencies().stream().map(m -> m.ideModule.get()).collect(Collectors.toList()));
+                .dependencyModules(getModuleDependencies().stream().map(BuildModule::ideModule).collect(Collectors.toList()));
             if (hasTests()) {
                 r.testSourcePath(getModuleRoot().resolve("src").resolve("test").resolve("java"));
                 Path testRes = getModuleRoot().resolve("src").resolve("test").resolve("resources");
@@ -176,7 +189,11 @@ public class Buildscript extends BaseJavaProject {
                     if (Files.exists(testRes)) new ProcessorChain().apply(testJarSink, new DirectoryProcessingSource(testRes));
                     JavaCompilationResult comp = compilationResult.get();
                     comp.getInputs((in, id) -> {
-                        if (comp.getSourceFile(id).startsWith(testSrc)) {
+                        Path src = comp.getSourceFile(id);
+                        if (src == null) {
+                            throw new IllegalStateException("Unable to find source file for id " + id + " in compilation result " + comp);
+                        }
+                        if (src.startsWith(testSrc)) {
                             testJarSink.sink(in, id);
                         } else {
                             jarSink.sink(in, id);
@@ -191,7 +208,7 @@ public class Buildscript extends BaseJavaProject {
                     jarSourcesSink.commit();
                     testJarSink.commit();
                     testJarSourcesSink.commit();
-                    r.tests = new JavaJarDependency(testoutjar, testoutjarsources, null);
+                    r.tests = new JavaJarDependency(testoutjar, testoutjarsources, getId().withClassifier("test-classes"));
                 }
             } else {
                 try (
@@ -248,11 +265,13 @@ public class Buildscript extends BaseJavaProject {
 
     public final BJavaModule brachyura = new BJavaModule() {
         @Override
+        @NotNull
         MavenId getId() {
-            return new MavenId(GROUP, "brachyura", "0.94");
+            return new MavenId(GROUP, "brachyura", BRACHY_VERSION);
         }
 
         @Override
+        @NotNull
         protected List<JavaJarDependency> createDependencies() {
             ArrayList<JavaJarDependency> deps = new ArrayList<>();
             deps.addAll(bdeps.get());
@@ -261,15 +280,17 @@ public class Buildscript extends BaseJavaProject {
         }
     };
 
-    Lazy<JavaJarDependency> mappingIo = new Lazy<>(() -> Maven.getMavenJarDep("https://maven.fabricmc.net/", new MavenId("net.fabricmc", "mapping-io", "0.3.0")));
+    Lazy<JavaJarDependency> mappingIo = new Lazy<>(() -> FABRIC_RESOLVER.getJarDepend(new MavenId("net.fabricmc", "mapping-io", "0.3.0")));
 
     public final BJavaModule trieharder = new BJavaModule() {
         @Override
+        @NotNull
         MavenId getId() {
             return new MavenId(GROUP, "trieharder", "0.2.0");
         }
 
         @Override
+        @NotNull
         protected List<JavaJarDependency> createDependencies() {
             ArrayList<JavaJarDependency> deps = new ArrayList<>();
             deps.add(mappingIo.get());
@@ -285,11 +306,13 @@ public class Buildscript extends BaseJavaProject {
         }
 
         @Override
+        @NotNull
         MavenId getId() {
             return new MavenId(GROUP, "fernutil", "0.2");
         }
 
         @Override
+        @NotNull
         protected List<JavaJarDependency> createDependencies() {
             ArrayList<JavaJarDependency> deps = new ArrayList<>();
             deps.addAll(junit.get());
@@ -307,11 +330,11 @@ public class Buildscript extends BaseJavaProject {
         String asmGroup = "org.ow2.asm";
         String asmVersion = "9.3";
         return Arrays.asList(
-            Maven.getMavenJarDep(Maven.MAVEN_CENTRAL, new MavenId(asmGroup, "asm", asmVersion)),
-            Maven.getMavenJarDep(Maven.MAVEN_CENTRAL, new MavenId(asmGroup, "asm-analysis", asmVersion)),
-            Maven.getMavenJarDep(Maven.MAVEN_CENTRAL, new MavenId(asmGroup, "asm-commons", asmVersion)),
-            Maven.getMavenJarDep(Maven.MAVEN_CENTRAL, new MavenId(asmGroup, "asm-tree", asmVersion)),
-            Maven.getMavenJarDep(Maven.MAVEN_CENTRAL, new MavenId(asmGroup, "asm-util", asmVersion))
+                CENTRAL_RESOLVER.getJarDepend(new MavenId(asmGroup, "asm", asmVersion)),
+                CENTRAL_RESOLVER.getJarDepend(new MavenId(asmGroup, "asm-analysis", asmVersion)),
+                CENTRAL_RESOLVER.getJarDepend(new MavenId(asmGroup, "asm-commons", asmVersion)),
+                CENTRAL_RESOLVER.getJarDepend(new MavenId(asmGroup, "asm-tree", asmVersion)),
+                CENTRAL_RESOLVER.getJarDepend(new MavenId(asmGroup, "asm-util", asmVersion))
         );
     }
 
@@ -322,11 +345,13 @@ public class Buildscript extends BaseJavaProject {
         }
 
         @Override
+        @NotNull
         MavenId getId() {
             return new MavenId(GROUP, "fabricmerge", "0.2");
         }
 
         @Override
+        @NotNull
         protected List<JavaJarDependency> createDependencies() {
             ArrayList<JavaJarDependency> deps = new ArrayList<>();
             deps.addAll(junit.get());
@@ -343,16 +368,19 @@ public class Buildscript extends BaseJavaProject {
         }
 
         @Override
-        public Path[] getSrcDirs() {
-            return new Path[]{getModuleRoot().resolve("src")};
+        public @NotNull Path @NotNull[] getSrcDirs() {
+            return new @NotNull Path[]{getModuleRoot().resolve("src")};
         }
 
         @Override
+        @NotNull
         MavenId getId() {
             return new MavenId(GROUP, "cfr", "0.6");
         }
 
+        @SuppressWarnings("null")
         @Override
+        @NotNull
         protected List<JavaJarDependency> createDependencies() {
             return Collections.emptyList();
         }
@@ -365,16 +393,20 @@ public class Buildscript extends BaseJavaProject {
         }
 
         @Override
+        @NotNull
         MavenId getId() {
             return new MavenId(GROUP, "brachyura-mixin-compile-extensions", "0.10");
         }
 
+        @SuppressWarnings("null")
         @Override
+        @NotNull
         protected List<JavaJarDependency> createDependencies() {
-            return Collections.singletonList(Maven.getMavenJarDep("https://repo.spongepowered.org/repository/maven-public/", new MavenId("org.spongepowered", "mixin", "0.8.3")));
+            return Collections.singletonList(SPONGE_RESOLVER.getJarDepend(new MavenId("org.spongepowered", "mixin", "0.8.3")));
         }
 
         @Override
+        @NotNull
         protected JavaCompilation createCompilation() {
             return super.createCompilation().addOption("-proc:none");
         }
@@ -387,20 +419,23 @@ public class Buildscript extends BaseJavaProject {
         }
 
         @Override
+        @NotNull
         MavenId getId() {
             return new MavenId(GROUP, "access-widener", "0.2");
         }
 
         @Override
+        @NotNull
         protected List<JavaJarDependency> createDependencies() {
             return asm.get();
         }
     };
 
-    Lazy<JavaJarDependency> tinyRemapper = new Lazy<>(() -> Maven.getMavenJarDep("https://maven.fabricmc.net/", new MavenId("net.fabricmc", "tiny-remapper", "0.8.2")));
+    Lazy<JavaJarDependency> tinyRemapper = new Lazy<>(() -> FABRIC_RESOLVER.getJarDepend(new MavenId("net.fabricmc", "tiny-remapper", "0.8.2")));
 
     public final BJavaModule brachyuraMinecraft = new BJavaModule() {
         @Override
+        @NotNull
         MavenId getId() {
             return new MavenId(GROUP, "brachyura-minecraft", "0.1");
         }
@@ -411,6 +446,7 @@ public class Buildscript extends BaseJavaProject {
         }
 
         @Override
+        @NotNull
         protected List<JavaJarDependency> createDependencies() {
             ArrayList<JavaJarDependency> deps = new ArrayList<>();
             deps.addAll(junit.get());
@@ -429,16 +465,20 @@ public class Buildscript extends BaseJavaProject {
         }
 
         @Override
+        @NotNull
         MavenId getId() {
             return new MavenId(GROUP, "brachyura-bootstrap", "0");
         }
 
         @Override
+        @NotNull
         public String getModuleName() {
             return "bootstrap";
         }
 
+        @SuppressWarnings("null")
         @Override
+        @NotNull
         protected List<JavaJarDependency> createDependencies() {
             return Collections.emptyList();
         }
@@ -451,24 +491,28 @@ public class Buildscript extends BaseJavaProject {
         }
 
         @Override
+        @NotNull
         MavenId getId() {
             return new MavenId(GROUP, "brachyura-bootstrap", "0");
         }
 
+        @Override
+        @NotNull
         public String getModuleName() {
             return "build";
         }
 
         @Override
+        @NotNull
         protected List<JavaJarDependency> createDependencies() {
             ArrayList<JavaJarDependency> deps = new ArrayList<>();
             deps.addAll(junit.get());
-            deps.add(Maven.getMavenJarDep(Maven.MAVEN_CENTRAL, new MavenId("org.kohsuke", "github-api", "1.131")));
-            deps.add(Maven.getMavenJarDep(Maven.MAVEN_CENTRAL, new MavenId("org.apache.commons", "commons-lang3", "3.9")));
-            deps.add(Maven.getMavenJarDep(Maven.MAVEN_CENTRAL, new MavenId("com.fasterxml.jackson.core", "jackson-databind", "2.13.4")));
-            deps.add(Maven.getMavenJarDep(Maven.MAVEN_CENTRAL, new MavenId("com.fasterxml.jackson.core", "jackson-core", "2.13.4")));
-            deps.add(Maven.getMavenJarDep(Maven.MAVEN_CENTRAL, new MavenId("com.fasterxml.jackson.core", "jackson-annotations", "2.13.4")));
-            deps.add(Maven.getMavenJarDep(Maven.MAVEN_CENTRAL, new MavenId("commons-io", "commons-io", "2.8.0")));
+            deps.add(CENTRAL_RESOLVER.getJarDepend(new MavenId("org.kohsuke", "github-api", "1.131")));
+            deps.add(CENTRAL_RESOLVER.getJarDepend(new MavenId("org.apache.commons", "commons-lang3", "3.9")));
+            deps.add(CENTRAL_RESOLVER.getJarDepend(new MavenId("com.fasterxml.jackson.core", "jackson-databind", "2.13.4")));
+            deps.add(CENTRAL_RESOLVER.getJarDepend(new MavenId("com.fasterxml.jackson.core", "jackson-core", "2.13.4")));
+            deps.add(CENTRAL_RESOLVER.getJarDepend(new MavenId("com.fasterxml.jackson.core", "jackson-annotations", "2.13.4")));
+            deps.add(CENTRAL_RESOLVER.getJarDepend(new MavenId("commons-io", "commons-io", "2.8.0")));
             return deps;
         }
     };
@@ -477,10 +521,11 @@ public class Buildscript extends BaseJavaProject {
     public final BJavaModule[] publishModules = {brachyura, trieharder, fernutil, fabricmerge, cfr, mixinCompileExtensions, accessWidener, brachyuraMinecraft, bootstrap};
 
     @Override
-    public IdeModule @NotNull [] getIdeModules() {
-        IdeModule[] ideModules = new IdeModule[modules.length];
+    @NotNull
+    public IdeModule @NotNull[] getIdeModules() {
+        @NotNull IdeModule[] ideModules = new @NotNull IdeModule[modules.length];
         for (int i = 0; i < ideModules.length; i++) {
-            ideModules[i] = modules[i].ideModule.get();
+            ideModules[i] = modules[i].ideModule();
         }
         return ideModules;
     }

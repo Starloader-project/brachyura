@@ -397,7 +397,7 @@ public class RemapperProcessor implements Processor {
             
         }
 
-        @SuppressWarnings("unchecked") // Slbrachyura: Make javac shut up about the JBR patch
+        @SuppressWarnings("all") // Slbrachyura: Make javac shut up about the JBR patch
         @Override
         public <V extends FileAttributeView> V getFileAttributeView(Path path, Class<V> type, LinkOption... options) {
             if (type != BasicFileAttributeView.class) return null;

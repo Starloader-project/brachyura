@@ -18,8 +18,8 @@ import io.github.coolcrabs.brachyura.util.JvmUtil;
 import io.github.coolcrabs.brachyura.util.Lazy;
 
 public abstract class SimpleJavaModule extends BuildModule {
-    public abstract Path[] getSrcDirs();
-    public abstract Path[] getResourceDirs();
+    public abstract @NotNull Path @NotNull[] getSrcDirs();
+    public abstract @NotNull Path @NotNull[] getResourceDirs();
 
     public final Lazy<@NotNull List<JavaJarDependency>> dependencies = new Lazy<>(this::createDependencies);
 
