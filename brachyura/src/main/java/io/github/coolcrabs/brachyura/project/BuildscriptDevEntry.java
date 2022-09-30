@@ -28,6 +28,9 @@ class BuildscriptDevEntry {
             Project buildscript;
             try {
                 buildscript = (Project) Class.forName("Buildscript").getDeclaredConstructor().newInstance();
+                if (buildscript == null) {
+                    throw new AssertionError();
+                }
             } catch (ClassNotFoundException cnfe) {
                 buildscript = new BuildscriptProject().createProject().get();
             }
@@ -35,7 +38,7 @@ class BuildscriptDevEntry {
             Project finalBuildscript = buildscript;
             BuildscriptProject buildscriptProject = new BuildscriptProject() {
                 @Override
-                public java.util.Optional<Project> createProject() {
+                protected java.util.Optional<Project> createProject() {
                     return Optional.of(finalBuildscript);
                 };
             };

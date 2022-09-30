@@ -37,7 +37,13 @@ public class LocalMavenRepository extends MavenRepository implements PublishRepo
 
     public LocalMavenRepository(@NotNull Path root) {
         if (!Files.isDirectory(root)) {
-            throw new IllegalStateException("Root is not a folder!");
+            try {
+                if (!Files.notExists(root) || !Files.exists(Files.createDirectories(root))) {
+                    throw new IllegalStateException("Root (" + root.toAbsolutePath() + ") is not a folder!");
+                }
+            } catch (IOException e) {
+                throw new IllegalStateException("Root (" + root.toAbsolutePath() + ") is not a folder!", e);
+            }
         }
         this.root = root;
     }

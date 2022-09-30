@@ -122,7 +122,7 @@ class BuildscriptProject extends BaseJavaProject {
     public final Lazy<Optional<Project>> project = new Lazy<>(this::createProject);
 
     @SuppressWarnings("all")
-    public Optional<Project> createProject() {
+    protected Optional<Project> createProject() {
         try {
             ClassLoader b = getBuildscriptClassLoader();
             if (b == null) return Optional.empty();

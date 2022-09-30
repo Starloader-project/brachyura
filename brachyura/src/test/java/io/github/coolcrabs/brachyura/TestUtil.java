@@ -19,12 +19,17 @@ public class TestUtil {
 
     static {
         Path p = PathUtil.CWD;
+        // Slbrachyura start: More descriptive error messages if something goes wrong
+        if (p.getNameCount() == 0) {
+            throw new IllegalStateException("Slbrachyura: Running from root! (WHAT?)");
+        }
         while (!p.getFileName().toString().equals("brachyura") && !Files.exists(p.resolve(".brachyuradirmarker"))) {
             p = p.getParent();
-            if (p == null) {
-                throw new IllegalStateException("Slbrachyura: Hit root! (Consider adding a .brachyuradirmarker file)");
+            if (p == null || p.getNameCount() == 0) {
+                throw new IllegalStateException("Slbrachyura: Hit root! (Consider adding a .brachyuradirmarker file); CWD is " + p);
             }
         }
+        // Slbrachyura end
         ROOT = p;
     }
 

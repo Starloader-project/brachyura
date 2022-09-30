@@ -145,7 +145,7 @@ public class MavenPublisher {
         out.newline();
         out.writeStartElement("dependencies");
         for (MavenDependency dependency : dependencies) {
-            if (dependency.getScope() == MavenDependencyScope.COMPILE_ONLY) {
+            if (dependency == null || dependency.getScope() == MavenDependencyScope.COMPILE_ONLY) {
                 continue;
             }
             out.indent();

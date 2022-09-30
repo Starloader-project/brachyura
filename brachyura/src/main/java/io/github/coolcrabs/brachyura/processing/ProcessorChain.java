@@ -31,6 +31,9 @@ public class ProcessorChain {
         try {
             Collector c = new Collector();
             for (ProcessingSource s : in) {
+                if (s == null) { // Slbrachyura: Better debugging
+                    throw new NullPointerException("One of the input processing sources was null!");
+                }
                 s.getInputs(c);
             }
             for (Processor p : processors) {
