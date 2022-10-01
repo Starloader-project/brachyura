@@ -568,7 +568,9 @@ public class Buildscript extends BaseJavaProject {
             for (JavaJarDependency jjd : build.dependencies.get()) {
                 cp.add(jjd.jar.toUri().toURL());
             }
-            List<String> mstrings = Arrays.stream(publishModules).map(BJavaModule::getModuleName).collect(Collectors.toList());
+            List<String> mstrings = Arrays.stream(publishModules)
+                    .map(module ->  module.getModuleRoot().getFileName().toString())
+                    .collect(Collectors.toList());
             ArrayList<String> depJars = new ArrayList<>();
             for (JavaJarDependency jjd : bdeps.get()) appendUrls(depJars, Maven.MAVEN_CENTRAL, jjd);
             for (JavaJarDependency jjd : asm.get()) appendUrls(depJars, Maven.MAVEN_CENTRAL, jjd);
