@@ -40,7 +40,6 @@ public class JvmUtil {
                 for (Path section : dir) {
                     if (section.getFileName().toString().contains("-"))
                         continue;
-                    System.out.println("Supported JDK: " + Long.parseUnsignedLong(section.getFileName().toString(), Character.MAX_RADIX));
                     SUPPORTED_RELEASE_VERSIONS.add(Long.parseUnsignedLong(section.getFileName().toString(), Character.MAX_RADIX));
                 }
             } catch (IOException | ProviderNotFoundException ex) {

@@ -100,7 +100,6 @@ public class Buildscript {
                 for (Path section : dir) {
                     if (section.getFileName().toString().contains("-"))
                         continue;
-                    System.out.println("Supported JDK: " + Long.parseUnsignedLong(section.getFileName().toString(), Character.MAX_RADIX));
                     if (Long.parseUnsignedLong(section.getFileName().toString(), Character.MAX_RADIX) == version) {
                         return true;
                     }
