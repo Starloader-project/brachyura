@@ -16,7 +16,7 @@ import io.github.coolcrabs.brachyura.project.Task;
 import io.github.coolcrabs.brachyura.project.TaskBuilder;
 import io.github.coolcrabs.brachyura.util.Lazy;
 
-public class IdeModule {
+public final class IdeModule {
     @NotNull
     public final String name;
     @NotNull
@@ -175,7 +175,7 @@ public class IdeModule {
             testResourcePaths.add(testResourcePath);
             return this;
         }
-        
+
         public IdeModuleBuilder javaVersion(int javaVersion) {
             this.javaVersion = javaVersion;
             return this;
@@ -300,4 +300,20 @@ public class IdeModule {
                     .buildUnconditionallyThrowing();
         }
     }
+
+    // Slbrachyura start: Implement #equals and #hashcode for IdeModule to guarantee stability
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof IdeModule) {
+            return ((IdeModule) obj).name.equals(this.name);
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        return this.name.hashCode() ^ 0x4839;
+    }
+    // Slbrachyura end
 }

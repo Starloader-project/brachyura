@@ -21,7 +21,7 @@ public interface Ide {
         for (IdeModule m0 : modules) {
             if (!names.add(m0.name)) throw new IllegalArgumentException("Duplicate modules for name " + m0.name);
             for (IdeModule m1 : m0.dependencyModules) {
-                if (!modules.contains(m1)) throw new IllegalArgumentException("Module " + m0.name + " references module " + m1.name + " not in ide project as a dependency");
+                if (!modules.contains(m1)) throw new IllegalArgumentException("Module " + m0.name + " references module " + m1.name + ", which is not listed as a dependency module");
             }
             /* TODO Slbrachyura: Replace if needed
             for (RunConfig rc : m0.runConfigs) {

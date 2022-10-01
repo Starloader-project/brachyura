@@ -23,6 +23,7 @@ import io.github.coolcrabs.brachyura.compiler.java.JavaCompilationOptions;
 import io.github.coolcrabs.brachyura.compiler.java.JavaCompilationResult;
 import io.github.coolcrabs.brachyura.dependency.JavaJarDependency;
 import io.github.coolcrabs.brachyura.ide.IdeModule;
+import io.github.coolcrabs.brachyura.ide.IdeModule.IdeModuleBuilder;
 import io.github.coolcrabs.brachyura.maven.HttpMavenRepository;
 import io.github.coolcrabs.brachyura.maven.Maven;
 import io.github.coolcrabs.brachyura.maven.MavenId;
@@ -31,6 +32,7 @@ import io.github.coolcrabs.brachyura.processing.ProcessorChain;
 import io.github.coolcrabs.brachyura.processing.sinks.AtomicZipProcessingSink;
 import io.github.coolcrabs.brachyura.processing.sources.DirectoryProcessingSource;
 import io.github.coolcrabs.brachyura.project.Task;
+import io.github.coolcrabs.brachyura.project.TaskBuilder;
 import io.github.coolcrabs.brachyura.project.java.BaseJavaProject;
 import io.github.coolcrabs.brachyura.project.java.BuildModule;
 import io.github.coolcrabs.brachyura.project.java.SimpleJavaModule;
@@ -41,7 +43,7 @@ import io.github.coolcrabs.brachyura.util.Util;
 
 public class Buildscript extends BaseJavaProject {
     static final String GROUP = "de.geolykt.starloader.brachyura";
-    private static final String BRACHY_VERSION = "0.94.1";
+    private static final String BRACHY_VERSION = "0.94.2";
 
     @NotNull
     private final JavaCompilationOptions compileOptions = new JavaCompilationOptions();
@@ -122,12 +124,21 @@ public class Buildscript extends BaseJavaProject {
 
         @Override
         public @NotNull String getModuleName() {
-            return getId().artifactId;
+         // Slbrachyura start: Umbrella project
+            if (this == brachyura) {
+                return "brachyura-core";
+            } else {
+                return getId().artifactId;
+            }
         }
 
         @Override
         public @NotNull Path getModuleRoot() {
+            if (this == brachyura) {
+                return Buildscript.this.getProjectDir().resolve(getId().artifactId);
+            }
             return Buildscript.this.getProjectDir().resolve(getModuleName());
+            // slbrachyura end
         }
 
         @Override
@@ -523,10 +534,19 @@ public class Buildscript extends BaseJavaProject {
     @Override
     @NotNull
     public IdeModule @NotNull[] getIdeModules() {
-        @NotNull IdeModule[] ideModules = new @NotNull IdeModule[modules.length];
-        for (int i = 0; i < ideModules.length; i++) {
+        // Slbrachyura start: Umbrella project
+        @NotNull IdeModule[] ideModules = new @NotNull IdeModule[modules.length + 1];
+        for (int i = 0; i < modules.length; i++) {
             ideModules[i] = modules[i].ideModule();
         }
+        if (getProjectDir().getFileName().toString().equalsIgnoreCase("buildscript")) {
+            throw new AssertionError("#getProjectDir has different behaviour than expected!");
+        }
+        ideModules[modules.length] = new IdeModuleBuilder()
+                .name("slbrachyura-umbrella")
+                .root(getProjectDir())
+                .build();
+        // Slbrachyura end
         return ideModules;
     }
 
