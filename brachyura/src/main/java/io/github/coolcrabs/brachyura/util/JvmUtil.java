@@ -1,6 +1,16 @@
 package io.github.coolcrabs.brachyura.util;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.ProviderNotFoundException;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.jetbrains.annotations.NotNull;
 import org.tinylog.Logger;
@@ -16,7 +26,28 @@ public class JvmUtil {
     @NotNull
     private static final String @NotNull[] NO_ARGS = new String[0];
 
+    private static final Set<Long> SUPPORTED_RELEASE_VERSIONS = new HashSet<>();
+
     static {
+
+        // Based on com.sun.tools.javac.platform.JDKPlatformProvider
+        Path ctSymFile = Paths.get(System.getProperty("java.home")).resolve("lib/ct.sym");
+
+        if (Files.exists(ctSymFile)) {
+            try (FileSystem fs = FileSystems.newFileSystem(ctSymFile, (ClassLoader)null);
+                 DirectoryStream<Path> dir =
+                         Files.newDirectoryStream(fs.getRootDirectories().iterator().next())) {
+                for (Path section : dir) {
+                    if (section.getFileName().toString().contains("-"))
+                        continue;
+                    System.out.println("Supported JDK: " + Long.parseUnsignedLong(section.getFileName().toString(), Character.MAX_RADIX));
+                    SUPPORTED_RELEASE_VERSIONS.add(Long.parseUnsignedLong(section.getFileName().toString(), Character.MAX_RADIX));
+                }
+            } catch (IOException | ProviderNotFoundException ex) {
+                ex.printStackTrace();
+            }
+        }
+
         // https://stackoverflow.com/a/2591122
         // Changed to java.specification.version to avoid -ea and other various odditites
         // See https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/System.html#getProperties()
@@ -61,7 +92,13 @@ public class JvmUtil {
     @NotNull
     public static String @NotNull[] compileArgs(int compilerversion, int targetversion) {
         if (compilerversion == targetversion) return NO_ARGS;
-        if (compilerversion >= 9 && targetversion >= 7) return new @NotNull String[] {"--release", String.valueOf(targetversion)}; // Doesn't accept 1.8 etc for some reason
+        if (compilerversion >= 9 && targetversion >= 7) {
+            if (SUPPORTED_RELEASE_VERSIONS.contains(Long.valueOf(compilerversion))) {
+                return new @NotNull String[] {"--release", String.valueOf(targetversion)};
+            } else {
+                return new @NotNull String[] {"--target", String.valueOf(targetversion), "--source", String.valueOf(targetversion)};
+            }
+        }
         throw new UnsupportedOperationException("Target Version: " + targetversion + " " + "Compiler Version: " + compilerversion);
     }
 }

@@ -3,21 +3,30 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
+import java.lang.reflect.Field;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.DirectoryStream;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.ProviderNotFoundException;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributeView;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.ServiceLoader;
+import java.util.TreeSet;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -69,9 +78,49 @@ public class Buildscript {
 
     private static final String[] NO_ARGS = new String[0];
 
+    private static final String[] symbolFileLocation = { "lib", "ct.sym" };
+
+    static Path findCtSym() {
+        String javaHome = System.getProperty("java.home");
+        Path file = Paths.get(javaHome);
+        // file == ${jdk.home}
+        for (String name : symbolFileLocation)
+            file = file.resolve(name);
+        return file;
+    }
+
+    private static boolean supportsReleaseVersion(int version) {
+        HashSet<String> supportedPlatforms = new HashSet<>();
+        Path ctSymFile = findCtSym();
+
+        if (Files.exists(ctSymFile)) {
+            try (FileSystem fs = FileSystems.newFileSystem(ctSymFile, (ClassLoader)null);
+                 DirectoryStream<Path> dir =
+                         Files.newDirectoryStream(fs.getRootDirectories().iterator().next())) {
+                for (Path section : dir) {
+                    if (section.getFileName().toString().contains("-"))
+                        continue;
+                    System.out.println("Supported JDK: " + Long.parseUnsignedLong(section.getFileName().toString(), Character.MAX_RADIX));
+                    if (Long.parseUnsignedLong(section.getFileName().toString(), Character.MAX_RADIX) == version) {
+                        return true;
+                    }
+                }
+            } catch (IOException | ProviderNotFoundException ex) {
+                ex.printStackTrace();
+            }
+        }
+        return false;
+    }
+
     public static String[] compileArgs(int compilerversion, int targetversion) {
         if (compilerversion == targetversion) return NO_ARGS;
-        if (compilerversion >= 9 && targetversion >= 7) return new String[] {"--release", String.valueOf(targetversion)}; // Doesn't accept 1.8 etc for some reason
+        if (compilerversion >= 9 && targetversion >= 7) {
+            if (supportsReleaseVersion(targetversion)) {
+                return new String[] {"--release", String.valueOf(targetversion)};
+            } else {
+                return new String[] {"--target", String.valueOf(targetversion), "--source", String.valueOf(targetversion)};
+            }
+        }
         throw new UnsupportedOperationException("Target Version: " + targetversion + " " + "Compiler Version: " + compilerversion);
     }
 

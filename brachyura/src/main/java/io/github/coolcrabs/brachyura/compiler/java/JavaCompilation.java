@@ -32,7 +32,7 @@ public class JavaCompilation {
     private ArrayList<Path> sourcePath = new ArrayList<>();
     private ArrayList<Path> classpath = new ArrayList<>();
     private ArrayList<ProcessingSource> classpathSources = new ArrayList<>();
-    private JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+    private JavaCompiler compiler = ToolProvider.getSystemJavaCompiler(); // Note: JvmUtil#compileArgs would need to be changed too if this were to change
 
     @NotNull
     @Contract(mutates = "this", pure = false, value = "_ -> this")
