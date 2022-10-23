@@ -52,7 +52,7 @@ import io.github.coolcrabs.brachyura.util.Util;
 
 public class Buildscript extends BaseJavaProject {
     static final String GROUP = "de.geolykt.starloader.brachyura";
-    private static final String BRACHY_VERSION = "0.94.5";
+    private static final String BRACHY_VERSION = "0.94.6";
     private static final String FERNUTIL_VERSION = "0.2.1";
 
     @NotNull

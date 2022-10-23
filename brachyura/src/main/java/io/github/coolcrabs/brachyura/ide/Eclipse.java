@@ -1,5 +1,6 @@
 package io.github.coolcrabs.brachyura.ide;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.StringWriter;
@@ -38,6 +39,48 @@ public enum Eclipse implements Ide {
     @NotNull
     public String ideName() {
         return "jdt";
+    }
+
+    void updateEclipseJDTCorePreferences(IdeModule module) throws IOException {
+        Path preferenceFile = PathUtil.resolveAndCreateDir(module.root, ".settings").resolve("org.eclipse.jdt.core.prefs");
+        List<String> otherLines = new ArrayList<>();
+        if (Files.exists(preferenceFile)) {
+            try (BufferedReader reader = Files.newBufferedReader(preferenceFile)) {
+                for (String line = reader.readLine(); line != null; line = reader.readLine()) {
+                    int keySeperator = line.indexOf('=');
+                    if (keySeperator == -1) {
+                        otherLines.add(line);
+                    }
+                    String key = line.substring(0, keySeperator);
+                    if (key.equals("eclipse.preferences.version")) {
+                        String value = line.substring(keySeperator + 1);
+                        if (!value.equals("1")) {
+                            throw new IOException("Unrecognised eclipse preferences version: " + value + ". Only \"1\" is supported!");
+                        }
+                    }
+                    if (key.equals("org.eclipse.jdt.core.compiler.codegen.targetPlatform")
+                            || key.equals("rg.eclipse.jdt.core.compiler.compliance")
+                            || key.equals("org.eclipse.jdt.core.compiler.source")) {
+                        continue; // We override these keys
+                    }
+                    otherLines.add(line);
+                }
+            } catch (Exception e) {
+                otherLines.clear();
+                e.printStackTrace();
+            }
+        }
+        try (BufferedWriter prefs = Files.newBufferedWriter(preferenceFile)) {
+            for (String line : otherLines) {
+                prefs.write(line);
+                prefs.write('\n');
+            }
+            prefs.write("eclipse.preferences.version=1\n");
+            String j = JvmUtil.javaVersionString(module.javaVersion);
+            prefs.write("org.eclipse.jdt.core.compiler.codegen.targetPlatform="); prefs.write(j); prefs.write('\n');
+            prefs.write("org.eclipse.jdt.core.compiler.compliance="); prefs.write(j); prefs.write('\n');
+            prefs.write("org.eclipse.jdt.core.compiler.source="); prefs.write(j); prefs.write('\n');
+        }
     }
 
     @Override
@@ -117,13 +160,9 @@ public enum Eclipse implements Ide {
             w.newline();
             w.writeEndDocument();
         }
-        try (BufferedWriter prefs = Files.newBufferedWriter(PathUtil.resolveAndCreateDir(module.root, ".settings").resolve("org.eclipse.jdt.core.prefs"))) {
-            prefs.write("eclipse.preferences.version=1\n");
-            String j = JvmUtil.javaVersionString(module.javaVersion);
-            prefs.write("org.eclipse.jdt.core.compiler.codegen.targetPlatform="); prefs.write(j); prefs.write('\n');
-            prefs.write("org.eclipse.jdt.core.compiler.compliance="); prefs.write(j); prefs.write('\n');
-            prefs.write("org.eclipse.jdt.core.compiler.source="); prefs.write(j); prefs.write('\n');
-        }
+        // Slbrachyura start: Don't completely overwrite old eclipse preferences
+        updateEclipseJDTCorePreferences(module);
+        // Slbrachyura end
         // Slbrachyura start: Set resource encoding for eclipse
         try (BufferedWriter prefs = Files.newBufferedWriter(module.root.resolve(".settings").resolve("org.eclipse.core.resources.prefs"))) {
             prefs.write("eclipse.preferences.version=1\n");
