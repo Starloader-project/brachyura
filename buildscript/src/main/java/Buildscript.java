@@ -1,16 +1,25 @@
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 import javax.tools.StandardLocation;
 
@@ -18,6 +27,7 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.tinylog.Logger;
 
+import io.github.coolcrabs.brachyura.compiler.java.CompilationFailedException;
 import io.github.coolcrabs.brachyura.compiler.java.JavaCompilation;
 import io.github.coolcrabs.brachyura.compiler.java.JavaCompilationOptions;
 import io.github.coolcrabs.brachyura.compiler.java.JavaCompilationResult;
@@ -42,7 +52,8 @@ import io.github.coolcrabs.brachyura.util.Util;
 
 public class Buildscript extends BaseJavaProject {
     static final String GROUP = "de.geolykt.starloader.brachyura";
-    private static final String BRACHY_VERSION = "0.94.4";
+    private static final String BRACHY_VERSION = "0.94.5";
+    private static final String FERNUTIL_VERSION = "0.2.1";
 
     @NotNull
     private final JavaCompilationOptions compileOptions = new JavaCompilationOptions();
@@ -179,8 +190,21 @@ public class Buildscript extends BaseJavaProject {
         }
 
         public final Lazy<BJarResult> built = new Lazy<>(this::build);
+
         protected BJarResult build() {
             Path buildLibsDir = PathUtil.resolveAndCreateDir(PathUtil.resolveAndCreateDir(getModuleRoot(), "build"), "libs");
+            // Slbrachyura start: Purge old jars before building jars
+            try {
+                List<Path> jars = Files.walk(buildLibsDir, 1)
+                    .filter(p -> p.getFileName().toString().endsWith(".jar"))
+                    .collect(Collectors.toList());
+                for (Path jar : jars) {
+                    Files.delete(jar);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            // Slbrachyura end
             Path testSrc = getModuleRoot().resolve("src").resolve("test").resolve("java");
             Path outjar = buildLibsDir.resolve(getJarBaseName() + ".jar");
             Path outjarsources = buildLibsDir.resolve(getJarBaseName() + "-sources.jar");
@@ -318,7 +342,7 @@ public class Buildscript extends BaseJavaProject {
         @Override
         @NotNull
         MavenId getId() {
-            return new MavenId(GROUP, "fernutil", "0.2");
+            return new MavenId(GROUP, "fernutil", FERNUTIL_VERSION);
         }
 
         @Override
@@ -333,6 +357,40 @@ public class Buildscript extends BaseJavaProject {
             }
             return deps;
         }
+
+        // Slbrachyura start: Don't include mock FF internals in the runtime classpath.
+        @Override
+        protected BJarResult build() {
+            BJarResult result = super.build();
+            Path jarPath = result.main.jar;
+            if (Files.exists(jarPath)) {
+                ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+                byte[] bytebuffer = new byte[4096];
+                try (ZipInputStream zipIn = new ZipInputStream(Files.newInputStream(jarPath), StandardCharsets.UTF_8);
+                        ZipOutputStream zipOut = new ZipOutputStream(bytes, StandardCharsets.UTF_8)) {
+                    for (ZipEntry entry = zipIn.getNextEntry(); entry != null; entry = zipIn.getNextEntry()) {
+                        if (entry.getName().startsWith("org/jetbrains/java/decompiler/") || entry.getName().startsWith("/org/jetbrains/java/decompiler/")) {
+                            continue;
+                        }
+                        zipOut.putNextEntry(entry);
+                        for (int read = zipIn.read(bytebuffer); read != -1; read = zipIn.read(bytebuffer)) {
+                            zipOut.write(bytebuffer, 0, read);
+                        }
+                    }
+                } catch (IOException e) {
+                    throw new CompilationFailedException(e);
+                }
+                try (OutputStream out = Files.newOutputStream(jarPath, StandardOpenOption.TRUNCATE_EXISTING)) {
+                    bytes.writeTo(out);
+                } catch (IOException e) {
+                    throw new CompilationFailedException(e);
+                }
+            } else {
+                throw new IllegalStateException("Build failure? Built jar doesn't exist for some reason.");
+            }
+            return result;
+        }
+        // Slbrachyura end
     };
 
     public final Lazy<List<JavaJarDependency>> asm = new Lazy<>(this::createAsm);

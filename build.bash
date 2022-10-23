@@ -1,3 +1,3 @@
 #!/bin/bash
 javac Buildscript.java
-java Buildscript build
+java Buildscript publish

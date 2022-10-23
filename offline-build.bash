@@ -1,3 +1,3 @@
 #!/bin/bash
 javac Buildscript.java
-java -Dskiptests=true Buildscript build
+java -Dskiptests=true Buildscript publish
