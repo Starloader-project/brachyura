@@ -1,3 +1,41 @@
+In the eternal search for the ideal build tool for galimulator, many build system were tried out.
+Initially gradle seemed like a good way of building things, but in the end it was very tedious
+to work with. So naturally, I searched for alternatives and ended up stumbling over brachyura,
+which did the job well enough, but had to be improved in order to do the job in a great way.
+These improvements ended up in this little repository which became known as slbrachyura. However
+with time upstream became more distanced from it's former self that gave it it's greatness.
+As such I (Geolykt) would always be faced with the decision of whether to hard-fork from brachyura,
+which would mean that the project can be developed to my own constraints (modding galimulator
+is a bit different to modding minecraft, as it seems like) or to keep pulling from upstream
+and kindof ignoring the regressions - Mind that you cannot really have the best of both worlds
+without spending enormous amount of time to resolve merge conflicts.
+
+After some more experimentation it became increasingly more clear that brachyura's task system
+has it's flaws that can only be remedied by rewriting large parts of it. Slbrachyura was able
+to perform the rewrite halfway and it is technically possible to complete it from my analysis,
+but again that would mean a lot of work that should really be put into more productive things.
+Another inherent issue is that brachyura is quite bloated if one wants to only mod galimulator
+with it, and important features such as maven resolving or plugins are missing.
+
+Other findings were that buildscripts written in java are simply not necessary most of the time,
+and usually pre-compiled plugins suffice. Brachyura however does not support plugins in a way
+that is modular. I am quite certain that this lack of modularity can't easily be resolved
+within brachyura and providing the modularity without it becoming a mess would amount nothing
+short of a rewrite. So in the end I am most likely doing exactly that whith intial skeletons
+showing that a hyper-modular build system can indeed work.
+
+The Starloader-API is going to continue to use slbrachyura alongside sl-starplane, but **that
+won't be forever.** However the Starloader-API will continue to sl-starplane for the forseeable
+future as the next generations of build systems for galimulator mods will use an entirely
+new architecture (mmStarmap) and migrating Starloader-API from the old architecture (spStarmap &
+slIntermediary) to the new one will take a considerable time. Until then slbrachyura will still
+be maintained, after that maintainance on slbrachyura will be based on whether it is needed.
+
+In short: **If I am not aware of anyone using slbrachyura, it will get retired.** On the flip side,
+if people still use it and I am aware of that, slbrachyura will stay maintained.
+
+---
+
 # Starloader's Brachyura (Slbrachyura)
 
 Brachyura is a WIP build tool with a strong focus on minecraft mods. Buildscripts are written in java.
