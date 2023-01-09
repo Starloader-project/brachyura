@@ -8,7 +8,6 @@ import java.lang.invoke.MethodType;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -52,7 +51,7 @@ import io.github.coolcrabs.brachyura.util.Util;
 
 public class Buildscript extends BaseJavaProject {
     static final String GROUP = "de.geolykt.starloader.brachyura";
-    private static final String BRACHY_VERSION = "0.94.6";
+    private static final String BRACHY_VERSION = "0.94.7";
     private static final String FERNUTIL_VERSION = "0.2.1";
 
     @NotNull

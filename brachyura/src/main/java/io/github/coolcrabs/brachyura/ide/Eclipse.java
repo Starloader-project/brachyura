@@ -41,6 +41,7 @@ public enum Eclipse implements Ide {
         return "jdt";
     }
 
+    // Slbrachyura start: Don't completely overwrite old eclipse preferences
     void updateEclipseJDTCorePreferences(IdeModule module) throws IOException {
         Path preferenceFile = PathUtil.resolveAndCreateDir(module.root, ".settings").resolve("org.eclipse.jdt.core.prefs");
         List<String> otherLines = new ArrayList<>();
@@ -57,6 +58,7 @@ public enum Eclipse implements Ide {
                         if (!value.equals("1")) {
                             throw new IOException("Unrecognised eclipse preferences version: " + value + ". Only \"1\" is supported!");
                         }
+                        continue; // Key is overwritten
                     }
                     if (key.equals("org.eclipse.jdt.core.compiler.codegen.targetPlatform")
                             || key.equals("rg.eclipse.jdt.core.compiler.compliance")
@@ -82,6 +84,7 @@ public enum Eclipse implements Ide {
             prefs.write("org.eclipse.jdt.core.compiler.source="); prefs.write(j); prefs.write('\n');
         }
     }
+    // Slbrachyura end
 
     @Override
     public void updateProject(Path projectRoot, IdeModule[] ideModules) {
