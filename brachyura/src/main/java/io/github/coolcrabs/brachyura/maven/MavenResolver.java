@@ -3,6 +3,7 @@ package io.github.coolcrabs.brachyura.maven;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
@@ -190,6 +191,14 @@ public class MavenResolver {
             Path nolookupFile = cacheFileParent.resolve(file + ".nolookup");
             if (Files.exists(nolookupFile)) {
                 return null;
+            }
+            if (Files.exists(cacheFile, LinkOption.NOFOLLOW_LINKS)) {
+                Logger.info("Deleting outdated symlink: " + cacheFile.toAbsolutePath());
+                try {
+                    Files.delete(cacheFile);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }
         for (MavenRepository repo : repositories) {
