@@ -51,7 +51,8 @@ import io.github.coolcrabs.brachyura.util.Util;
 
 public class Buildscript extends BaseJavaProject {
     static final String GROUP = "de.geolykt.starloader.brachyura";
-    private static final String BRACHY_VERSION = "0.94.7";
+    private static final String BRACHY_VERSION = "0.94.8";
+    private static final String MC_BRACHY_VERSION = "0.1.1";
     private static final String FERNUTIL_VERSION = "0.2.1";
 
     @NotNull
@@ -504,7 +505,7 @@ public class Buildscript extends BaseJavaProject {
         @Override
         @NotNull
         MavenId getId() {
-            return new MavenId(GROUP, "brachyura-minecraft", "0.1");
+            return new MavenId(GROUP, "brachyura-minecraft", MC_BRACHY_VERSION);
         }
 
         @Override

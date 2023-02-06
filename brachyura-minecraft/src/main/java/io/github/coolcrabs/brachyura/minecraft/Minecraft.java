@@ -290,7 +290,7 @@ public class Minecraft {
         for (Map.Entry<String, SizeHash> entry : assetsIndex.objects.entrySet()) {
             String hash = entry.getValue().hash;
             String a = hash.substring(0, 2); // first 2 chars
-            URL url = NetUtil.url("http://resources.download.minecraft.net/" + a + "/" + hash);
+            URL url = NetUtil.url("https://resources.download.minecraft.net/" + a + "/" + hash);
             Path target = objects.resolve(a).resolve(hash);
             if (!Files.isRegularFile(target)) {
                 try (AtomicFile atomicFile = new AtomicFile(target)) {
